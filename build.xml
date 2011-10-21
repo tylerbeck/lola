@@ -1,51 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="lola" default="dev-build">
+<project name="lola" default="build">
 
-	<!-- load the global & local build properties files -->
-	<property file="../build.properties"/>
+	<!-- load the build properties files -->
 	<property file="./build.properties"/>
-	<property name="lola.src.path" value="${project.path}/${lola.dir}/${lola.src.dir}"/>
-	<property name="lola.dev.path" value="${project.path}/${lola.dir}/${lola.dev.dir}"/>
-	<property name="lola.release.path" value="${project.path}/${lola.dir}/${lola.release.dir}"/>
-	<property name="lola.tmp.path" value="${project.path}/${lola.dir}/${lola.tmp.dir}"/>
 
 	<!-- add closure compiler task definition -->
 	<taskdef name="jscomp"
 	         classname="com.google.javascript.jscomp.ant.CompileTask"
-	         classpath="${project.path}/assets/lib/compiler.jar"/>
-
-	<!-- add lesscss task definition -->
-	<taskdef name="lesscss"
-	         classname="com.pensioenpage.jynx.lesscss.LessCSSTask"
-	         classpath="${project.path}/assets/lib/lesscss.jar"/>
-
+	         classpath="lib/closurecompiler/compiler.jar"/>
 
 	<!-- define top level targets -->
 	<target name="build" depends="copy-unified,copy-compressed,cleanup"/>
 	<target name="build-clean" depends="clean,copy-unified,copy-compressed,cleanup"/>
-	<target name="dev-build" depends="copy-unified,cleanup"/>
-	<target name="dev-build-clean" depends="clean,copy-unified,cleanup"/>
+	<target name="build-dev" depends="clean,copy-unified,cleanup"/>
+	<target name="build-clean-dev" depends="clean,copy-unified,cleanup"/>
 
 
 	<!-- delete directory structure -->
 	<target name="clean">
-		<delete dir="${lola.release.path}"/>
-		<delete dir="${lola.dev.path}"/>
-		<delete dir="${lola.tmp.path}"/>
+		<delete dir="${lola.release.dir}"/>
+		<delete dir="${lola.dev.dir}"/>
+		<delete dir="${lola.tmp.dir}"/>
 	</target>
 
 	<!-- initialize directory structure -->
 	<target name="init">
-		<mkdir dir="${lola.release.path}"/>
-		<mkdir dir="${lola.dev.path}"/>
-		<mkdir dir="${lola.tmp.path}"/>
+		<mkdir dir="${lola.release.dir}"/>
+		<mkdir dir="${lola.dev.dir}"/>
+		<mkdir dir="${lola.tmp.dir}"/>
 	</target>
 
 	<!-- unify core and modules -->
 	<target name="unify" depends="init">
-		<concat destfile="${lola.tmp.path}/unified.js" force="no">
-			<fileset dir="${lola.src.path}" includes="core.js,sizzle.js"/>
-			<fileset dir="${lola.src.path}/modules" includes="*.js"/>
+		<concat destfile="${lola.tmp.dir}/unified.js" force="no">
+			<fileset dir="${lola.src.dir}" includes="core.js,sizzle.js"/>
+			<fileset dir="${lola.src.dir}/modules" includes="*.js"/>
 		</concat>
 	</target>
 
@@ -53,42 +42,42 @@
 	<target name="compile" depends="unify">
 		<jscomp compilationLevel="simple"
 		        debug="false"
-		        output="${lola.tmp.path}/temp.js">
-			<sources dir="${lola.tmp.path}">
+		        output="${lola.tmp.dir}/temp.js">
+			<sources dir="${lola.tmp.dir}">
 				<file name="unified.js"/>
 			</sources>
 		</jscomp>
-		<concat destfile="${lola.tmp.path}/compressed.js">
+		<concat destfile="${lola.tmp.dir}/compressed.js">
 			<header filtering="no" trimleading="yes" file="${lola.src.dir}/resources/header.txt"/>
-			<fileset dir="${lola.tmp.path}" includes="temp.js"/>
+			<fileset dir="${lola.tmp.dir}" includes="temp.js"/>
 		</concat>
 	</target>
 
 	<!-- copy and alias unified file -->
 	<target name="copy-unified" depends="unify">
 		<!-- copy versioned file -->
-		<copy file="${lola.tmp.path}/unified.js"
-		      tofile="${lola.dev.path}/lola-${lola.version}.js"/>
+		<copy file="${lola.tmp.dir}/unified.js"
+		      tofile="${lola.dev.dir}/lola-${lola.version}.js"/>
 		<!-- make new symlink -->
-		<symlink link="${lola.dev.path}/lola.js"
+		<symlink link="${lola.dev.dir}/lola.js"
 		         overwrite="true"
-		         resource="${lola.dev.path}/lola-${lola.version}.js"/>
+		         resource="${lola.dev.dir}/lola-${lola.version}.js"/>
 	</target>
 
 	<!-- copy and alias compressed file -->
 	<target name="copy-compressed" depends="compile">
 		<!-- copy versioned file -->
-		<copy file="${lola.tmp.path}/compressed.js"
-		      tofile="${lola.release.path}/lola-${lola.version}.min.js"/>
+		<copy file="${lola.tmp.dir}/compressed.js"
+		      tofile="${lola.release.dir}/lola-${lola.version}.min.js"/>
 		<!-- make new symlink -->
-		<symlink link="${lola.release.path}/lola.min.js"
+		<symlink link="${lola.release.dir}/lola.min.js"
 		         overwrite="true"
-		         resource="${lola.release.path}/lola-${lola.version}.min.js"/>
+		         resource="${lola.release.dir}/lola-${lola.version}.min.js"/>
 	</target>
 
 	<!-- cleanup tmp files -->
 	<target name="cleanup">
-		<delete dir="${lola.tmp.path}"/>
+		<delete dir="${lola.tmp.dir}"/>
 	</target>
 
 </project>

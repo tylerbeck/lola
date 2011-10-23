@@ -258,14 +258,14 @@
 		addDOMListener: function( target, type, handler, useCapture ) {
 			//if ( target.hasOwnProperty('nodeType') && (target.nodeType == 1 || target.nodeType == 9)){
 			type = lola.event.map[type] ? lola.event.map[type] : [type];
-			type.forEach( function() {
+			type.forEach( function(t) {
 				try {
 					if ( target.addEventListener )
-						target.addEventListener( type, handler, useCapture );
+						target.addEventListener( t, handler, useCapture );
 					else if ( lola.support.msEvent )
-						target.attachEvent( 'on' + type, handler );
-					else if ( target['on' + type.toLowerCase()] == null )
-						target['on' + type.toLowerCase()] = handler;
+						target.attachEvent( 'on' + t, handler );
+					else if ( target['on' + t.toLowerCase()] == null )
+						target['on' + t.toLowerCase()] = handler;
 				}
 				catch( error ) {
 					//console.info( 'lola.event.addDOMListener error' );
@@ -280,14 +280,14 @@
 		removeDOMListener: function( target, type, handler ) {
 			//if ( target.hasOwnProperty('nodeType') && (target.nodeType == 1 || target.nodeType == 9)){
 			type = lola.event.map[type] ? lola.event.map[type] : [type];
-			type.forEach( function() {
+			type.forEach( function(t) {
 				try {
 					if ( target.removeEventListener )
-						target.removeEventListener( type, handler, false );
+						target.removeEventListener( t, handler, false );
 					else if ( lola.support.msEvent )
-						target.detachEvent( 'on' + type, handler );
-					else if ( target['on' + type.toLowerCase()] == null )
-						delete target['on' + type.toLowerCase()];
+						target.detachEvent( 'on' + t, handler );
+					else if ( target['on' + t.toLowerCase()] == null )
+						delete target['on' + t.toLowerCase()];
 				}
 				catch( error ) {
 					//console.info( 'lola.event.removeDOMListener error' );

@@ -1,7 +1,7 @@
 /***********************************************************************
  *    Framework: lola JavaScript Framework
- *       Module: Math
- *  Description: math module
+ *       Module: Utility
+ *  Description: utility module
  *          Author: Copyright 2011, Tyler Beck
  ***********************************************************************/
 (function( lola ) {
@@ -12,7 +12,7 @@
 		// Attributes
 		//==================================================================
 		//module registration namespace
-		namespace: "math",
+		namespace: "math.geom",
 
 		//module dependencies
 		dependencies: [],
@@ -28,24 +28,34 @@
 		// initialize - module initialization function
 		//------------------------------------------------------------------
 		initialize: function() {
-			if ( !lola.math.initialized ) {
-				//console.info('lola.math.initialize');
+			if ( !lola.math.geom.initialized ) {
+				//console.info('lola.math.tvm.initialize');
 
 				//this framework is dependent on lola framework
 				if ( !lola ) throw new Error( 'lola not defined!' );
 
-				lola.math.initialized = true;
+
+				lola.math.geom.initialized = true;
 			}
 		},
 
+
 		//------------------------------------------------------------------
-		// initialize - module initialization function
+		// distance
 		//------------------------------------------------------------------
-		normalizeRadians: function( value ) {
-			if (value >= 0)
-				return value - Math.floor( value/(2*Math.PI) )*2*Math.PI;
-			else
-				return value + Math.floor( value/(-2*Math.PI) )*2*Math.PI;
+		distance: function( p1, p2 ){
+			return Math.sqrt( Math.pow(p2.x-p1.x,2) + Math.pow(p2.y-p1.y,2)  );
+		},
+
+		//------------------------------------------------------------------
+		// distance
+		//------------------------------------------------------------------
+		offsetAngle: function( point, angle, distance ){
+			console.log('getting offset of: ['+point.x+','+point.y+'] a:' + angle+' d:'+distance );
+			var offset = {x:point.x, y:point.y};
+			offset.x += Math.cos( angle ) * distance;
+			offset.y += Math.sin( angle ) * distance;
+			return offset;
 		},
 
 		//==================================================================
@@ -53,51 +63,9 @@
 		//==================================================================
 		SelectionPrototype: {
 
-			maxValue: function( getVal ) {
-				return this.compareValues( getVal, Math.max, 0 );
-			},
-
-			minValue: function( getVal ) {
-				return this.compareValues( getVal, Math.min, 0xFFFFFF );
-			},
-
-			totalValue: function( getVal ) {
-				return this.compareValues( getVal, function( a, b ) {
-					return a + b;
-				}, 0 );
-			},
-
-			avgValue: function( getVal ) {
-				return this.totalValue( getVal ) / this.elements.length;
-			},
-
-
-			summaryValue: function( type, getVal ) {
-				if ( typeof type === 'number' ) {
-					return this.valueAtIndex( getVal, type );
-				}
-				else {
-					switch ( type ) {
-						case 'min':
-							return this.minValue( getVal );
-							break;
-						case 'max':
-							return this.maxValue( getVal );
-							break;
-						case 'avg':
-							return this.avgValue( getVal );
-							break;
-						default:
-							return this.totalValue( getVal );
-							break;
-					}
-				}
-				return 0;
-			}
 
 		}
 
 	};
-
 	lola.registerModule( Module );
 })( lola );

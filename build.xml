@@ -1,83 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="lola" default="build">
 
-	<!-- load the build properties files -->
-	<property file="./build.properties"/>
-
 	<!-- add closure compiler task definition -->
 	<taskdef name="jscomp"
 	         classname="com.google.javascript.jscomp.ant.CompileTask"
-	         classpath="lib/closurecompiler/compiler.jar"/>
-
-	<!-- define top level targets -->
-	<target name="build" depends="copy-unified,copy-compressed,cleanup"/>
-	<target name="build-clean" depends="clean,copy-unified,copy-compressed,cleanup"/>
-	<target name="build-dev" depends="clean,copy-unified,cleanup"/>
-	<target name="build-clean-dev" depends="clean,copy-unified,cleanup"/>
+	         classpath="assets/ant-tasks/closure-compiler/compiler.jar" />
 
 
-	<!-- delete directory structure -->
-	<target name="clean">
-		<delete dir="${lola.release.dir}"/>
-		<delete dir="${lola.dev.dir}"/>
-		<delete dir="${lola.tmp.dir}"/>
+	<target name="build" depends="init,copy-unified,copy-compressed,create-docs,cleanup" />
+
+	<target name="build-docs" depends="init,create-docs,cleanup">
 	</target>
 
-	<!-- initialize directory structure -->
+
+	<target name="cleanup">
+		<delete dir="tmp"/>
+		<delete dir="out"/>
+	</target>
+
 	<target name="init">
-		<mkdir dir="${lola.release.dir}"/>
-		<mkdir dir="${lola.dev.dir}"/>
-		<mkdir dir="${lola.tmp.dir}"/>
+		<mkdir dir="tmp"/>
+		<mkdir dir="framework/bin"/>
+		<delete >
+			<fileset dir="documentation">
+				<exclude name="*.iml"/>
+			</fileset>
+		</delete>
 	</target>
+
 
 	<!-- unify core and modules -->
-	<target name="unify" depends="init">
-		<concat destfile="${lola.tmp.dir}/unified.js" force="no">
-			<fileset dir="${lola.src.dir}" includes="core.js,sizzle.js"/>
-			<fileset dir="${lola.src.dir}/modules" includes="*.js"/>
+	<target name="unify-scripts" depends="init" >
+		<concat destfile="tmp/unified.js" force="no">
+			<fileset dir="framework/source/" includes="core.js"/>
+			<fileset dir="framework/source/external/" includes="sizzle.js"/>
+			<fileset dir="framework/source/modules" includes="*.js"/>
 		</concat>
 	</target>
 
+
 	<!-- compile unified script -->
-	<target name="compile" depends="unify">
+	<target name="compile-lola" depends="unify-scripts">
 		<jscomp compilationLevel="simple"
 		        debug="false"
-		        output="${lola.tmp.dir}/temp.js">
-			<sources dir="${lola.tmp.dir}">
+		        output="tmp/temp.js">
+			<sources dir="tmp">
 				<file name="unified.js"/>
 			</sources>
 		</jscomp>
-		<concat destfile="${lola.tmp.dir}/compressed.js">
-			<header filtering="no" trimleading="yes" file="${lola.src.dir}/resources/header.txt"/>
-			<fileset dir="${lola.tmp.dir}" includes="temp.js"/>
+		<concat destfile="tmp/compressed.js">
+			<fileset dir="tmp" includes="temp.js"/>
 		</concat>
 	</target>
 
 	<!-- copy and alias unified file -->
-	<target name="copy-unified" depends="unify">
+	<target name="copy-unified" depends="unify-scripts">
 		<!-- copy versioned file -->
-		<copy file="${lola.tmp.dir}/unified.js"
-		      tofile="${lola.dev.dir}/lola-${lola.version}.js"/>
-		<!-- make new symlink -->
-		<symlink link="${lola.dev.dir}/lola.js"
-		         overwrite="true"
-		         resource="${lola.dev.dir}/lola-${lola.version}.js"/>
+		<copy file="tmp/unified.js"
+		      tofile="framework/bin/lola.js"/>
 	</target>
+
 
 	<!-- copy and alias compressed file -->
-	<target name="copy-compressed" depends="compile">
+	<target name="copy-compressed" depends="compile-lola">
 		<!-- copy versioned file -->
-		<copy file="${lola.tmp.dir}/compressed.js"
-		      tofile="${lola.release.dir}/lola-${lola.version}.min.js"/>
-		<!-- make new symlink -->
-		<symlink link="${lola.release.dir}/lola.min.js"
-		         overwrite="true"
-		         resource="${lola.release.dir}/lola-${lola.version}.min.js"/>
+		<copy file="tmp/compressed.js"
+		      tofile="framework/bin/lola.min.js"/>
 	</target>
 
-	<!-- cleanup tmp files -->
-	<target name="cleanup">
-		<delete dir="${lola.tmp.dir}"/>
+	<!-- create documentation -->
+	<target name="create-docs" depends="unify-scripts">
+		<!-- copy versioned file -->
+		<exec executable="assets/java-libs/jsdoc/jsdoc" failonerror="true">
+			<arg path="framework/source/test.js"/>
+			<!--<arg path="framework/source/modules/"/>-->
+		</exec>
+		<copy todir="documentation" overwrite="true" >
+			<fileset dir="out" includes="**/*.*"/>
+		</copy>
 	</target>
+
+
+
 
 </project>

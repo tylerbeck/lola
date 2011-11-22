@@ -1,0 +1,270 @@
+<docs>
+	<doc>
+		<comment>/**
+		 * @description selector
+		 */</comment>
+		<meta>
+			<lineno>48</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode848678846</id>
+				<name>selector</name>
+				<type>OBJECTLIT</type>
+				<node>OBJECT</node>
+				<value>OBJECTLIT</value>
+			</code>
+		</meta>
+		<description>selector</description>
+		<name>selector</name>
+		<kind>member</kind>
+		<memberof>&amp;lt;anonymous>~lola</memberof>
+		<scope>static</scope>
+		<longname>&amp;lt;anonymous>~lola.selector</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>selector</id>
+	</doc>
+	<doc>
+		<comment>/**
+			 * @description  a
+			 */</comment>
+		<meta>
+			<lineno>52</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode529858968</id>
+				<name>a</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>A</value>
+			</code>
+		</meta>
+		<description>a</description>
+		<name>a</name>
+		<kind>member</kind>
+		<memberof>&amp;lt;anonymous>~lola.selector</memberof>
+		<scope>static</scope>
+		<longname>&amp;lt;anonymous>~lola.selector.a</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>a</id>
+		<ancestors>&amp;lt;a href="0473b2793b.html#selector">.selector&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+			 * @description  b
+			 */</comment>
+		<meta>
+			<lineno>57</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode1287251034</id>
+				<name>b</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>B</value>
+			</code>
+		</meta>
+		<description>b</description>
+		<name>b</name>
+		<kind>member</kind>
+		<memberof>&amp;lt;anonymous>~lola.selector</memberof>
+		<scope>static</scope>
+		<longname>&amp;lt;anonymous>~lola.selector.b</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>b</id>
+		<ancestors>&amp;lt;a href="0473b2793b.html#selector">.selector&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+			 * @description  c
+			 */</comment>
+		<meta>
+			<lineno>62</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode1712325475</id>
+				<name>c</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>C</value>
+			</code>
+		</meta>
+		<description>c</description>
+		<name>c</name>
+		<kind>member</kind>
+		<memberof>&amp;lt;anonymous>~lola.selector</memberof>
+		<scope>static</scope>
+		<longname>&amp;lt;anonymous>~lola.selector.c</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>c</id>
+		<ancestors>&amp;lt;a href="0473b2793b.html#selector">.selector&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+	 * @namespace lola
+	 * @description framework root object
+	 * @customOne this is custom 1
+	 * @customTwo this is custom 2
+	 */</comment>
+		<meta>
+			<lineno>2</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code/></meta>
+		<kind>namespace</kind>
+		<name>lola</name>
+		<description>framework root object</description>
+		<tags>
+			<originalTitle>customOne</originalTitle>
+			<title>customone</title>
+			<text>this is custom 1</text>
+			<value>this is custom 1</value>
+		</tags>
+		<tags>
+			<originalTitle>customTwo</originalTitle>
+			<title>customtwo</title>
+			<text>this is custom 2</text>
+			<value>this is custom 2</value>
+		</tags>
+		<longname>lola</longname>
+		<signature></signature>
+		<attribs></attribs>
+		<id>lola</id>
+	</doc>
+	<doc>
+		<comment>/**
+	 * @memberof lola
+	 * @description Array Module
+	 */</comment>
+		<meta>
+			<lineno>105</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode1730147382</id>
+				<name>array</name>
+				<type>OBJECTLIT</type>
+				<node>OBJECT</node>
+				<value>OBJECTLIT</value>
+			</code>
+		</meta>
+		<memberof>lola</memberof>
+		<description>Array Module</description>
+		<name>array</name>
+		<kind>member</kind>
+		<scope>static</scope>
+		<longname>lola.array</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>array</id>
+		<ancestors>&amp;lt;a href="lola.html">lola&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */</comment>
+		<meta>
+			<lineno>113</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode2814081</id>
+				<name>methods</name>
+				<type>OBJECTLIT</type>
+				<node>OBJECT</node>
+				<value>OBJECTLIT</value>
+			</code>
+		</meta>
+		<description>module's selector methods</description>
+		<type>
+			<names>Object</names>
+			<optional/>			<nullable/>			<variable/></type>
+		<name>methods</name>
+		<kind>member</kind>
+		<memberof>lola.array.getMethods</memberof>
+		<longname>lola.array.getMethods~methods</longname>
+		<scope>inner</scope>
+		<signature>&amp;lt;span class="type-signature"> :Object&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;inner> &amp;lt;/span></attribs>
+		<id>methods</id>
+	</doc>
+	<doc>
+		<comment>/**
+				 * @description  d
+				 */</comment>
+		<meta>
+			<lineno>117</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode2126858590</id>
+				<name>d</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>D</value>
+			</code>
+		</meta>
+		<description>d</description>
+		<name>d</name>
+		<kind>member</kind>
+		<memberof>lola.array.getMethods~methods</memberof>
+		<scope>static</scope>
+		<longname>lola.array.getMethods~methods.d</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>d</id>
+		<ancestors>&amp;lt;a href="lola.array.getMethods.html#methods">~methods&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+				 * @description  e
+				 */</comment>
+		<meta>
+			<lineno>122</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode1902716336</id>
+				<name>e</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>E</value>
+			</code>
+		</meta>
+		<description>e</description>
+		<name>e</name>
+		<kind>member</kind>
+		<memberof>lola.array.getMethods~methods</memberof>
+		<scope>static</scope>
+		<longname>lola.array.getMethods~methods.e</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>e</id>
+		<ancestors>&amp;lt;a href="lola.array.getMethods.html#methods">~methods&amp;lt;/a>.</ancestors>
+	</doc>
+	<doc>
+		<comment>/**
+				 * @description f
+				 */</comment>
+		<meta>
+			<lineno>127</lineno>
+			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<code>
+				<id>astnode647057258</id>
+				<name>f</name>
+				<type>STRING</type>
+				<node>OBJECT</node>
+				<value>F</value>
+			</code>
+		</meta>
+		<description>f</description>
+		<name>f</name>
+		<kind>member</kind>
+		<memberof>lola.array.getMethods~methods</memberof>
+		<scope>static</scope>
+		<longname>lola.array.getMethods~methods.f</longname>
+		<signature>&amp;lt;span class="type-signature">&amp;lt;/span></signature>
+		<attribs>&amp;lt;span class="type-signature">&amp;lt;static> &amp;lt;/span></attribs>
+		<id>f</id>
+		<ancestors>&amp;lt;a href="lola.array.getMethods.html#methods">~methods&amp;lt;/a>.</ancestors>
+	</doc>
+</docs>

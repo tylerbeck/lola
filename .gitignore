@@ -1,1 +1,3 @@
 lola.iml
+framework/src/*
+.idea/*

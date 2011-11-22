@@ -5,9 +5,9 @@
 		 */</comment>
 		<meta>
 			<lineno>48</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode848678846</id>
+				<id>astnode1232704349</id>
 				<name>selector</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -30,9 +30,9 @@
 			 */</comment>
 		<meta>
 			<lineno>52</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode529858968</id>
+				<id>astnode1077868560</id>
 				<name>a</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -56,9 +56,9 @@
 			 */</comment>
 		<meta>
 			<lineno>57</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1287251034</id>
+				<id>astnode9949215</id>
 				<name>b</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -82,9 +82,9 @@
 			 */</comment>
 		<meta>
 			<lineno>62</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1712325475</id>
+				<id>astnode1578101576</id>
 				<name>c</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -111,7 +111,7 @@
 	 */</comment>
 		<meta>
 			<lineno>2</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code/></meta>
 		<kind>namespace</kind>
 		<name>lola</name>
@@ -140,9 +140,9 @@
 	 */</comment>
 		<meta>
 			<lineno>105</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1730147382</id>
+				<id>astnode51619133</id>
 				<name>array</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -167,9 +167,9 @@
 			 */</comment>
 		<meta>
 			<lineno>113</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode2814081</id>
+				<id>astnode344078580</id>
 				<name>methods</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -195,9 +195,9 @@
 				 */</comment>
 		<meta>
 			<lineno>117</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode2126858590</id>
+				<id>astnode774471675</id>
 				<name>d</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -221,9 +221,9 @@
 				 */</comment>
 		<meta>
 			<lineno>122</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1902716336</id>
+				<id>astnode1953619005</id>
 				<name>e</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -247,9 +247,9 @@
 				 */</comment>
 		<meta>
 			<lineno>127</lineno>
-			<filename>/Users/tylerbeck/Projects/lola/framework/source/test.js</filename>
+			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode647057258</id>
+				<id>astnode1701136111</id>
 				<name>f</name>
 				<type>STRING</type>
 				<node>OBJECT</node>

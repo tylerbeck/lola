@@ -47,6 +47,12 @@
 		 */
 		safeDeleteHooks: [],
 
+		/**
+		 * @private
+		 * @type {Boolean}
+		 */
+		debugMode: true,
+
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -57,7 +63,7 @@
 		 */
 		initialize: function( wnd ) {
 			if (!lola.initialized) {
-				console.log('lola::initialize');
+				lola.debug('lola::initialize');
 				lola.initialized  = true;
 				window = wnd;
 
@@ -107,7 +113,7 @@
 		 * @return {Object}
 		 */
 		getPackage: function( base, chain ) {
-			//console.log('lola::getPackage');
+			//lola.debug('lola::getPackage');
 			var result = base;
 			if ( typeof chain === 'string' ) {
 				var parts = chain.split( '.' );
@@ -130,7 +136,7 @@
 		 * @return {void}
 		 */
 		extend: function( target, source, overwrite, errors ) {
-			//console.log('lola::extend');
+			//lola.debug('lola::extend');
 			//TODO: make deep copy an option
 			if ( overwrite == undefined ) overwrite = false;
 			if ( errors == null ) errors = false;
@@ -201,7 +207,7 @@
 		 * @return {void}
 		 */
 		registerModule: function( module ) {
-			console.log('lola::registerModule - ' + module.getNamespace() );
+			lola.debug('lola::registerModule - ' + module.getNamespace() );
 			//add module dependencies
 			lola.dependencies.push( module.getDependencies() );
 
@@ -233,7 +239,7 @@
 		 * @return {void}
 		 */
 		safeDelete: function( object, property ) {
-			//console.log('lola::safeDelete');
+			//lola.debug('lola::safeDelete');
 			var obj = (property) ? object[ property ] : object;
 			for ( var i = this.safeDeleteHooks.length - 1; i >= 0; i-- ) {
 				var hook = this.safeDeleteHooks[i];
@@ -295,6 +301,12 @@
 			}
 
 			return check;
+		},
+
+		debug: function( msg ){
+			if (lola.debugMode) {
+				console.log(msg);
+			}
 		},
 
 		//==================================================================

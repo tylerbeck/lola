@@ -9,8 +9,7 @@
 
 	<target name="build" depends="init,copy-unified,copy-compressed,create-docs,cleanup" />
 
-	<target name="build-docs" depends="init,create-docs,cleanup">
-	</target>
+	<target name="build-docs" depends="init,create-docs,cleanup"/>
 
 
 	<target name="cleanup">
@@ -79,8 +78,6 @@
 			<fileset dir="out" includes="**/*.*"/>
 		</copy>
 	</target>
-
-
 
 
 </project>

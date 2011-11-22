@@ -22,7 +22,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log('lola.MODULE::preinitialize');
+			lola.debug('lola.MODULE::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -39,7 +39,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.MODULE::initialize');
+			lola.debug('lola.MODULE::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 

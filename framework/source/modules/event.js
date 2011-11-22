@@ -41,7 +41,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.event::preinitialize' );
+			lola.debug( 'lola.event::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -57,7 +57,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.event::initialize' );
+			lola.debug( 'lola.event::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -282,7 +282,7 @@
 		 */
 		trigger: function( object, type, bubbles, cancelable, data ) {
 			/*console.group('lola.event.trigger: '+type);
-			console.log(object);
+			lola.debug(object);
 			console.groupEnd();*/
 			var args = [object, type];
 			var names = ['target','type'];
@@ -688,7 +688,7 @@
 			return data;
 		},
 		mouseOver: function( event ){
-			//console.log('hover.mouseover');
+			//lola.debug('hover.mouseover');
 			lola.event.addListener( event.currentTarget, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( event.currentTarget );
 			data.hasIntent = true;
@@ -696,13 +696,13 @@
 				data.timeout = setTimeout( lola.event.hooks.hover.confirm, data.wait, event.currentTarget )
 		},
 		mouseOut: function( event ){
-			//console.log('hover.mouseout')
+			//lola.debug('hover.mouseout')
 			lola.event.removeListener( event.currentTarget, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( event.currentTarget );
 			data.hasIntent = false;
 		},
 		confirm: function( target ){
-			//console.log('hover.confirm')
+			//lola.debug('hover.confirm')
 			lola.event.removeListener( target, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( target );
 			data.timeout = -1;

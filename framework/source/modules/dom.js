@@ -27,7 +27,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.dom::initialize');
+			lola.debug('lola.dom::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 

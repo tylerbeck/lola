@@ -75,7 +75,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log('lola.support::preinitialize');
+			lola.debug('lola.support::preinitialize');
 			//DOM script eval support
 			var root = document.documentElement;
 			var script = document.createElement( 'script' );
@@ -139,7 +139,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.support::initialize');
+			lola.debug('lola.support::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 

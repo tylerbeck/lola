@@ -21,7 +21,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.array::initialize');
+			lola.debug('lola.array::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 

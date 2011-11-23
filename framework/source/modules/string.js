@@ -22,7 +22,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.string::preinitialize' );
+			lola.debug( 'lola.string::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -38,7 +38,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.string::initialize' );
+			lola.debug( 'lola.string::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -111,32 +111,6 @@
 			}
 
 			return parts.join();
-		},
-
-		/**
-		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
-		 * @param {String} str
-		 */
-		encode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /</g, '&lt;' );
-				str = str.replace( />/g, '&gt;' );
-				str = str.replace( /&/g, '&amp;' );
-			}
-			return str;
-		},
-
-		/**
-		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
-		 * @param {String} str
-		 */
-		unencode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /\$lt;/g, '<' );
-				str = str.replace( /&gt;/g, '>' );
-				str = str.replace( /&amp;/g, '&' );
-			}
-			return str;
 		},
 
 

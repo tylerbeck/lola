@@ -27,7 +27,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.dom::initialize');
+			lola.debug('lola.dom::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -227,6 +227,19 @@
 				appendChild: function( node ) {
 					if ( this.elements.length > 0 ) {
 						this.get().appendChild( node );
+					}
+
+					return this;
+				},
+
+				/**
+				 * @description  prepends node to first selection element in DOM
+				 * @param {Element} node
+				 * @return {lola.Selector}
+				 */
+				prependChild: function( node ) {
+					if ( this.elements.length > 0 ) {
+						this.get().insertBefore( node, this.get().firstChild );
 					}
 
 					return this;

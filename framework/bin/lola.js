@@ -47,6 +47,12 @@
 		 */
 		safeDeleteHooks: [],
 
+		/**
+		 * @private
+		 * @type {Boolean}
+		 */
+		debugMode: true,
+
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -57,7 +63,7 @@
 		 */
 		initialize: function( wnd ) {
 			if (!lola.initialized) {
-				console.log('lola::initialize');
+				lola.debug('lola::initialize');
 				lola.initialized  = true;
 				window = wnd;
 
@@ -107,7 +113,7 @@
 		 * @return {Object}
 		 */
 		getPackage: function( base, chain ) {
-			//console.log('lola::getPackage');
+			//lola.debug('lola::getPackage');
 			var result = base;
 			if ( typeof chain === 'string' ) {
 				var parts = chain.split( '.' );
@@ -130,7 +136,7 @@
 		 * @return {void}
 		 */
 		extend: function( target, source, overwrite, errors ) {
-			//console.log('lola::extend');
+			//lola.debug('lola::extend');
 			//TODO: make deep copy an option
 			if ( overwrite == undefined ) overwrite = false;
 			if ( errors == null ) errors = false;
@@ -201,7 +207,7 @@
 		 * @return {void}
 		 */
 		registerModule: function( module ) {
-			console.log('lola::registerModule - ' + module.getNamespace() );
+			lola.debug('lola::registerModule - ' + module.getNamespace() );
 			//add module dependencies
 			lola.dependencies.push( module.getDependencies() );
 
@@ -233,7 +239,7 @@
 		 * @return {void}
 		 */
 		safeDelete: function( object, property ) {
-			//console.log('lola::safeDelete');
+			//lola.debug('lola::safeDelete');
 			var obj = (property) ? object[ property ] : object;
 			for ( var i = this.safeDeleteHooks.length - 1; i >= 0; i-- ) {
 				var hook = this.safeDeleteHooks[i];
@@ -295,6 +301,12 @@
 			}
 
 			return check;
+		},
+
+		debug: function( msg ){
+			if (lola.debugMode) {
+				console.log(msg);
+			}
 		},
 
 		//==================================================================
@@ -525,1448 +537,232 @@
 })( window );
 
 
-/**
- * @license
- * Sizzle CSS Selector Engine
- *  Copyright 2011, The Dojo Foundation
- *  Released under the MIT, BSD, and GPL Licenses.
- *  More information: http://sizzlejs.com/
- */
-(function(){
-
-var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^\[\]]*\]|['"][^'"]*['"]|[^\[\]'"]+)+\]|\\.|[^ >+~,(\[\\]+)+|[>+~])(\s*,\s*)?((?:.|\r|\n)*)/g,
-	expando = "sizcache" + (Math.random() + '').replace('.', ''),
-	done = 0,
-	toString = Object.prototype.toString,
-	hasDuplicate = false,
-	baseHasDuplicate = true,
-	rBackslash = /\\/g,
-	rReturn = /\r\n/g,
-	rNonWord = /\W/;
-
-// Here we check if the JavaScript engine is using some sort of
-// optimization where it does not always call our comparision
-// function. If that is the case, discard the hasDuplicate value.
-//   Thus far that includes Google Chrome.
-[0, 0].sort(function() {
-	baseHasDuplicate = false;
-	return 0;
-});
-
-var Sizzle = function( selector, context, results, seed ) {
-	results = results || [];
-	context = context || document;
-
-	var origContext = context;
-
-	if ( context.nodeType !== 1 && context.nodeType !== 9 ) {
-		return [];
-	}
-
-	if ( !selector || typeof selector !== "string" ) {
-		return results;
-	}
-
-	var m, set, checkSet, extra, ret, cur, pop, i,
-		prune = true,
-		contextXML = Sizzle.isXML( context ),
-		parts = [],
-		soFar = selector;
-
-	// Reset the position of the chunker regexp (start from head)
-	do {
-		chunker.exec( "" );
-		m = chunker.exec( soFar );
-
-		if ( m ) {
-			soFar = m[3];
-
-			parts.push( m[1] );
-
-			if ( m[2] ) {
-				extra = m[3];
-				break;
-			}
-		}
-	} while ( m );
-
-	if ( parts.length > 1 && origPOS.exec( selector ) ) {
-
-		if ( parts.length === 2 && Expr.relative[ parts[0] ] ) {
-			set = posProcess( parts[0] + parts[1], context, seed );
-
-		} else {
-			set = Expr.relative[ parts[0] ] ?
-				[ context ] :
-				Sizzle( parts.shift(), context );
-
-			while ( parts.length ) {
-				selector = parts.shift();
-
-				if ( Expr.relative[ selector ] ) {
-					selector += parts.shift();
-				}
-
-				set = posProcess( selector, set, seed );
-			}
-		}
-
-	} else {
-		// Take a shortcut and set the context if the root selector is an ID
-		// (but not if it'll be faster if the inner selector is an ID)
-		if ( !seed && parts.length > 1 && context.nodeType === 9 && !contextXML &&
-				Expr.match.ID.test(parts[0]) && !Expr.match.ID.test(parts[parts.length - 1]) ) {
-
-			ret = Sizzle.find( parts.shift(), context, contextXML );
-			context = ret.expr ?
-				Sizzle.filter( ret.expr, ret.set )[0] :
-				ret.set[0];
-		}
-
-		if ( context ) {
-			ret = seed ?
-				{ expr: parts.pop(), set: makeArray(seed) } :
-				Sizzle.find( parts.pop(), parts.length === 1 && (parts[0] === "~" || parts[0] === "+") && context.parentNode ? context.parentNode : context, contextXML );
-
-			set = ret.expr ?
-				Sizzle.filter( ret.expr, ret.set ) :
-				ret.set;
-
-			if ( parts.length > 0 ) {
-				checkSet = makeArray( set );
-
-			} else {
-				prune = false;
-			}
-
-			while ( parts.length ) {
-				cur = parts.pop();
-				pop = cur;
-
-				if ( !Expr.relative[ cur ] ) {
-					cur = "";
-				} else {
-					pop = parts.pop();
-				}
-
-				if ( pop == null ) {
-					pop = context;
-				}
-
-				Expr.relative[ cur ]( checkSet, pop, contextXML );
-			}
-
-		} else {
-			checkSet = parts = [];
-		}
-	}
-
-	if ( !checkSet ) {
-		checkSet = set;
-	}
-
-	if ( !checkSet ) {
-		Sizzle.error( cur || selector );
-	}
-
-	if ( toString.call(checkSet) === "[object Array]" ) {
-		if ( !prune ) {
-			results.push.apply( results, checkSet );
-
-		} else if ( context && context.nodeType === 1 ) {
-			for ( i = 0; checkSet[i] != null; i++ ) {
-				if ( checkSet[i] && (checkSet[i] === true || checkSet[i].nodeType === 1 && Sizzle.contains(context, checkSet[i])) ) {
-					results.push( set[i] );
-				}
-			}
-
-		} else {
-			for ( i = 0; checkSet[i] != null; i++ ) {
-				if ( checkSet[i] && checkSet[i].nodeType === 1 ) {
-					results.push( set[i] );
-				}
-			}
-		}
-
-	} else {
-		makeArray( checkSet, results );
-	}
-
-	if ( extra ) {
-		Sizzle( extra, origContext, results, seed );
-		Sizzle.uniqueSort( results );
-	}
-
-	return results;
-};
-
-Sizzle.uniqueSort = function( results ) {
-	if ( sortOrder ) {
-		hasDuplicate = baseHasDuplicate;
-		results.sort( sortOrder );
-
-		if ( hasDuplicate ) {
-			for ( var i = 1; i < results.length; i++ ) {
-				if ( results[i] === results[ i - 1 ] ) {
-					results.splice( i--, 1 );
-				}
-			}
-		}
-	}
-
-	return results;
-};
-
-Sizzle.matches = function( expr, set ) {
-	return Sizzle( expr, null, null, set );
-};
-
-Sizzle.matchesSelector = function( node, expr ) {
-	return Sizzle( expr, null, null, [node] ).length > 0;
-};
-
-Sizzle.find = function( expr, context, isXML ) {
-	var set, i, len, match, type, left;
-
-	if ( !expr ) {
-		return [];
-	}
-
-	for ( i = 0, len = Expr.order.length; i < len; i++ ) {
-		type = Expr.order[i];
-
-		if ( (match = Expr.leftMatch[ type ].exec( expr )) ) {
-			left = match[1];
-			match.splice( 1, 1 );
-
-			if ( left.substr( left.length - 1 ) !== "\\" ) {
-				match[1] = (match[1] || "").replace( rBackslash, "" );
-				set = Expr.find[ type ]( match, context, isXML );
-
-				if ( set != null ) {
-					expr = expr.replace( Expr.match[ type ], "" );
-					break;
-				}
-			}
-		}
-	}
-
-	if ( !set ) {
-		set = typeof context.getElementsByTagName !== "undefined" ?
-			context.getElementsByTagName( "*" ) :
-			[];
-	}
-
-	return { set: set, expr: expr };
-};
-
-Sizzle.filter = function( expr, set, inplace, not ) {
-	var match, anyFound,
-		type, found, item, filter, left,
-		i, pass,
-		old = expr,
-		result = [],
-		curLoop = set,
-		isXMLFilter = set && set[0] && Sizzle.isXML( set[0] );
-
-	while ( expr && set.length ) {
-		for ( type in Expr.filter ) {
-			if ( (match = Expr.leftMatch[ type ].exec( expr )) != null && match[2] ) {
-				filter = Expr.filter[ type ];
-				left = match[1];
-
-				anyFound = false;
-
-				match.splice(1,1);
-
-				if ( left.substr( left.length - 1 ) === "\\" ) {
-					continue;
-				}
-
-				if ( curLoop === result ) {
-					result = [];
-				}
-
-				if ( Expr.preFilter[ type ] ) {
-					match = Expr.preFilter[ type ]( match, curLoop, inplace, result, not, isXMLFilter );
-
-					if ( !match ) {
-						anyFound = found = true;
-
-					} else if ( match === true ) {
-						continue;
-					}
-				}
-
-				if ( match ) {
-					for ( i = 0; (item = curLoop[i]) != null; i++ ) {
-						if ( item ) {
-							found = filter( item, match, i, curLoop );
-							pass = not ^ found;
-
-							if ( inplace && found != null ) {
-								if ( pass ) {
-									anyFound = true;
-
-								} else {
-									curLoop[i] = false;
-								}
-
-							} else if ( pass ) {
-								result.push( item );
-								anyFound = true;
-							}
-						}
-					}
-				}
-
-				if ( found !== undefined ) {
-					if ( !inplace ) {
-						curLoop = result;
-					}
-
-					expr = expr.replace( Expr.match[ type ], "" );
-
-					if ( !anyFound ) {
-						return [];
-					}
-
-					break;
-				}
-			}
-		}
-
-		// Improper expression
-		if ( expr === old ) {
-			if ( anyFound == null ) {
-				Sizzle.error( expr );
-
-			} else {
-				break;
-			}
-		}
-
-		old = expr;
-	}
-
-	return curLoop;
-};
-
-Sizzle.error = function( msg ) {
-	throw new Error( "Syntax error, unrecognized expression: " + msg );
-};
-
-/**
- * Utility function for retreiving the text value of an array of DOM nodes
- * @param {Array|Element} elem
- */
-var getText = Sizzle.getText = function( elem ) {
-    var i, node,
-		nodeType = elem.nodeType,
-		ret = "";
-
-	if ( nodeType ) {
-		if ( nodeType === 1 || nodeType === 9 ) {
-			// Use textContent || innerText for elements
-			if ( typeof elem.textContent === 'string' ) {
-				return elem.textContent;
-			} else if ( typeof elem.innerText === 'string' ) {
-				// Replace IE's carriage returns
-				return elem.innerText.replace( rReturn, '' );
-			} else {
-				// Traverse it's children
-				for ( elem = elem.firstChild; elem; elem = elem.nextSibling) {
-					ret += getText( elem );
-				}
-			}
-		} else if ( nodeType === 3 || nodeType === 4 ) {
-			return elem.nodeValue;
-		}
-	} else {
-
-		// If no nodeType, this is expected to be an array
-		for ( i = 0; (node = elem[i]); i++ ) {
-			// Do not traverse comment nodes
-			if ( node.nodeType !== 8 ) {
-				ret += getText( node );
-			}
-		}
-	}
-	return ret;
-};
-
-var Expr = Sizzle.selectors = {
-	order: [ "ID", "NAME", "TAG" ],
-
-	match: {
-		ID: /#((?:[\w\u00c0-\uFFFF\-]|\\.)+)/,
-		CLASS: /\.((?:[\w\u00c0-\uFFFF\-]|\\.)+)/,
-		NAME: /\[name=['"]*((?:[\w\u00c0-\uFFFF\-]|\\.)+)['"]*\]/,
-		ATTR: /\[\s*((?:[\w\u00c0-\uFFFF\-]|\\.)+)\s*(?:(\S?=)\s*(?:(['"])(.*?)\3|(#?(?:[\w\u00c0-\uFFFF\-]|\\.)*)|)|)\s*\]/,
-		TAG: /^((?:[\w\u00c0-\uFFFF\*\-]|\\.)+)/,
-		CHILD: /:(only|nth|last|first)-child(?:\(\s*(even|odd|(?:[+\-]?\d+|(?:[+\-]?\d*)?n\s*(?:[+\-]\s*\d+)?))\s*\))?/,
-		POS: /:(nth|eq|gt|lt|first|last|even|odd)(?:\((\d*)\))?(?=[^\-]|$)/,
-		PSEUDO: /:((?:[\w\u00c0-\uFFFF\-]|\\.)+)(?:\((['"]?)((?:\([^\)]+\)|[^\(\)]*)+)\2\))?/
-	},
-
-	leftMatch: {},
-
-	attrMap: {
-		"class": "className",
-		"for": "htmlFor"
-	},
-
-	attrHandle: {
-		href: function( elem ) {
-			return elem.getAttribute( "href" );
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * @description Ag Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var agent = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+		/**
+		 * @description registration index
+		 * @private
+		 */
+		index: 0,
+
+		/**
+		 * @description registration map
+		 * @private
+		 */
+		map: {},
+
+		/**
+		 * @description initializers
+		 * @private
+		 */
+		initializers: [],
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.agent::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+			lola.safeDeleteHooks.push( {scope:this, fn:this.drop} );
+
+
+			//remove initialization method
+			delete lola.agent.preinitialize;
 		},
-		type: function( elem ) {
-			return elem.getAttribute( "type" );
-		}
-	},
 
-	relative: {
-		"+": function(checkSet, part){
-			var isPartStr = typeof part === "string",
-				isTag = isPartStr && !rNonWord.test( part ),
-				isPartStrNotTag = isPartStr && !isTag;
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.agent::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
 
-			if ( isTag ) {
-				part = part.toLowerCase();
-			}
+			//do module initialization
 
-			for ( var i = 0, l = checkSet.length, elem; i < l; i++ ) {
-				if ( (elem = checkSet[i]) ) {
-					while ( (elem = elem.previousSibling) && elem.nodeType !== 1 ) {}
 
-					checkSet[i] = isPartStrNotTag || elem && elem.nodeName.toLowerCase() === part ?
-						elem || false :
-						elem === part;
+
+			//remove initialization method
+			delete lola.agent.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "agent";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return ['event','data'];
+		},
+
+
+		/**
+		 * @description used to register an agent with the framework
+		 * @param {Object} agent object that implements the agent interface
+		 */
+		register: function( agent ) {
+			console.info('register agent: '+agent.name);
+			if (agent.sign && agent.drop) {
+				//setup namespace
+				var pkg = lola.getPkgChain( lola.agent, agent.name );
+
+				//copy module methods and attributes
+				lola.extend( pkg, agent, true );
+
+				//map agent
+				this.map[ agent.name ] = pkg;
+
+				//add initializer
+				if ( agent.initialize && typeof agent.initialize === "function" ) {
+					lola.agent.initializers.push( function() {
+						agent.initialize();
+					} );
 				}
+
+				//run preinitialization method if available
+				if ( agent.preinitialize && typeof agent.preinitialize === "function" ) {
+					agent.preinitialize();
+				}
+
+			}
+			else {
+				console.error( 'invalid agent implementation: '+name );
 			}
 
-			if ( isPartStrNotTag ) {
-				Sizzle.filter( part, checkSet, true );
+		},
+
+		/**
+		 * @description assign a client to an agent
+		 * @param {Object} client
+		 * @param {String} name name of registered agent
+		 */
+		assign: function( client, name ) {
+			var agent = lola.agent.map[ name ];
+			if (agent){
+				agent.sign( client );
+			}
+			else {
+				throw new Error("unknown agent: "+name);
 			}
 		},
 
-		">": function( checkSet, part ) {
-			var elem,
-				isPartStr = typeof part === "string",
-				i = 0,
-				l = checkSet.length;
+		/**
+		 * @description drop a client from an agent
+		 * @param {Object} client
+		 * @param {String} name name of registered agent
+		 */
+		drop: function( client, name ) {
+			var agents = {};
+			if (name == !undefined){
+				agents = lola.agent.map;
+			}
+			else if (typeof name == 'string'){
+				name.split(',').forEach( function(item){
+					agents[ item ] = lola.agent.map[ item ];
+				});
+			}
 
-			if ( isPartStr && !rNonWord.test( part ) ) {
-				part = part.toLowerCase();
-
-				for ( ; i < l; i++ ) {
-					elem = checkSet[i];
-
-					if ( elem ) {
-						var parent = elem.parentNode;
-						checkSet[i] = parent.nodeName.toLowerCase() === part ? parent : false;
-					}
-				}
-
-			} else {
-				for ( ; i < l; i++ ) {
-					elem = checkSet[i];
-
-					if ( elem ) {
-						checkSet[i] = isPartStr ?
-							elem.parentNode :
-							elem.parentNode === part;
-					}
-				}
-
-				if ( isPartStr ) {
-					Sizzle.filter( part, checkSet, true );
+			for (var i in agents){
+				var agent = agents[i];
+				if (agent){
+					agent.drop( client );
 				}
 			}
 		},
 
-		"": function(checkSet, part, isXML){
-			var nodeCheck,
-				doneName = done++,
-				checkFn = dirCheck;
 
-			if ( typeof part === "string" && !rNonWord.test( part ) ) {
-				part = part.toLowerCase();
-				nodeCheck = part;
-				checkFn = dirNodeCheck;
-			}
+		//==================================================================
+		// Classes
+		//==================================================================
 
-			checkFn( "parentNode", part, doneName, checkSet, nodeCheck, isXML );
-		},
 
-		"~": function( checkSet, part, isXML ) {
-			var nodeCheck,
-				doneName = done++,
-				checkFn = dirCheck;
 
-			if ( typeof part === "string" && !rNonWord.test( part ) ) {
-				part = part.toLowerCase();
-				nodeCheck = part;
-				checkFn = dirNodeCheck;
-			}
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
 
-			checkFn( "previousSibling", part, doneName, checkSet, nodeCheck, isXML );
-		}
-	},
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
 
-	find: {
-		ID: function( match, context, isXML ) {
-			if ( typeof context.getElementById !== "undefined" && !isXML ) {
-				var m = context.getElementById(match[1]);
-				// Check parentNode to catch when Blackberry 4.6 returns
-				// nodes that are no longer in the document #6963
-				return m && m.parentNode ? [m] : [];
-			}
-		},
+				/**
+				 * @description assigns an agent to selector elements
+				 * @param {String} agentName name of registered agent
+				 */
+				assignAgent: function( agentName ) {
+					this.foreach( function(item){
+						lola.agent.assign( item, agentName );
+					});
+					return this;
+				},
 
-		NAME: function( match, context ) {
-			if ( typeof context.getElementsByName !== "undefined" ) {
-				var ret = [],
-					results = context.getElementsByName( match[1] );
-
-				for ( var i = 0, l = results.length; i < l; i++ ) {
-					if ( results[i].getAttribute("name") === match[1] ) {
-						ret.push( results[i] );
-					}
+				/**
+				 * @description drops client from agent
+				 * @param {String} agentName name of registered agent
+				 */
+				dropAgent: function( agentName ) {
+					this.foreach( function(item){
+						lola.agent.drop( item, agentName );
+					})
 				}
 
-				return ret.length === 0 ? null : ret;
-			}
-		},
+			};
 
-		TAG: function( match, context ) {
-			if ( typeof context.getElementsByTagName !== "undefined" ) {
-				return context.getElementsByTagName( match[1] );
-			}
-		}
-	},
-	preFilter: {
-		CLASS: function( match, curLoop, inplace, result, not, isXML ) {
-			match = " " + match[1].replace( rBackslash, "" ) + " ";
+			return methods;
 
-			if ( isXML ) {
-				return match;
-			}
-
-			for ( var i = 0, elem; (elem = curLoop[i]) != null; i++ ) {
-				if ( elem ) {
-					if ( not ^ (elem.className && (" " + elem.className + " ").replace(/[\t\n\r]/g, " ").indexOf(match) >= 0) ) {
-						if ( !inplace ) {
-							result.push( elem );
-						}
-
-					} else if ( inplace ) {
-						curLoop[i] = false;
-					}
-				}
-			}
-
-			return false;
-		},
-
-		ID: function( match ) {
-			return match[1].replace( rBackslash, "" );
-		},
-
-		TAG: function( match, curLoop ) {
-			return match[1].replace( rBackslash, "" ).toLowerCase();
-		},
-
-		CHILD: function( match ) {
-			if ( match[1] === "nth" ) {
-				if ( !match[2] ) {
-					Sizzle.error( match[0] );
-				}
-
-				match[2] = match[2].replace(/^\+|\s*/g, '');
-
-				// parse equations like 'even', 'odd', '5', '2n', '3n+2', '4n-1', '-n+6'
-				var test = /(-?)(\d*)(?:n([+\-]?\d*))?/.exec(
-					match[2] === "even" && "2n" || match[2] === "odd" && "2n+1" ||
-					!/\D/.test( match[2] ) && "0n+" + match[2] || match[2]);
-
-				// calculate the numbers (first)n+(last) including if they are negative
-				match[2] = (test[1] + (test[2] || 1)) - 0;
-				match[3] = test[3] - 0;
-			}
-			else if ( match[2] ) {
-				Sizzle.error( match[0] );
-			}
-
-			// TODO: Move to normal caching system
-			match[0] = done++;
-
-			return match;
-		},
-
-		ATTR: function( match, curLoop, inplace, result, not, isXML ) {
-			var name = match[1] = match[1].replace( rBackslash, "" );
-
-			if ( !isXML && Expr.attrMap[name] ) {
-				match[1] = Expr.attrMap[name];
-			}
-
-			// Handle if an un-quoted value was used
-			match[4] = ( match[4] || match[5] || "" ).replace( rBackslash, "" );
-
-			if ( match[2] === "~=" ) {
-				match[4] = " " + match[4] + " ";
-			}
-
-			return match;
-		},
-
-		PSEUDO: function( match, curLoop, inplace, result, not ) {
-			if ( match[1] === "not" ) {
-				// If we're dealing with a complex expression, or a simple one
-				if ( ( chunker.exec(match[3]) || "" ).length > 1 || /^\w/.test(match[3]) ) {
-					match[3] = Sizzle(match[3], null, null, curLoop);
-
-				} else {
-					var ret = Sizzle.filter(match[3], curLoop, inplace, true ^ not);
-
-					if ( !inplace ) {
-						result.push.apply( result, ret );
-					}
-
-					return false;
-				}
-
-			} else if ( Expr.match.POS.test( match[0] ) || Expr.match.CHILD.test( match[0] ) ) {
-				return true;
-			}
-
-			return match;
-		},
-
-		POS: function( match ) {
-			match.unshift( true );
-
-			return match;
-		}
-	},
-
-	filters: {
-		enabled: function( elem ) {
-			return elem.disabled === false && elem.type !== "hidden";
-		},
-
-		disabled: function( elem ) {
-			return elem.disabled === true;
-		},
-
-		checked: function( elem ) {
-			return elem.checked === true;
-		},
-
-		selected: function( elem ) {
-			// Accessing this property makes selected-by-default
-			// options in Safari work properly
-			if ( elem.parentNode ) {
-				elem.parentNode.selectedIndex;
-			}
-
-			return elem.selected === true;
-		},
-
-		parent: function( elem ) {
-			return !!elem.firstChild;
-		},
-
-		empty: function( elem ) {
-			return !elem.firstChild;
-		},
-
-		has: function( elem, i, match ) {
-			return !!Sizzle( match[3], elem ).length;
-		},
-
-		header: function( elem ) {
-			return (/h\d/i).test( elem.nodeName );
-		},
-
-		text: function( elem ) {
-			var attr = elem.getAttribute( "type" ), type = elem.type;
-			// IE6 and 7 will map elem.type to 'text' for new HTML5 types (search, etc)
-			// use getAttribute instead to test this case
-			return elem.nodeName.toLowerCase() === "input" && "text" === type && ( attr === type || attr === null );
-		},
-
-		radio: function( elem ) {
-			return elem.nodeName.toLowerCase() === "input" && "radio" === elem.type;
-		},
-
-		checkbox: function( elem ) {
-			return elem.nodeName.toLowerCase() === "input" && "checkbox" === elem.type;
-		},
-
-		file: function( elem ) {
-			return elem.nodeName.toLowerCase() === "input" && "file" === elem.type;
-		},
-
-		password: function( elem ) {
-			return elem.nodeName.toLowerCase() === "input" && "password" === elem.type;
-		},
-
-		submit: function( elem ) {
-			var name = elem.nodeName.toLowerCase();
-			return (name === "input" || name === "button") && "submit" === elem.type;
-		},
-
-		image: function( elem ) {
-			return elem.nodeName.toLowerCase() === "input" && "image" === elem.type;
-		},
-
-		reset: function( elem ) {
-			var name = elem.nodeName.toLowerCase();
-			return (name === "input" || name === "button") && "reset" === elem.type;
-		},
-
-		button: function( elem ) {
-			var name = elem.nodeName.toLowerCase();
-			return name === "input" && "button" === elem.type || name === "button";
-		},
-
-		input: function( elem ) {
-			return (/input|select|textarea|button/i).test( elem.nodeName );
-		},
-
-		focus: function( elem ) {
-			return elem === elem.ownerDocument.activeElement;
-		}
-	},
-	setFilters: {
-		first: function( elem, i ) {
-			return i === 0;
-		},
-
-		last: function( elem, i, match, array ) {
-			return i === array.length - 1;
-		},
-
-		even: function( elem, i ) {
-			return i % 2 === 0;
-		},
-
-		odd: function( elem, i ) {
-			return i % 2 === 1;
-		},
-
-		lt: function( elem, i, match ) {
-			return i < match[3] - 0;
-		},
-
-		gt: function( elem, i, match ) {
-			return i > match[3] - 0;
-		},
-
-		nth: function( elem, i, match ) {
-			return match[3] - 0 === i;
-		},
-
-		eq: function( elem, i, match ) {
-			return match[3] - 0 === i;
-		}
-	},
-	filter: {
-		PSEUDO: function( elem, match, i, array ) {
-			var name = match[1],
-				filter = Expr.filters[ name ];
-
-			if ( filter ) {
-				return filter( elem, i, match, array );
-
-			} else if ( name === "contains" ) {
-				return (elem.textContent || elem.innerText || getText([ elem ]) || "").indexOf(match[3]) >= 0;
-
-			} else if ( name === "not" ) {
-				var not = match[3];
-
-				for ( var j = 0, l = not.length; j < l; j++ ) {
-					if ( not[j] === elem ) {
-						return false;
-					}
-				}
-
-				return true;
-
-			} else {
-				Sizzle.error( name );
-			}
-		},
-
-		CHILD: function( elem, match ) {
-			var first, last,
-				doneName, parent, cache,
-				count, diff,
-				type = match[1],
-				node = elem;
-
-			switch ( type ) {
-				case "only":
-				case "first":
-					while ( (node = node.previousSibling) )	 {
-						if ( node.nodeType === 1 ) {
-							return false;
-						}
-					}
-
-					if ( type === "first" ) {
-						return true;
-					}
-
-					node = elem;
-
-				case "last":
-					while ( (node = node.nextSibling) )	 {
-						if ( node.nodeType === 1 ) {
-							return false;
-						}
-					}
-
-					return true;
-
-				case "nth":
-					first = match[2];
-					last = match[3];
-
-					if ( first === 1 && last === 0 ) {
-						return true;
-					}
-
-					doneName = match[0];
-					parent = elem.parentNode;
-
-					if ( parent && (parent[ expando ] !== doneName || !elem.nodeIndex) ) {
-						count = 0;
-
-						for ( node = parent.firstChild; node; node = node.nextSibling ) {
-							if ( node.nodeType === 1 ) {
-								node.nodeIndex = ++count;
-							}
-						}
-
-						parent[ expando ] = doneName;
-					}
-
-					diff = elem.nodeIndex - last;
-
-					if ( first === 0 ) {
-						return diff === 0;
-
-					} else {
-						return ( diff % first === 0 && diff / first >= 0 );
-					}
-			}
-		},
-
-		ID: function( elem, match ) {
-			return elem.nodeType === 1 && elem.getAttribute("id") === match;
-		},
-
-		TAG: function( elem, match ) {
-			return (match === "*" && elem.nodeType === 1) || !!elem.nodeName && elem.nodeName.toLowerCase() === match;
-		},
-
-		CLASS: function( elem, match ) {
-			return (" " + (elem.className || elem.getAttribute("class")) + " ")
-				.indexOf( match ) > -1;
-		},
-
-		ATTR: function( elem, match ) {
-			var name = match[1],
-				result = Sizzle.attr ?
-					Sizzle.attr( elem, name ) :
-					Expr.attrHandle[ name ] ?
-					Expr.attrHandle[ name ]( elem ) :
-					elem[ name ] != null ?
-						elem[ name ] :
-						elem.getAttribute( name ),
-				value = result + "",
-				type = match[2],
-				check = match[4];
-
-			return result == null ?
-				type === "!=" :
-				!type && Sizzle.attr ?
-				result != null :
-				type === "=" ?
-				value === check :
-				type === "*=" ?
-				value.indexOf(check) >= 0 :
-				type === "~=" ?
-				(" " + value + " ").indexOf(check) >= 0 :
-				!check ?
-				value && result !== false :
-				type === "!=" ?
-				value !== check :
-				type === "^=" ?
-				value.indexOf(check) === 0 :
-				type === "$=" ?
-				value.substr(value.length - check.length) === check :
-				type === "|=" ?
-				value === check || value.substr(0, check.length + 1) === check + "-" :
-				false;
-		},
-
-		POS: function( elem, match, i, array ) {
-			var name = match[2],
-				filter = Expr.setFilters[ name ];
-
-			if ( filter ) {
-				return filter( elem, i, match, array );
-			}
-		}
-	}
-};
-
-var origPOS = Expr.match.POS,
-	fescape = function(all, num){
-		return "\\" + (num - 0 + 1);
-	};
-
-for ( var type in Expr.match ) {
-	Expr.match[ type ] = new RegExp( Expr.match[ type ].source + (/(?![^\[]*\])(?![^\(]*\))/.source) );
-	Expr.leftMatch[ type ] = new RegExp( /(^(?:.|\r|\n)*?)/.source + Expr.match[ type ].source.replace(/\\(\d+)/g, fescape) );
-}
-
-var makeArray = function( array, results ) {
-	array = Array.prototype.slice.call( array, 0 );
-
-	if ( results ) {
-		results.push.apply( results, array );
-		return results;
-	}
-
-	return array;
-};
-
-// Perform a simple check to determine if the browser is capable of
-// converting a NodeList to an array using builtin methods.
-// Also verifies that the returned array holds DOM nodes
-// (which is not the case in the Blackberry browser)
-try {
-	Array.prototype.slice.call( document.documentElement.childNodes, 0 )[0].nodeType;
-
-// Provide a fallback method if it does not work
-} catch( e ) {
-	makeArray = function( array, results ) {
-		var i = 0,
-			ret = results || [];
-
-		if ( toString.call(array) === "[object Array]" ) {
-			Array.prototype.push.apply( ret, array );
-
-		} else {
-			if ( typeof array.length === "number" ) {
-				for ( var l = array.length; i < l; i++ ) {
-					ret.push( array[i] );
-				}
-
-			} else {
-				for ( ; array[i]; i++ ) {
-					ret.push( array[i] );
-				}
-			}
-		}
-
-		return ret;
-	};
-}
-
-var sortOrder, siblingCheck;
-
-if ( document.documentElement.compareDocumentPosition ) {
-	sortOrder = function( a, b ) {
-		if ( a === b ) {
-			hasDuplicate = true;
-			return 0;
-		}
-
-		if ( !a.compareDocumentPosition || !b.compareDocumentPosition ) {
-			return a.compareDocumentPosition ? -1 : 1;
-		}
-
-		return a.compareDocumentPosition(b) & 4 ? -1 : 1;
-	};
-
-} else {
-	sortOrder = function( a, b ) {
-		// The nodes are identical, we can exit early
-		if ( a === b ) {
-			hasDuplicate = true;
-			return 0;
-
-		// Fallback to using sourceIndex (in IE) if it's available on both nodes
-		} else if ( a.sourceIndex && b.sourceIndex ) {
-			return a.sourceIndex - b.sourceIndex;
-		}
-
-		var al, bl,
-			ap = [],
-			bp = [],
-			aup = a.parentNode,
-			bup = b.parentNode,
-			cur = aup;
-
-		// If the nodes are siblings (or identical) we can do a quick check
-		if ( aup === bup ) {
-			return siblingCheck( a, b );
-
-		// If no parents were found then the nodes are disconnected
-		} else if ( !aup ) {
-			return -1;
-
-		} else if ( !bup ) {
-			return 1;
-		}
-
-		// Otherwise they're somewhere else in the tree so we need
-		// to build up a full list of the parentNodes for comparison
-		while ( cur ) {
-			ap.unshift( cur );
-			cur = cur.parentNode;
-		}
-
-		cur = bup;
-
-		while ( cur ) {
-			bp.unshift( cur );
-			cur = cur.parentNode;
-		}
-
-		al = ap.length;
-		bl = bp.length;
-
-		// Start walking down the tree looking for a discrepancy
-		for ( var i = 0; i < al && i < bl; i++ ) {
-			if ( ap[i] !== bp[i] ) {
-				return siblingCheck( ap[i], bp[i] );
-			}
-		}
-
-		// We ended someplace up the tree so do a sibling check
-		return i === al ?
-			siblingCheck( a, bp[i], -1 ) :
-			siblingCheck( ap[i], b, 1 );
-	};
-
-	siblingCheck = function( a, b, ret ) {
-		if ( a === b ) {
-			return ret;
-		}
-
-		var cur = a.nextSibling;
-
-		while ( cur ) {
-			if ( cur === b ) {
-				return -1;
-			}
-
-			cur = cur.nextSibling;
-		}
-
-		return 1;
-	};
-}
-
-// Check to see if the browser returns elements by name when
-// querying by getElementById (and provide a workaround)
-(function(){
-	// We're going to inject a fake input element with a specified name
-	var form = document.createElement("div"),
-		id = "script" + (new Date()).getTime(),
-		root = document.documentElement;
-
-	form.innerHTML = "<a name='" + id + "'/>";
-
-	// Inject it into the root element, check its status, and remove it quickly
-	root.insertBefore( form, root.firstChild );
-
-	// The workaround has to do additional checks after a getElementById
-	// Which slows things down for other browsers (hence the branching)
-	if ( document.getElementById( id ) ) {
-		Expr.find.ID = function( match, context, isXML ) {
-			if ( typeof context.getElementById !== "undefined" && !isXML ) {
-				var m = context.getElementById(match[1]);
-
-				return m ?
-					m.id === match[1] || typeof m.getAttributeNode !== "undefined" && m.getAttributeNode("id").nodeValue === match[1] ?
-						[m] :
-						undefined :
-					[];
-			}
-		};
-
-		Expr.filter.ID = function( elem, match ) {
-			var node = typeof elem.getAttributeNode !== "undefined" && elem.getAttributeNode("id");
-
-			return elem.nodeType === 1 && node && node.nodeValue === match;
-		};
-	}
-
-	root.removeChild( form );
-
-	// release memory in IE
-	root = form = null;
-})();
-
-(function(){
-	// Check to see if the browser returns only elements
-	// when doing getElementsByTagName("*")
-
-	// Create a fake element
-	var div = document.createElement("div");
-	div.appendChild( document.createComment("") );
-
-	// Make sure no comments are found
-	if ( div.getElementsByTagName("*").length > 0 ) {
-		Expr.find.TAG = function( match, context ) {
-			var results = context.getElementsByTagName( match[1] );
-
-			// Filter out possible comments
-			if ( match[1] === "*" ) {
-				var tmp = [];
-
-				for ( var i = 0; results[i]; i++ ) {
-					if ( results[i].nodeType === 1 ) {
-						tmp.push( results[i] );
-					}
-				}
-
-				results = tmp;
-			}
-
-			return results;
-		};
-	}
-
-	// Check to see if an attribute returns normalized href attributes
-	div.innerHTML = "<a href='#'></a>";
-
-	if ( div.firstChild && typeof div.firstChild.getAttribute !== "undefined" &&
-			div.firstChild.getAttribute("href") !== "#" ) {
-
-		Expr.attrHandle.href = function( elem ) {
-			return elem.getAttribute( "href", 2 );
-		};
-	}
-
-	// release memory in IE
-	div = null;
-})();
-
-if ( document.querySelectorAll ) {
-	(function(){
-		var oldSizzle = Sizzle,
-			div = document.createElement("div"),
-			id = "__sizzle__";
-
-		div.innerHTML = "<p class='TEST'></p>";
-
-		// Safari can't handle uppercase or unicode characters when
-		// in quirks mode.
-		if ( div.querySelectorAll && div.querySelectorAll(".TEST").length === 0 ) {
-			return;
-		}
-
-		Sizzle = function( query, context, extra, seed ) {
-			context = context || document;
-
-			// Only use querySelectorAll on non-XML documents
-			// (ID selectors don't work in non-HTML documents)
-			if ( !seed && !Sizzle.isXML(context) ) {
-				// See if we find a selector to speed up
-				var match = /^(\w+$)|^\.([\w\-]+$)|^#([\w\-]+$)/.exec( query );
-
-				if ( match && (context.nodeType === 1 || context.nodeType === 9) ) {
-					// Speed-up: Sizzle("TAG")
-					if ( match[1] ) {
-						return makeArray( context.getElementsByTagName( query ), extra );
-
-					// Speed-up: Sizzle(".CLASS")
-					} else if ( match[2] && Expr.find.CLASS && context.getElementsByClassName ) {
-						return makeArray( context.getElementsByClassName( match[2] ), extra );
-					}
-				}
-
-				if ( context.nodeType === 9 ) {
-					// Speed-up: Sizzle("body")
-					// The body element only exists once, optimize finding it
-					if ( query === "body" && context.body ) {
-						return makeArray( [ context.body ], extra );
-
-					// Speed-up: Sizzle("#ID")
-					} else if ( match && match[3] ) {
-						var elem = context.getElementById( match[3] );
-
-						// Check parentNode to catch when Blackberry 4.6 returns
-						// nodes that are no longer in the document #6963
-						if ( elem && elem.parentNode ) {
-							// Handle the case where IE and Opera return items
-							// by name instead of ID
-							if ( elem.id === match[3] ) {
-								return makeArray( [ elem ], extra );
-							}
-
-						} else {
-							return makeArray( [], extra );
-						}
-					}
-
-					try {
-						return makeArray( context.querySelectorAll(query), extra );
-					} catch(qsaError) {}
-
-				// qSA works strangely on Element-rooted queries
-				// We can work around this by specifying an extra ID on the root
-				// and working up from there (Thanks to Andrew Dupont for the technique)
-				// IE 8 doesn't work on object elements
-				} else if ( context.nodeType === 1 && context.nodeName.toLowerCase() !== "object" ) {
-					var oldContext = context,
-						old = context.getAttribute( "id" ),
-						nid = old || id,
-						hasParent = context.parentNode,
-						relativeHierarchySelector = /^\s*[+~]/.test( query );
-
-					if ( !old ) {
-						context.setAttribute( "id", nid );
-					} else {
-						nid = nid.replace( /'/g, "\\$&" );
-					}
-					if ( relativeHierarchySelector && hasParent ) {
-						context = context.parentNode;
-					}
-
-					try {
-						if ( !relativeHierarchySelector || hasParent ) {
-							return makeArray( context.querySelectorAll( "[id='" + nid + "'] " + query ), extra );
-						}
-
-					} catch(pseudoError) {
-					} finally {
-						if ( !old ) {
-							oldContext.removeAttribute( "id" );
-						}
-					}
-				}
-			}
-
-			return oldSizzle(query, context, extra, seed);
-		};
-
-		for ( var prop in oldSizzle ) {
-			Sizzle[ prop ] = oldSizzle[ prop ];
-		}
-
-		// release memory in IE
-		div = null;
-	})();
-}
-
-(function(){
-	var html = document.documentElement,
-		matches = html.matchesSelector || html.mozMatchesSelector || html.webkitMatchesSelector || html.msMatchesSelector;
-
-	if ( matches ) {
-		// Check to see if it's possible to do matchesSelector
-		// on a disconnected node (IE 9 fails this)
-		var disconnectedMatch = !matches.call( document.createElement( "div" ), "div" ),
-			pseudoWorks = false;
-
-		try {
-			// This should fail with an exception
-			// Gecko does not error, returns false instead
-			matches.call( document.documentElement, "[test!='']:sizzle" );
-
-		} catch( pseudoError ) {
-			pseudoWorks = true;
-		}
-
-		Sizzle.matchesSelector = function( node, expr ) {
-			// Make sure that attribute selectors are quoted
-			expr = expr.replace(/\=\s*([^'"\]]*)\s*\]/g, "='$1']");
-
-			if ( !Sizzle.isXML( node ) ) {
-				try {
-					if ( pseudoWorks || !Expr.match.PSEUDO.test( expr ) && !/!=/.test( expr ) ) {
-						var ret = matches.call( node, expr );
-
-						// IE 9's matchesSelector returns false on disconnected nodes
-						if ( ret || !disconnectedMatch ||
-								// As well, disconnected nodes are said to be in a document
-								// fragment in IE 9, so check for that
-								node.document && node.document.nodeType !== 11 ) {
-							return ret;
-						}
-					}
-				} catch(e) {}
-			}
-
-			return Sizzle(expr, null, null, [node]).length > 0;
-		};
-	}
-})();
-
-(function(){
-	var div = document.createElement("div");
-
-	div.innerHTML = "<div class='test e'></div><div class='test'></div>";
-
-	// Opera can't find a second classname (in 9.6)
-	// Also, make sure that getElementsByClassName actually exists
-	if ( !div.getElementsByClassName || div.getElementsByClassName("e").length === 0 ) {
-		return;
-	}
-
-	// Safari caches class attributes, doesn't catch changes (in 3.2)
-	div.lastChild.className = "e";
-
-	if ( div.getElementsByClassName("e").length === 1 ) {
-		return;
-	}
-
-	Expr.order.splice(1, 0, "CLASS");
-	Expr.find.CLASS = function( match, context, isXML ) {
-		if ( typeof context.getElementsByClassName !== "undefined" && !isXML ) {
-			return context.getElementsByClassName(match[1]);
 		}
 	};
 
-	// release memory in IE
-	div = null;
-})();
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
 
-function dirNodeCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
-	for ( var i = 0, l = checkSet.length; i < l; i++ ) {
-		var elem = checkSet[i];
 
-		if ( elem ) {
-			var match = false;
 
-			elem = elem[dir];
 
-			while ( elem ) {
-				if ( elem[ expando ] === doneName ) {
-					match = checkSet[elem.sizset];
-					break;
-				}
+	//register module
+	lola.registerModule( agent );
 
-				if ( elem.nodeType === 1 && !isXML ){
-					elem[ expando ] = doneName;
-					elem.sizset = i;
-				}
+})( lola );
 
-				if ( elem.nodeName.toLowerCase() === cur ) {
-					match = elem;
-					break;
-				}
-
-				elem = elem[dir];
-			}
-
-			checkSet[i] = match;
-		}
-	}
-}
-
-function dirCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
-	for ( var i = 0, l = checkSet.length; i < l; i++ ) {
-		var elem = checkSet[i];
-
-		if ( elem ) {
-			var match = false;
-
-			elem = elem[dir];
-
-			while ( elem ) {
-				if ( elem[ expando ] === doneName ) {
-					match = checkSet[elem.sizset];
-					break;
-				}
-
-				if ( elem.nodeType === 1 ) {
-					if ( !isXML ) {
-						elem[ expando ] = doneName;
-						elem.sizset = i;
-					}
-
-					if ( typeof cur !== "string" ) {
-						if ( elem === cur ) {
-							match = true;
-							break;
-						}
-
-					} else if ( Sizzle.filter( cur, [elem] ).length > 0 ) {
-						match = elem;
-						break;
-					}
-				}
-
-				elem = elem[dir];
-			}
-
-			checkSet[i] = match;
-		}
-	}
-}
-
-if ( document.documentElement.contains ) {
-	Sizzle.contains = function( a, b ) {
-		return a !== b && (a.contains ? a.contains(b) : true);
-	};
-
-} else if ( document.documentElement.compareDocumentPosition ) {
-	Sizzle.contains = function( a, b ) {
-		return !!(a.compareDocumentPosition(b) & 16);
-	};
-
-} else {
-	Sizzle.contains = function() {
-		return false;
-	};
-}
-
-Sizzle.isXML = function( elem ) {
-	// documentElement is verified for cases where it doesn't yet exist
-	// (such as loading iframes in IE - #4833)
-	var documentElement = (elem ? elem.ownerDocument || elem : 0).documentElement;
-
-	return documentElement ? documentElement.nodeName !== "HTML" : false;
-};
-
-var posProcess = function( selector, context, seed ) {
-	var match,
-		tmpSet = [],
-		later = "",
-		root = context.nodeType ? [context] : context;
-
-	// Position selectors must be done after the filter
-	// And so must :not(positional) so we move all PSEUDOs to the end
-	while ( (match = Expr.match.PSEUDO.exec( selector )) ) {
-		later += match[0];
-		selector = selector.replace( Expr.match.PSEUDO, "" );
-	}
-
-	selector = Expr.relative[selector] ? selector + "*" : selector;
-
-	for ( var i = 0, l = root.length; i < l; i++ ) {
-		Sizzle( selector, root[i], tmpSet, seed );
-	}
-
-	return Sizzle.filter( later, tmpSet );
-};
-
-// EXPOSE
-
-window.Sizzle = Sizzle;
-
-})();
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -1990,7 +786,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.array::initialize');
+			lola.debug('lola.array::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -2403,6 +1199,703 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
+	 * @description CSS Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var css = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+		/**
+		 * @description cache for fixed/mapped style properties
+		 * @private
+		 */
+		propertyCache: {},
+
+		/**
+		 * @description cache for fixed/mapped selectors
+		 * @private
+		 */
+		selectorCache: {},
+
+		/**
+		 * @description style property hooks
+		 * @private
+		 */
+		propertyHooks: {},
+
+		/**
+		 * @description references to dynamic stylesheets
+		 * @private
+		 */
+		stylesheets: {},
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			console.log( 'lola.css::preinitialize' );
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+			//remove initialization method
+			delete lola.css.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			console.log( 'lola.css::initialize' );
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+			lola.support.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || !document.createStyleSheet ) ? true : false;
+
+			//add default stylesheet for dynamic rules
+			this.addStyleSheet( "_default" );
+
+			//add default mappings
+			this.propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
+
+			//remove initialization method
+			delete lola.css.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "css";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return [];
+		},
+
+		/**
+		 * @description returns whether or not an object can have styles applied
+		 * @param {*} obj
+		 */
+		canStyle: function( obj ) {
+			//TODO: Implement canStyle function
+			return true
+		},
+
+		/**
+		 * @description gets mapped selector string
+		 * @param {String} selector
+		 * @return {String}
+		 */
+		getSelector: function( selector ) {
+			if ( !this.selectorCache[selector] )
+				this.selectorCache[selector] = lola.string.camelCase( selector );
+			return this.selectorCache( selector );
+		},
+
+		/**
+		 * @description gets mapped selector string
+		 * @param {String} property
+		 * @return {String}
+		 */
+		getProperty: function( property ) {
+			if ( !this.propertyCache[property] )
+				this.propertyCache[property] = lola.string.camelCase( property );
+			return this.propertyCache( property );
+		},
+
+		/**
+		 * @descrtiption gets/sets styles on an object
+		 * @public
+		 * @param {Object} obj styleable object
+		 * @param {String} style style property
+		 * @param {*} value leave undefined to get style
+		 * @return {*}
+		 */
+		style: function( obj, style, value ) {
+			//make sure style can be set
+			if ( lola.css.canStyle( obj ) ) {
+				var prop = lola.css.getProperty( style );
+				if ( lola.css.propertyHooks[ style ] != null ) {
+					return lola.css.propertyHooks[style].apply( obj, arguments );
+				}
+				else {
+					if ( value == undefined ) {
+						if (document.defaultView && document.defaultView.getComputedStyle) {
+							return document.defaultView.getComputedStyle( obj )[ prop ];
+						}
+						else if ( typeof(document.body.currentStyle) !== "undefined") {
+							return obj["currentStyle"][prop];
+						}
+						else {
+							return obj.style[prop];
+						}
+					}
+					else {
+						return obj.style[ prop ] = value;
+					}
+				}
+			}
+
+			return false;
+		},
+
+		/**
+		 * @description adds a stylesheet to the document head with an optional source
+		 * @param {String|undefined} id reference id for stylesheet
+		 * @param {String|undefined} source url for external stylesheet
+		 */
+		addStyleSheet: function( id, source ) {
+			var stylesheet = (lola.support.cssRules) ? document.createElement( 'style' ) : document.createStyleSheet();
+			if (source) {
+				stylesheet.source = source;
+			}
+			if (id) {
+				this.registerStyleSheet( stylesheet, id );
+			}
+			lola('head').appendChild( stylesheet );
+		},
+
+		/**
+		 * @description registers a stylesheet with the css module
+		 * @param {Node} stylesheet stylesheet object reference
+		 * @param {String} id the id with which to register stylesheet
+		 */
+		registerStyleSheet: function( stylesheet, id ) {
+			this.stylesheets[ id ] = stylesheet;
+		},
+
+		/**
+		 * @description adds a selector to a stylesheet
+		 * @param {String} selector
+		 * @param {Object} styles an object containing key value pairs of style properties and values
+		 * @param {String|Object|undefined} stylesheet registered stylesheet id or stylesheet reference
+		 * @return {Object}
+		 */
+		addSelector: function( selector, styles, stylesheet ) {
+			if (lola.type.get(stylesheet) == "string" ){
+				stylesheet = this.stylesheets["_default"];
+			}
+			stylesheet = stylesheet || this.stylesheets["_default"];
+			styles = styles || [];
+
+			var ri = lola.support.cssRules ? stylesheet.cssRules.length : stylesheet.rules.length;
+			if ( stylesheet.addRule )
+				stylesheet.addRule( selector, null, ri );
+			else
+				stylesheet.insertRule( selector + ' { }', ri );
+
+			var rule = lola.support.cssRules ? stylesheet.cssRules[ri] : stylesheet.rules[ri];
+			if ( styles ){
+				var props = styles.keys();
+				props.forEach( function( item ){
+					lola.css.style( rule, item, styles[item] );
+				});
+			}
+
+			return rule;
+		},
+		/**
+		 * @description performs action on matching rules
+		 * @param {String} selector
+		 * @param {Function} action
+		 * @param {String} media
+		 */
+		performRuleAction: function( selector, action, media ) {
+			selector = selector.toLowerCase();
+			media = media ? media.toLowerCase() : '';
+			for ( var si = 0; si < document.styleSheets.length; si++ ) {
+				var ss = document.styleSheets[si];
+				//match media
+				if ( !media || media == ss.mediaText ) {
+					var rules = (lola.support.cssRules) ? ss.cssRules : ss.rules;
+					for ( var ri in rules ) {
+						if ( rules[ri] && rules[ri].selectorText ) {
+							if ( rules[ri].selectorText.toLowerCase() == selector ) {
+								console.info( 'matched rule: ' + rules[ri].selectorText );
+								action( si, ri );
+							}
+						}
+					}
+				}
+			}
+		},
+
+		/**
+		 * @description returns an array of matching rules
+		 * @param {String} selector
+		 * @param {String} media
+		 * @return {Array}
+		 */
+		getRules: function( selector, media ) {
+			var rules = [];
+			lola.css.performRuleAction( selector, function( si, ri ) {
+				if ( lola.support.cssRules )
+					rules.push( document.styleSheets[ si ].cssRules[ ri ] );
+				else
+					rules.push( document.styleSheets[ si ].rules[ ri ] );
+			}, media );
+			return rules;
+		},
+
+		/**
+		 * @description updates rules in matching selectors
+		 * @param {String} selector
+		 * @param {Object} styles an object containing key value pairs of style properties and values
+		 * @param {String} media
+		 * @return {Array}
+		 */
+		updateRules: function( selector, styles, media ) {
+			var rules = lola.css.getRules( selector, media );
+			var props = styles.keys();
+			props.forEach( function( item ){
+				rules.forEach( function( rule ){
+					lola.css.style( rule, item, styles[item] );
+				});
+			});
+
+			return rules;
+		},
+
+		/**
+		 * @description deletes matching rules
+		 * @param selector
+		 * @param media
+		 */
+		deleteRules: function( selector, media ) {
+			lola.css.performRuleAction( selector, function( si, ri ) {
+				if ( lola.support.cssRules )
+					document.styleSheets[ si ].deleteRule( ri );
+				else
+					document.styleSheets[ si ].removeRule( ri );
+			}, media )
+		},
+
+		/**
+		 * @description gets or sets an objects classes
+		 * @param {Node} obj
+		 * @param {String|Array|undefined} classes leave undefined to get classes
+		 * @return {Array}
+		 */
+		classes: function( obj, classes ) {
+			if ( classes != undefined ) {
+				if ( lola.type.get( classes ) != 'array' ) {
+					if ( lola.type.get( classes ) == 'string' )
+						classes = [classes];
+					else
+						classes = [];
+				}
+
+				obj.className = classes.join( " " );
+				return classes;
+
+			}
+			else {
+				var names = obj.className.replace( lola.regex.extraSpace, " " );
+				return names.split( " " ).reverse();
+			}
+		},
+
+		/**
+		 * @description returns
+		 * @param obj
+		 * @param className
+		 */
+		hasClass: function( obj, className ) {
+			var names = lola.css.classes( obj );
+			return lola.array.isIn( names, className );
+		},
+
+		/**
+		 * @description adds class to object if not already added
+		 * @param {Node} obj
+		 * @param {String} className
+		 */
+		addClass: function( obj, className ) {
+			var names = lola.css.classes( obj );
+			if ( !lola.array.isIn( names, className ) ) {
+				names.push( className );
+				lola.css.classes( obj, names );
+			}
+		},
+
+		/**
+		 * @description removes a class from an object
+		 * @param {Node} obj
+		 * @param {String} className
+		 */
+		removeClass: function( obj, className ) {
+			var names = lola.css.classes( obj );
+			var index = names.indexOf( className );
+			if ( index >= 0 ) {
+				names.splice( index, 1 );
+				lola.css.classes( obj, names );
+			}
+		},
+
+		/**
+		 * @description removes an objects style property
+		 * @param obj
+		 * @param style
+		 */
+		clearStyle: function( obj, style ) {
+			delete obj.style[ lola.css.getProperty( style ) ];
+		},
+
+		/**
+		 * @description parses an RGB or RGBA color
+		 * @param {String} val
+		 */
+		parseRGBColor: function( val ) {
+			var rgba = { r:0, g:0, b:0, a:1 };
+			var parts = val.match( lola.type.rIsRGBColor );
+			if ( parts != null ) {
+				var v = parts[1].replace( /\s+/g, "" );
+				v = v.split( ',' );
+				rgba.r = lola.css.parseColorPart( v[0], 255 );
+				rgba.g = lola.css.parseColorPart( v[1], 255 );
+				rgba.b = lola.css.parseColorPart( v[2], 255  );
+				rgba.a = (v.length > 3) ? lola.css.parseColorPart( v[3], 1 ) : 1;
+			}
+			return rgba;
+		},
+
+		/**
+		 * @description parses an HSL or HSLA color
+		 * @param {String} val
+		 * @return {Object}
+		 */
+		parseHSLColor: function( val ) {
+			var hsla = { h:0, s:0, l:0, a:1 };
+			var parts = val.match( lola.type.rIsHSLColor );
+			if ( parts != null ) {
+				var v = parts[1].replace( /\s+/g, "" );
+				v = v.split( ',' );
+				hsla.h = lola.css.parseColorPart( v[0], 360  );
+				hsla.s = lola.css.parseColorPart( v[1], 1  );
+				hsla.l = lola.css.parseColorPart( v[2], 1  );
+				hsla.a = (v.length > 3) ? lola.css.parseColorPart( v[3], 1 ) : 1;
+			}
+			return hsla;
+		},
+
+		/**
+		 * @description parses color part value
+		 * @private
+		 * @param {String} val
+		 * @return {Number}
+		 */
+		parseColorPart: function( val, divisor ) {
+			if ( val ) {
+				if ( val.indexOf( '%' ) > 0 )
+					return parseFloat( val.replace( /%/g, "" ) ) / 100;
+				else
+					return parseFloat( val ) / divisor;
+			}
+			return 0;
+
+		},
+
+
+		//==================================================================
+		// Classes
+		//==================================================================
+		Color: function( value ){
+			return this.init( value );
+		},
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+				/**
+				 * @description sets or gets element css property
+				 * @param {String} property
+				 * @param {*} value
+				 */
+				css: function( property, value ) {
+					if ( value != undefined ) {
+						this.foreach( function( item ) {
+							lola.css.style( item, selector, value );
+						} );
+						return this;
+					}
+					else {
+						var values = [];
+						this.forEach( function(item){
+							values.push( lola.css.style( item, property ) )
+						});
+						return values;
+					}
+				},
+
+				/**
+				 * @description sets or gets classes for elements
+				 * @param {String|Array|undefined} values
+				 */
+				classes: function( values ) {
+					if ( values != undefined ) {
+						//set class names
+						this.foreach( function( item ) {
+							lola.css.classes( item, values );
+						} );
+						return this;
+
+					}
+					else {
+						//get class names
+						var names = [];
+						this.foreach( function( item ) {
+							names.push( lola.css.classes( item ) );
+						} );
+
+						return names;
+					}
+				},
+
+				/**
+				 * @description checks that all elements in selector have class
+				 * @param {String} name
+				 */
+				hasClass: function( name ) {
+					var check = true;
+					this.foreach( function( item ) {
+						if (!lola.css.hasClass( item, name )){
+							check = false;
+						}
+					} );
+					return check;
+				},
+
+				/**
+				 * @description adds class to all elements
+				 * @param {String} name
+				 */
+				addClass: function( name ) {
+					this.foreach( function( item ) {
+						lola.css.addClass( item, name );
+					} );
+					return this;
+				},
+
+				/**
+				 * @description removes class from all elements
+				 * @param {String} name
+				 */
+				removeClass: function( name ) {
+					this.foreach( function( item ) {
+						lola.css.removeClass( item, name );
+					} );
+					return this;
+				}
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+	css.Color.prototype = {
+
+		/**
+		 * @description output color type
+		 * @private
+		 */
+		outputType: "",
+
+		/**
+		 * @description hex color value object
+		 * @public
+		 */
+		hexValue: null,
+
+		/**
+		 * @description rgba color value object
+		 * @public
+		 */
+		rgbValue: null,
+
+		/**
+		 * @description hsla color value object
+		 * @public
+		 */
+		hslValue: null,
+
+		/**
+		 * @description class initialization function
+		 * @param value
+		 */
+		init: function( value ){
+			if (value) this.parseString( value );
+			return this;
+		},
+
+		/**
+		 * @description parses style color values returns rgba object
+		 * @public
+		 * @param {String} val
+		 */
+		parseString: function( val ) {
+			//console.info('parseColor ------ ');
+			var cparts = val.match( lola.regex.isColor );
+			if ( cparts ) {
+				var parts,rgb,hsl,hex;
+				switch ( cparts[1] ) {
+					case '#':
+						parts = val.match( lola.regex.isHexColor );
+						hex = ( parts != null ) ? parts[1] : "000000";
+						rgb = lola.math.color.hex2rgb(hex);
+						hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
+						rgb.a = hsl.a = 1;
+						break;
+					case 'rgb':
+					case 'rgba':
+						rgb = lola.css.parseRGBColor( val );
+						hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
+						hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
+						hsl.a = rgb.a;
+						this.valueType = "rgba";
+						break;
+					case 'hsl':
+					case 'hsla':
+						hsl = lola.css.parseHSLColor( val );
+						rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
+						hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
+						rgb.a = hsl.a;
+						this.valueType = "hsla";
+						break;
+				}
+
+				this.hexValue = hex;
+				this.rgbValue = rgb;
+				this.hslValue = hsl;
+			}
+		},
+
+		/**
+		 * @description outputs a css color string of the type specified in outputType
+		 * @return {String}
+		 */
+		toString: function() {
+			switch (this.outputType) {
+				case "#":
+					return this.toHexString();
+				case "hsl":
+					return this.toHslString();
+				case "hsla":
+					return this.toHslaString();
+				case "rgb":
+					return this.toRgbString();
+				default:
+					return this.toRgbaString();
+			}
+		},
+
+		/**
+		 * @description returns the uint value of color object
+		 * @return {uint}
+		 */
+		toInt: function() {
+			return parseInt("0x" + this.hexValue );
+		},
+
+		/**
+		 * @description outputs a css color hex string
+		 * @return {String}
+		 */
+		toHexString: function() {
+			return "#" + this.hexValue;
+		},
+
+		/**
+		 * @description outputs a css color hsl string
+		 * @return {String}
+		 */
+		toHslString: function() {
+			return "hsl("+
+					Math.round( this.hslValue.h * 360 )+","+
+					Math.round( this.hslValue.s * 100 )+"%,"+
+					Math.round( this.hslValue.l * 100 )+"%)";
+		},
+
+		/**
+		 * @description outputs a css color hsla string
+		 * @return {String}
+		 */
+		toHslaString: function() {
+			return "hsla("+
+					Math.round( this.hslValue.h * 360 )+","+
+					Math.round( this.hslValue.s * 100 )+"%,"+
+					Math.round( this.hslValue.l * 100 )+"%,"+
+					this.hslValue.a+"%)";
+		},
+
+		/**
+		 * @description outputs a css color rgb string
+		 * @return {String}
+		 */
+		toRgbString: function() {
+			return "rgb("+
+					Math.round( this.rgbValue.r * 255 )+","+
+					Math.round( this.rgbValue.g * 255 )+","+
+					Math.round( this.rgbValue.b * 255 )+")";
+		},
+
+		/**
+		 * @description outputs a css color rgba string
+		 * @return {String}
+		 */
+		toRgbaString: function() {
+			return "rgba("+
+					Math.round( this.rgbValue.r * 255 )+","+
+					Math.round( this.rgbValue.g * 255 )+","+
+					Math.round( this.rgbValue.b * 255 )+","+
+					this.rgbValue.a+")";
+		}
+	};
+
+	//register module
+	lola.registerModule( css );
+
+})( lola );
+(function( lola ) {
+	var $ = lola;
+	/**
 	 * @description Data Module
 	 * @implements {lola.Module}
 	 * @memberof lola
@@ -2439,7 +1932,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.data::preinitialize' );
+			lola.debug( 'lola.data::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -2455,7 +1948,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.data::initialize' );
+			lola.debug( 'lola.data::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -2760,7 +2253,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.dom::initialize');
+			lola.debug('lola.dom::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -2966,6 +2459,19 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
+				 * @description  prepends node to first selection element in DOM
+				 * @param {Element} node
+				 * @return {lola.Selector}
+				 */
+				prependChild: function( node ) {
+					if ( this.elements.length > 0 ) {
+						this.get().insertBefore( node, this.get().firstChild );
+					}
+
+					return this;
+				},
+
+				/**
 				 * @description  clones first selection element
 				 * @param {Boolean} deep
 				 * @return {Element}
@@ -3145,7 +2651,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.event::preinitialize' );
+			lola.debug( 'lola.event::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -3161,7 +2667,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.event::initialize' );
+			lola.debug( 'lola.event::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -3386,7 +2892,7 @@ window.Sizzle = Sizzle;
 		 */
 		trigger: function( object, type, bubbles, cancelable, data ) {
 			/*console.group('lola.event.trigger: '+type);
-			console.log(object);
+			lola.debug(object);
 			console.groupEnd();*/
 			var args = [object, type];
 			var names = ['target','type'];
@@ -3792,7 +3298,7 @@ window.Sizzle = Sizzle;
 			return data;
 		},
 		mouseOver: function( event ){
-			//console.log('hover.mouseover');
+			//lola.debug('hover.mouseover');
 			lola.event.addListener( event.currentTarget, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( event.currentTarget );
 			data.hasIntent = true;
@@ -3800,13 +3306,13 @@ window.Sizzle = Sizzle;
 				data.timeout = setTimeout( lola.event.hooks.hover.confirm, data.wait, event.currentTarget )
 		},
 		mouseOut: function( event ){
-			//console.log('hover.mouseout')
+			//lola.debug('hover.mouseout')
 			lola.event.removeListener( event.currentTarget, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( event.currentTarget );
 			data.hasIntent = false;
 		},
 		confirm: function( target ){
-			//console.log('hover.confirm')
+			//lola.debug('hover.confirm')
 			lola.event.removeListener( target, 'mouseout', lola.event.hooks.hover.mouseOut );
 			var data = lola.event.hooks.hover.getData( target );
 			data.timeout = -1;
@@ -3917,6 +3423,667 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
+	 * @description HTTP Request Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var http = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+		/**
+		 * @description storage for cached xsl requests
+		 */
+		xslCache: {},
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug( 'lola.http::preinitialize' );
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+			//remove initialization method
+			delete lola.http.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug( 'lola.http::initialize' );
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+			//remove initialization method
+			delete lola.http.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "http";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return ['string'];
+		},
+
+		/**
+		 * @descripiton applies transformation using results of two requests
+		 * @public
+		 * @param {lola.http.Request} xmlDoc
+		 * @param {lola.http.Request} xslDoc
+		 * @param {Object} xslParams
+		 */
+		transform: function( xmlDoc, xslDoc, xslParams ) {
+			var children,k;
+			if ( window.ActiveXObject ) {
+				//THIS NEEDS TO BE TESTED! I've got no clue if it will work or not.
+				var xsltCompiled = new ActiveXObject( "MSXML2.XSLTemplate" );
+				xsltCompiled.stylesheet = xslDoc.documentElement;
+				var processor = xsltCompiled.createProcessor();
+				processor.input = xmlDoc;
+				for ( k in xslParams ) {
+					processor.addParameter( k, xslParams[k] );
+				}
+				processor.transform();
+
+				var tempDiv = document.createElement( 'div' );
+				tempDiv.innerHTML = processor.output;
+				children = tempDiv.childNodes;
+			}
+			else if ( document.implementation && document.implementation.createDocument ) {
+				var xsltProcessor = new XSLTProcessor();
+				xsltProcessor.importStylesheet( xslDoc );
+				for ( k in xslParams ) {
+					xsltProcessor.setParameter( null, k, xslParams[k] );
+				}
+				var resultDocument = xsltProcessor.transformToFragment( xmlDoc, document );
+				if ( resultDocument ) {
+					children = resultDocument.childNodes;
+				}
+			}
+
+			return children;
+		},
+
+		/**
+		 * @description caches xsl request
+		 * @public
+		 * @param {String} id
+		 * @param {lola.http.Request} xsl
+		 */
+		cacheXsl: function( id, xsl ){
+			lola.http.xslCache[ id ] = xsl;
+		},
+
+		/**
+		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
+		 * @param {String} str
+		 */
+		encode: function( str ) {
+			if ( typeof str == 'string' ) {
+				str = str.replace( /</g, '&lt;' );
+				str = str.replace( />/g, '&gt;' );
+				str = str.replace( /&/g, '&amp;' );
+			}
+			return str;
+		},
+
+		/**
+		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
+		 * @param {String} str
+		 */
+		unencode: function( str ) {
+			if ( typeof str == 'string' ) {
+				str = str.replace( /\$lt;/g, '<' );
+				str = str.replace( /&gt;/g, '>' );
+				str = str.replace( /&amp;/g, '&' );
+			}
+			return str;
+		},
+
+		//==================================================================
+		// Classes
+		//==================================================================
+		/**
+		 * @description Base HTTP Request Class
+		 * @class
+		 * @param {String} url request url
+		 * @param {String} method request method
+		 * @param {Array} headers request headers
+		 * @param {Boolean} async execute request asyncronously
+		 * @param {String} user credentials username
+		 * @param {String} password credentials password
+		 */
+		Request: function( url, method, headers, async, user, password ) {
+			return this.init( url, method, headers, async, user, password );
+		},
+
+		/**
+		 * @description Asynchronous HTTP Request Class
+		 * @class
+		 * @param {String} url request url
+		 * @param {String} method request method
+		 * @param {Array} headers request headers
+		 * @param {String} user credentials username
+		 * @param {String} password credentials password
+		 * @extends lola.http.Request
+		 */
+		AsyncRequest: function( url, method, headers, user, password ) {
+			return this.init( url, method, headers, true, user, password );
+		},
+
+		/**
+		 * @description Synchronous HTTP Request Class
+		 * @class
+		 * @param {String} url request url
+		 * @param {String} method request method
+		 * @param {Array} headers request headers
+		 * @param {String} user credentials username
+		 * @param {String} password credentials password
+		 * @extends lola.http.Request
+		 */
+		SyncRequest: function( url, method, headers, user, password ) {
+			return this.init( url, method, headers, false, user, password );
+		},
+
+		/**
+		 * @description AJAX Transform Class
+		 * @param {lola.http.Request} xml request object
+		 * @param {lola.http.Request|String} xsl request object or string id for cached xsl
+		 * @param {Object} xslParams
+		 * @param {String|undefined} xslCacheId if set xsl will be cached with the specified id
+		 */
+		Transform: function( xml, xmlParams, xsl, xslParams, transformParams, xslCacheId ) {
+			return this.init( xml, xmlParams, xsl, xslParams, transformParams, xslCacheId );
+		},
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+				applyTransform: function( transform, interimContent, faultContent ) {
+					this.html( interimContent );
+					this.forEach( function(item){
+						lola.event.addListener( transform, 'result', function( event ) {
+							$( item ).html( event.data );
+						} );
+						lola.event.addListener( transform, 'fault', function() {
+							$( item ).html( faultContent );
+						} );
+					});
+
+					transform.load();
+
+				},
+				/**
+				 * @description loads a request's content into elements
+				 * @param {lola.http.Request} request
+				 * @param {Object} requestParams
+				 * @param {*} interimContent
+				 * @param {*} faultContent
+				 */
+				applyRequest: function( request, requestParams, interimContent, faultContent ) {
+					this.html( interimContent );
+					this.forEach( function(item){
+						lola.event.addListener( request, 'result', function( event ) {
+							$( item ).html( event.currentTarget.responseText() );
+						} );
+						lola.event.addListener( request, 'fault', function() {
+							$( item ).html( faultContent );
+						} );
+					});
+
+					request.load();
+				},
+
+				/**
+				 * @description loads http content into elements asynchronously
+				 * @param {String} url
+				 * @param {*} interimContent
+				 * @param {*} faultContent
+				 */
+				loadContent: function( url, interimContent, faultContent ){
+					var request = new lola.http.AsyncRequest( url, 'get', [] );
+					this.applyRequest( request, {}, interimContent, faultContent);
+				}
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+	http.Request.prototype = {
+		/**
+		 * @description request url
+		 * @private
+		 */
+		url: "",
+
+		/**
+		 * @description request method
+		 * @private
+		 */
+		method: 'POST',
+
+		/**
+		 * @description request headers
+		 * @private
+		 */
+		headers: [],
+
+		/**
+		 * @description execute request asyncronously
+		 * @private
+		 */
+		async: true,
+
+		/**
+		 * @description username
+		 * @private
+		 */
+		user: null,
+
+		/**
+		 * @description password
+		 * @private
+		 */
+		password: null,
+
+		/**
+		 * @description DOM xmlhttprequest
+		 * @private
+		 */
+		request: false,
+
+		/**
+		 * @description readyFlag
+		 * @public
+		 */
+		ready: false,
+
+		/**
+		 * @description http.Request initializer
+		 * @param {String} url request url
+		 * @param {String} method request method
+		 * @param {Array} headers request headers
+		 * @param {Boolean} async execute request asyncronously
+		 * @param {String} user credentials username
+		 * @param {String} password credentials password
+		 */
+		init: function( url, method, headers, async, user, password ) {
+			this.method = method || 'POST';
+			this.headers = headers || [];
+			this.async = async === true;
+			this.url = url;
+			this.user = user;
+			this.password = password;
+
+			return this;
+		},
+
+		/**
+		 * @description gets correct request object
+		 * @private
+		 */
+		getRequestObject: function() {
+			var request = false;
+			if ( window.XMLHttpRequest && !(window.ActiveXObject) ) {
+				// branch for native XMLHttpRequest object
+				try {
+					request = new XMLHttpRequest();
+				}
+				catch( error ) {
+					request = false;
+				}
+			}
+			else if ( window.ActiveXObject ) {
+				// branch for IE/Windows ActiveX version
+				try {
+					//request = new ActiveXObject("MSXML2.FreeThreadedDomDocument");
+					request = new ActiveXObject( "Msxml2.XMLHTTP" );
+				}
+				catch( error ) {
+					try {
+						request = new ActiveXObject( "Microsoft.XMLHTTP" );
+					}
+					catch( error ) {
+						request = false;
+					}
+				}
+			}
+
+			return request;
+		},
+
+		/**
+		 * @description builds and executes request
+		 * @private
+		 * @param url
+		 * @param params
+		 * @param method
+		 * @param headers
+		 * @param async
+		 * @param readystatechange
+		 * @param scope
+		 * @param user
+		 * @param password
+		 */
+		makeRequest: function( url, params, method, headers, async, readystatechange, scope, user, password ) {
+			var request = this.getRequestObject();
+			request.open( method, url, async, user, password );
+			request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
+			for ( var i = 0; i < headers.length; i++ ) {
+				try {
+					request.setRequestHeader( headers[i].name, headers[i].value );
+				}
+				catch( e ) {
+				}
+			}
+			if ( params != null ) {
+				if ( lola.type.get( params ) != 'string' ) {
+					var temp = [];
+					for ( var k in params ) {
+						temp.push( k + "=" + lola.string.encode( params[k] ) );
+					}
+					params = temp.join( '&' );
+				}
+
+				if ( params.length > 0 ) {
+					//request.setRequestHeader("Content-Length", params.length);
+					//request.setRequestHeader("Connection", "close");
+				}
+			}
+
+			request.onreadystatechange = function() {
+				readystatechange.call( scope )
+			};
+			request.send( params );
+
+			return request;
+		},
+
+		/**
+		 * @description send request
+		 * @public
+		 * @param {Object|String|undefined} params
+		 */
+		load: function( params ) {
+			this.request = this.makeRequest( this.url, params, this.method, this.headers, true, this.readyStateChange, this, this.user, this.password );
+		},
+
+		/**
+		 * @description ready state change listener
+		 * @private
+		 */
+		readyStateChange: function() {
+			if ( this.request ) {
+				switch ( this.request.readyState ) {
+					case 0:
+						//uninitialized
+						break;
+					case 1:
+						//loading
+						lola.event.trigger( this, 'loading', true, true, this.request );
+						break;
+					case 2:
+						//loaded
+						lola.event.trigger( this, 'loaded', true, true, this.request );
+						break;
+					case 3:
+						//interactive
+						lola.event.trigger( this, 'interactive', true, true, this.request );
+						break;
+					case 4:
+						//complete
+						lola.event.trigger( this, 'stateComplete', true, true, this.request );
+						if ( this.request.status == 200 && !this.ready ) {
+							this.ready = true;
+							lola.event.trigger( this, 'result', true, true, this.request );
+						}
+						else if ( this.request.status >= 400 ) {
+							console.info( 'AsyncRequest.readyStateChange.fault: ' + this.url );
+							lola.event.trigger( this, 'fault', false, false, this.request );
+						}
+						break;
+				}
+			}
+		},
+
+		/**
+		 * @description get raw response text
+		 * @return {String}
+		 */
+		responseText: function() {
+			if ( this.ready )
+				return this.request.responseText;
+			else
+				return false;
+		},
+
+		/**
+		 * @description get response xml document
+		 * @return {XML}
+		 */
+		responseXML: function() {
+			if ( this.ready )
+				return this.request.responseXML;
+			else
+				return false;
+		}
+
+
+	};
+	http.AsyncRequest.prototype = http.Request.prototype;
+	http.SyncRequest.prototype = http.Request.prototype;
+
+	http.Transform.prototype = {
+		/**
+		 * @description xml request object
+		 * @private
+		 * @type {lola.http.Request}
+		 */
+		xml: null,
+
+		/**
+		 * @description xsl request object
+		 * @private
+		 * @type {lola.http.Request}
+		 */
+		xsl: null,
+
+		/**
+		 * @description transformation xsl request params
+		 * @private
+		 * @type {Object}
+		 */
+		xslParams: null,
+
+		/**
+		 * @description transformation xml request params
+		 * @private
+		 * @type {Object}
+		 */
+		xmlParams: null,
+
+		/**
+		 * @description cache xsl onceLoaded
+		 * @private
+		 * @type {String}
+		 */
+		xslCacheId: "",
+
+		/**
+		 * @description holds transformation result
+		 * @type {Array}
+		 */
+		resultNodes: [],
+
+		/**
+		 * @description Transform class initializer
+		 * @private
+		 * @param xml
+		 * @param xsl
+		 * @param xslParams
+		 * @param xslCacheId
+		 */
+		init: function( xml, xmlParams, xsl, xslParams, transformParams, xslCacheId ) {
+			this.xmlParams = xmlParams;
+			this.xslParams = xslParams;
+			this.transformParams = transformParams;
+			this.xslCacheId = xslCacheId || "";
+			if ( lola.type.get( xsl ) == 'string' ) {
+				var xslId = xsl;
+				xsl = lola.http.getCachedXsl( xslId );
+				if ( !xsl ) {
+					throw new Error( 'unknown xsl cache id: "' + xslId + '"' );
+				}
+			}
+			else {
+				this.xsl = xsl;
+			}
+
+			if ( this.xsl && this.xml ) {
+				lola.event.addListener( this.xsl, 'result', this.checkStates, true, 0, this );
+				lola.event.addListener( this.xsl, 'fault', this.handleXSLFault, true, 0, this );
+				lola.event.addListener( this.xml, 'result', this.checkStates, true, 0, this );
+				lola.event.addListener( this.xml, 'fault', this.handleXMLFault, true, 0, this );
+
+				this.checkStates();
+			}
+			else {
+				throw new Error( 'transform error!' );
+			}
+
+		},
+
+		/**
+		 * @description checks the states of both requests to see if the transform can be applied
+		 * @private
+		 */
+		checkStates: function() {
+			if ( this.xml.ready && this.xsl.ready ) {
+				//cache xsl request if id set
+				if (this.xslCacheId && this.xslCacheId != "") {
+					lola.http.cacheXsl( this.xslCacheId, this.xsl );
+				}
+
+				//both requests are ready, do transform
+				this.resultNodes = lola.http.transform( this.xml.responseXML(), this.xsl.responseXML(), this.transformParams );
+				lola.event.trigger( this, 'result', true, true, this.resultNodes );
+			}
+		},
+
+		/**
+		 * @description  handles xsl fault
+		 * @private
+		 */
+		handleXSLFault: function() {
+			lola.event.trigger( this, 'fault', true, true, 'xsl fault' );
+		},
+
+		/**
+		 * @description  handles xml fault
+		 * @private
+		 */
+		handleXMLFault: function() {
+			lola.event.trigger( this, 'fault', true, true, 'xml fault' );
+		},
+
+		/**
+		 * @description sends the transform requests if not yet sent
+		 * @public
+		 */
+		load: function() {
+			if ( !this.xml.request ) {
+				this.xml.send( this.xmlParams );
+			}
+			if ( !this.xsl.request ){
+				this.xsl.send( this.xslParams );
+			}
+		},
+
+		/**
+		 * @description  cancels transform request... aborts requests and removes listeners
+		 * @public
+		 */
+		cancel: function() {
+			lola.event.removeListener( this.xsl, 'result', this.checkStates, true );
+			lola.event.removeListener( this.xsl, 'fault', this.handleXSLFault, true );
+			lola.event.removeListener( this.xml, 'result', this.checkStates, true );
+			lola.event.removeListener( this.xml, 'fault', this.handleXMLFault, true );
+			try {
+				this.xsl.abort();
+			}
+			catch(e){}
+			try {
+				this.xml.abort();
+			}
+			catch(e){}
+		},
+
+		/**
+		 * @description get the result of the transformation
+		 * @public
+		 * @return {Array} array of nodes
+		 */
+		getResultNodes: function(){
+			return this.resultNodes;
+		}
+
+
+	};
+
+
+	//register module
+	lola.registerModule( http );
+
+})( lola );
+(function( lola ) {
+	var $ = lola;
+	/**
 	 * @description JSON Module adapted from json.org code
 	 * @implements {lola.Module}
 	 * @memberof lola
@@ -3952,7 +4119,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.json::preinitialize' );
+			lola.debug( 'lola.json::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -3968,7 +4135,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.json::initialize' );
+			lola.debug( 'lola.json::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -4346,6 +4513,862 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
+	 * @description Math Color Module
+	 * @implements {lola.Module}
+	 * @memberof lola.math
+	 */
+	var color = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.color::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+
+			//remove initialization method
+			delete lola.math.color.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.color::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+
+			//remove initialization method
+			delete lola.math.color.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "math.color";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return [];
+		},
+
+
+		/**
+		 * @description converts red,green,blue values to hue,saturation,lightness
+		 * @param {Number} r
+		 * @param {Number} g
+		 * @param {Number} b
+		 * @return {Object}
+		 */
+		rgb2hsl: function( r, g, b ) {
+			var hue = 0;
+			var saturation = 0;
+			var lightness = 0;
+
+			//make sure values are in range
+			r = (r < 0) ? 0 : r;
+			r = (r > 1) ? 1 : r;
+			g = (g < 0) ? 0 : g;
+			g = (g > 1) ? 1 : g;
+			b = (b < 0) ? 0 : b;
+			b = (b > 1) ? 1 : b;
+
+			//set lightness
+			var colorMax = (r > g) ? ((b > r) ? b : r) : ((b > g) ? b : g);
+			var colorMin = (r < g) ? ((b < r) ? b : r) : ((b < g) ? b : g);
+			lightness = colorMax;
+
+			//set saturation
+			if ( colorMax != 0 )
+				saturation = (colorMax - colorMin) / colorMax;
+
+			//set hue
+			if ( saturation > 0 ) {
+				var red = (colorMax - r) / (colorMax - colorMin);
+				var green = (colorMax - g) / (colorMax - colorMin);
+				var blue = (colorMax - b) / (colorMax - colorMin);
+				if ( r == colorMax )
+					hue = blue - green;
+
+				else if ( g == colorMax )
+					hue = 2 + red - blue;
+
+				else
+					hue = 4 + green - red;
+
+				hue = hue / 6;
+
+				while ( hue < 0 ) {
+					hue++;
+				}
+
+			}
+
+			return {h:hue, s:saturation, l:lightness };
+		},
+
+		/**
+		 * @description converts red,green,blue values to hex string
+		 * @param {Number} r
+		 * @param {Number} g
+		 * @param {Number} b
+		 * @return {String}
+		 */
+		rgb2hex: function( r, g, b ) {
+			var str = "";
+
+			//make sure values are in range
+			r = (r < 0) ? 0 : r;
+			r = (r > 1) ? 1 : r;
+			g = (g < 0) ? 0 : g;
+			g = (g > 1) ? 1 : g;
+			b = (b < 0) ? 0 : b;
+			b = (b > 1) ? 1 : b;
+
+			var red = Math.round( r * 255 );
+			var green = Math.round( g * 255 );
+			var blue = Math.round( b * 255 );
+
+			var digits = "0123456789ABCDEF";
+
+			var lku = [];
+			lku.push((red - (red % 16)) / 16);
+			lku.push( red % 16);
+			lku.push((green - (green % 16)) / 16);
+			lku.push( green % 16);
+			lku.push((blue - (blue % 16)) / 16);
+			lku.push( blue % 16);
+
+
+			lku.forEach( function(i){
+				str += digits.charAt( i );
+			});
+
+			return str;
+		},
+
+
+		/**
+		 * @description converts red,green,blue values to int
+		 * @param {Number} r
+		 * @param {Number} g
+		 * @param {Number} b
+		 * @return {int}
+		 */
+		rgb2int: function( r, g, b ) {
+			return parseInt("0x"+lola.math.color.rgb2hex(r,g,b));
+		},
+
+		/**
+		 * @description converts hue,saturation,lightness values to red,green,blue
+		 * @param {Number} h
+		 * @param {Number} s
+		 * @param {Number} l
+		 * @return {Object}
+		 */
+		hsl2rgb: function( h, s, l ) {
+			//make sure values are in range
+			h = (h < 0) ? 0 : h;
+			h = (h > 1) ? 1 : h;
+			s = (s < 0) ? 0 : s;
+			s = (s > 1) ? 1 : s;
+			l = (l < 0) ? 0 : l;
+			l = (l > 1) ? 1 : l;
+
+			var red = 0;
+			var green = 0;
+			var blue = 0;
+
+			if ( s == 0 ) {
+				red = b;
+				green = red;
+				blue = red;
+			}
+			else {
+				var _h = (h - Math.floor( h )) * 6;
+				var _f = _h - Math.floor( _h );
+
+				var _p = l * (1.0 - s);
+				var _q = l * (1.0 - s * _f);
+				var _t = l * (1.0 - (s * (1 - _f)));
+
+				switch ( Math.floor( _h ) ) {
+					case 0:
+						red = l;
+						green = _t;
+						blue = _p;
+						break;
+					case 1:
+						red = _q;
+						green = l;
+						blue = _p;
+						break;
+					case 2:
+						red = _p;
+						green = l;
+						blue = _t;
+						break;
+					case 3:
+						red = _p;
+						green = _q;
+						blue = l;
+						break;
+					case 4:
+						red = _t;
+						green = _p;
+						blue = l;
+						break;
+					case 5:
+						red = l;
+						green = _p;
+						blue = _q;
+						break;
+				}
+			}
+			return {r:red,g:green,b:blue};
+		},
+
+		/**
+		 * @description converts hue,saturation,lightness values to uint
+		 * @param {Number} h
+		 * @param {Number} s
+		 * @param {Number} l
+		 * @return {int}
+		 */
+		hsl2int: function( h, s, l ) {
+			var rgb = color.hsl2rgb( h, s, l );
+			return color.rgb2int( rgb.r, rgb.g, rgb.b );
+		},
+
+		/**
+		 * @description converts hue,saturation,lightness values to hex
+		 * @param {Number} h
+		 * @param {Number} s
+		 * @param {Number} l
+		 * @return {String}
+		 */
+		hsl2hex: function( h, s, l ) {
+			var rgb = color.hsl2rgb( h, s, l );
+			return color.rgb2hex( rgb.r, rgb.g, rgb.b );
+		},
+
+		/**
+		 * @description converts int values to rgb
+		 * @param {int} value
+		 * @return {Object}
+		 */
+		int2rgb: function( value ) {
+			var str = "";
+
+			//make sure value is in range
+			value = (value > 0xFFFFFF) ? 0xFFFFFF : value;
+			value = (value < 0x000000) ? 0x000000 : value;
+
+			var red = ((value >> 16) & 0xFF) / 255;
+			var green = ((value >> 8) & 0xFF) / 255;
+			var blue = ((value) & 0xFF) / 255;
+
+
+			return {r:red,g:green,b:blue};
+		},
+
+		/**
+		 * @description converts int values to hsl
+		 * @param {int} value
+		 * @return {Object}
+		 */
+		int2hsl: function( value ) {
+			var rgb = color.int2rgb( value );
+			return color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+		},
+
+		/**
+		 * @description converts int values to hex string
+		 * @param {int} value
+		 * @return {String}
+		 */
+		int2hex: function( value ) {
+			var rgb = color.int2rgb( value );
+			return color.rgb2hex( rgb.r, rgb.g, rgb.b );
+		},
+
+		/**
+		 * @description converts hex values to int
+		 * @param {String} value
+		 * @return {int}
+		 */
+		hex2int: function( value ) {
+			//special case for 3 digit color
+			var str;
+			if ( value.length == 3 ) {
+				str = value[0] + value[0] + value[1] + value[1] + value[2] + value[2]
+			}
+			else {
+				str = value;
+			}
+
+			return parseInt( "0x" + str );
+		},
+
+		/**
+		 * @description converts hex values to rgb
+		 * @param {String} value
+		 * @return {Object}
+		 */
+		hex2rgb: function( value ) {
+			return color.int2rgb( color.hex2int( value ) );
+		},
+
+		/**
+		 * @description converts hex values to hsl
+		 * @param {String} value
+		 * @return {Object}
+		 */
+		hex2hsl: function( value ) {
+			return color.int2hsl( color.hex2int( value ) );
+		},
+
+
+		//==================================================================
+		// Classes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+
+
+
+
+	//register module
+	lola.registerModule( color );
+
+})( lola );
+
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * @description math Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var math = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.math::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+
+			//remove initialization method
+			delete lola.math.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.math::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+
+			//remove initialization method
+			delete lola.math.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "math";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return [];
+		},
+
+		/**
+		 * @description normalize radians to 0 to 2 * PI
+		 * @param {Number} value radian value
+		 * @return {Number}
+		 */
+		normalizeRadians: function( value ) {
+			var unit = 2 * Math.PI;
+			while (value < unit)
+				value += unit;
+			return value % unit;
+		},
+
+		/**
+		 * @description normalize degrees to 0 to 360
+		 * @param {Number} value radian value
+		 * @return {Number}
+		 */
+		normalizeDegrees: function( value ) {
+			while (value < 360)
+				value += 360;
+			return value % 360;
+		},
+
+
+
+		//==================================================================
+		// Classes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+
+				/**
+				 * @description get max value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				maxValue: function( getVal ) {
+					return this.compareValues( getVal, Math.max, Number.MIN_VALUE );
+				},
+
+				/**
+				 * @description get min value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				minValue: function( getVal ) {
+					return this.compareValues( getVal, Math.min, Number.MAX_VALUE );
+				},
+
+				/**
+				 * @description get total value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				totalValue: function( getVal ) {
+					return this.compareValues( getVal, function( a, b ) {
+						return a + b;
+					}, 0 );
+				},
+
+				/**
+				 * @description get averate value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				avgValue: function( getVal ) {
+					return this.totalValue( getVal ) / this.elements.length;
+				}
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+
+
+
+
+	//register module
+	lola.registerModule( math );
+
+})( lola );
+
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * @description Math Time Value of Money Module
+	 * @implements {lola.Module}
+	 * @memberof lola.math
+	 */
+	var tvm = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.math.tvm::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+
+			//remove initialization method
+			delete lola.math.tvm.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.math.tvm::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+
+			//remove initialization method
+			delete lola.math.tvm.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "math.tvm";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return [];
+		},
+
+		/**
+		 * @description present value
+		 * @param fv future value
+		 * @param rate rate per term
+		 * @param term
+		 */
+		pv: function( fv, rate, term ) {
+			return fv / Math.pow( 1 + rate, term );
+		},
+
+		/**
+		 * @description future value
+		 * @param pv present value
+		 * @param rate rate per term
+		 * @param term
+		 */
+		fv: function( pv, rate, term ) {
+			return pv * Math.pow( 1 + rate, term );
+		},
+
+
+		/**
+		 * @description present value of an annuity
+		 * @param a annuity
+		 * @param rate rate per term
+		 * @param term
+		 */
+		pva: function( a, rate, term ) {
+			return a * (1 - ( 1 / Math.pow( 1 + rate, term ) ) ) / rate;
+		},
+
+		/**
+		 * @description future value of an annuity
+		 * @param a annuity
+		 * @param rate rate per term
+		 * @param term
+		 */
+		fva: function( a, rate, term ) {
+			return a * (Math.pow( 1 + rate, term ) - 1) / rate;
+		},
+
+		/**
+		 * @description payment
+		 * @param pv present value
+		 * @param rate rate per term
+		 * @param term
+		 * @param fv future value
+		 */
+		payment: function( pv, rate, term, fv ) {
+			var rp = Math.pow( 1 + rate, term );
+			return  pv * rate / ( 1 - (1 / rp)) - fv * rate / (rp - 1);
+		},
+
+
+		//==================================================================
+		// Classes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+
+
+
+
+	//register module
+	lola.registerModule( tvm );
+
+})( lola );
+
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * @description Regular Expression Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var regex = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+		extraSpace: /\s\s+/g,
+		isNumber: /^-?\d*(?:\.\d+)?$/,
+		isDimension: /^(-?\d*(?:\.\d+)?)(%|in|cm|mm|em|ex|pt|pc|px)$/,
+		isColor: /^(#|rgb|rgba|hsl|hsla)(.*)$/,
+		isHexColor: /^#([A-F0-9]{3,6})$/,
+		isRGBColor: /^rgba?\(([^\)]+)\)$/,
+		isHSLColor: /^hsla?\(([^\)]+)\)$/,
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * @description preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.regex::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+
+			//remove initialization method
+			delete lola.regex.preinitialize;
+		},
+
+		/**
+		 * @description initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.regex::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+
+			//remove initialization method
+			delete lola.regex.initialize;
+		},
+
+		/**
+		 * @description get module's namespace
+		 * @public
+		 * @return {String}
+		 * @default dom
+		 */
+		getNamespace: function() {
+			return "regex";
+		},
+
+		/**
+		 * @description get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return [];
+		},
+
+		//==================================================================
+		// Classes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * @description get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * @description module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+
+
+
+
+	//register module
+	lola.registerModule( regex );
+
+})( lola );
+
+(function( lola ) {
+	var $ = lola;
+	/**
 	 * @description String Module
 	 * @implements {lola.Module}
 	 * @memberof lola
@@ -4367,7 +5390,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.string::preinitialize' );
+			lola.debug( 'lola.string::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -4383,7 +5406,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.string::initialize' );
+			lola.debug( 'lola.string::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -4456,32 +5479,6 @@ window.Sizzle = Sizzle;
 			}
 
 			return parts.join();
-		},
-
-		/**
-		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
-		 * @param {String} str
-		 */
-		encode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /</g, '&lt;' );
-				str = str.replace( />/g, '&gt;' );
-				str = str.replace( /&/g, '&amp;' );
-			}
-			return str;
-		},
-
-		/**
-		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
-		 * @param {String} str
-		 */
-		unencode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /\$lt;/g, '<' );
-				str = str.replace( /&gt;/g, '>' );
-				str = str.replace( /&amp;/g, '&' );
-			}
-			return str;
 		},
 
 
@@ -4620,7 +5617,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log('lola.support::preinitialize');
+			lola.debug('lola.support::preinitialize');
 			//DOM script eval support
 			var root = document.documentElement;
 			var script = document.createElement( 'script' );
@@ -4684,7 +5681,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.support::initialize');
+			lola.debug('lola.support::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -4779,7 +5776,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log('lola.type::preinitialize');
+			lola.debug('lola.type::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -4799,7 +5796,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log('lola.type::initialize');
+			lola.debug('lola.type::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -5031,7 +6028,6 @@ window.Sizzle = Sizzle;
 		//==================================================================
 
 
-
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -5041,7 +6037,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			console.log( 'lola.util::preinitialize' );
+			lola.debug( 'lola.util::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
@@ -5057,7 +6053,7 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			console.log( 'lola.util::initialize' );
+			lola.debug( 'lola.util::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -5147,335 +6143,5 @@ window.Sizzle = Sizzle;
 
 	//register module
 	lola.registerModule( util );
-
-})( lola );
-(function( lola ) {
-	var $ = lola;
-	/**
-	 * @description XML HTTP Request Module
-	 * @implements {lola.Module}
-	 * @memberof lola
-	 */
-	var xhr = {
-
-		//==================================================================
-		// Attributes
-		//==================================================================
-
-
-
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * @description preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			console.log( 'lola.xhr::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.xhr.preinitialize;
-		},
-
-		/**
-		 * @description initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			console.log( 'lola.xhr::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.xhr.initialize;
-		},
-
-		/**
-		 * @description get module's namespace
-		 * @public
-		 * @return {String}
-		 * @default dom
-		 */
-		getNamespace: function() {
-			return "xhr";
-		},
-
-		/**
-		 * @description get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return ['string'];
-		},
-
-		//==================================================================
-		// Classes
-		//==================================================================
-		Request: function( url, method, headers, async, user, password ){
-			return this.init( url, method, headers, async, user, password );
-		},
-
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * @description get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
-
-			/**
-			 * @description module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-			};
-
-			return methods;
-
-		}
-	};
-
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
-	xhr.Request.prototype = {
-		/**
-		 * @description request url
-		 * @private
-		 */
-		url: "",
-
-		/**
-		 * @description request method
-		 * @private
-		 */
-		method: 'POST',
-
-		/**
-		 * @description request headers
-		 * @private
-		 */
-		headers: [],
-
-		/**
-		 * @description execute request asyncronously
-		 * @private
-		 */
-		async: true,
-
-		/**
-		 * @description username
-		 * @private
-		 */
-		user: null,
-
-		/**
-		 * @description password
-		 * @private
-		 */
-		password: null,
-
-		/**
-		 * @description DOM xmlhttprequest
-		 * @private
-		 */
-		request: false,
-
-		/**
-		 * @description readyFlag
-		 * @public
-		 */
-		ready: false,
-
-		/**
-		 * @description xhr.Request initializer
-		 * @param {String} url request url
-		 * @param {String} method request method
-		 * @param {Array} headers request headers
-		 * @param {Boolean} async execute request asyncronously
-		 * @param {String} user credentials username
-		 * @param {String} password credentials password
-		 */
-		init: function( url, method, headers, async, user, password ){
-			this.method = method || 'POST';
-			this.headers = headers || [];
-			this.async = async === true;
-			this.url = url;
-			this.user = user;
-			this.password = password;
-
-			return this;
-		},
-
-		/**
-		 * @description gets correct request object
-		 * @private
-		 */
-		getRequestObject: function() {
-			var request = false;
-			if ( window.XMLHttpRequest && !(window.ActiveXObject) ) {
-				// branch for native XMLHttpRequest object
-				try {
-					request = new XMLHttpRequest();
-				}
-				catch( error ) {
-					request = false;
-				}
-			}
-			else if ( window.ActiveXObject ) {
-				// branch for IE/Windows ActiveX version
-				try {
-					//request = new ActiveXObject("MSXML2.FreeThreadedDomDocument");
-					request = new ActiveXObject( "Msxml2.XMLHTTP" );
-				}
-				catch( error ) {
-					try {
-						request = new ActiveXObject( "Microsoft.XMLHTTP" );
-					}
-					catch( error ) {
-						request = false;
-					}
-				}
-			}
-
-			return request;
-		},
-
-		/**
-		 * @description builds and executes request
-		 * @private
-		 * @param url
-		 * @param params
-		 * @param method
-		 * @param headers
-		 * @param async
-		 * @param readystatechange
-		 * @param scope
-		 * @param user
-		 * @param password
-		 */
-		makeRequest: function( url, params, method, headers, async, readystatechange, scope, user, password ) {
-			var request = this.getRequestObject();
-			request.open( method, url, async, user, password );
-			request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
-			for ( var i = 0; i < headers.length; i++ ) {
-				try {
-					request.setRequestHeader( headers[i].name, headers[i].value );
-				}
-				catch( e ) {
-				}
-			}
-			if ( params != null ) {
-				if ( lola.type.get( params ) != 'string' ) {
-					var temp = [];
-					for ( var k in params ) {
-						temp.push( k + "=" + lola.string.encode( params[k] ) );
-					}
-					params = temp.join( '&' );
-				}
-
-				if ( params.length > 0 ) {
-					//request.setRequestHeader("Content-Length", params.length);
-					//request.setRequestHeader("Connection", "close");
-				}
-			}
-
-			request.onreadystatechange = function() {
-				readystatechange.call( scope )
-			};
-			request.send( params );
-
-			return request;
-		},
-
-		/**
-		 * @description send request
-		 * @public
-		 * @param {Object|String|undefined} params
-		 */
-		send: function( params ) {
-			this.request = this.makeRequest( this.url, params, this.method, this.headers, true, this.readyStateChange, this, this.user, this.password );
-		},
-
-		/**
-		 * @description ready state change listener
-		 * @private
-		 */
-		readyStateChange: function() {
-			if ( this.request ) {
-				switch ( this.request.readyState ) {
-					case 0:
-						//uninitialized
-						break;
-					case 1:
-						//loading
-						lola.event.trigger( this, 'loading', true, true, this.request );
-						break;
-					case 2:
-						//loaded
-						lola.event.trigger( this, 'loaded', true, true, this.request );
-						break;
-					case 3:
-						//interactive
-						lola.event.trigger( this, 'interactive', true, true, this.request );
-						break;
-					case 4:
-						//complete
-						lola.event.dispatch( this, 'stateComplete', true, true, this.request );
-						if ( this.request.status == 200 && !this.ready ) {
-							this.ready = true;
-							lola.event.trigger( this, 'result', true, true, this.request );
-						}
-						else if ( this.request.status >= 400 ) {
-							console.info( 'AsyncRequest.readyStateChange.fault: ' + this.url );
-							lola.event.trigger( this, 'fault', false, false, this.request );
-						}
-						break;
-				}
-			}
-		},
-
-		/**
-		 * @description get raw response text
-		 * @return {String}
-		 */
-		responseText: function() {
-			if ( this.ready )
-				return this.request.responseText;
-			else
-				return false;
-		},
-
-		/**
-		 * @description get response xml document
-		 * @return {XML}
-		 */
-		responseXML: function() {
-			if ( this.ready )
-				return this.request.responseXML;
-			else
-				return false;
-		}
-
-
-	};
-
-	//register module
-	lola.registerModule( xhr );
 
 })( lola );

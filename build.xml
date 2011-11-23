@@ -32,7 +32,7 @@
 	<target name="unify-scripts" depends="init" >
 		<concat destfile="tmp/unified.js" force="no">
 			<fileset dir="framework/source/" includes="core.js"/>
-			<fileset dir="framework/source/external/" includes="sizzle.js"/>
+			<!--<fileset dir="framework/source/external/" includes="sizzle.js"/>-->
 			<fileset dir="framework/source/modules" includes="*.js"/>
 		</concat>
 	</target>

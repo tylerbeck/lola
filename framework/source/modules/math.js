@@ -1,15 +1,16 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Utility Module
+	 * @description math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
-	var util = {
+	var math = {
 
 		//==================================================================
 		// Attributes
 		//==================================================================
+
 
 
 		//==================================================================
@@ -21,14 +22,15 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug( 'lola.util::preinitialize' );
+			lola.debug('lola.math::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
 
 
+
 			//remove initialization method
-			delete lola.util.preinitialize;
+			delete lola.math.preinitialize;
 		},
 
 		/**
@@ -37,15 +39,16 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug( 'lola.util::initialize' );
+			lola.debug('lola.math::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
 
 
+
 			//remove initialization method
-			delete lola.util.initialize;
+			delete lola.math.initialize;
 		},
 
 		/**
@@ -55,7 +58,7 @@
 		 * @default dom
 		 */
 		getNamespace: function() {
-			return "util";
+			return "math";
 		},
 
 		/**
@@ -68,9 +71,35 @@
 			return [];
 		},
 
+		/**
+		 * @description normalize radians to 0 to 2 * PI
+		 * @param {Number} value radian value
+		 * @return {Number}
+		 */
+		normalizeRadians: function( value ) {
+			var unit = 2 * Math.PI;
+			while (value < unit)
+				value += unit;
+			return value % unit;
+		},
+
+		/**
+		 * @description normalize degrees to 0 to 360
+		 * @param {Number} value radian value
+		 * @return {Number}
+		 */
+		normalizeDegrees: function( value ) {
+			while (value < 360)
+				value += 360;
+			return value % 360;
+		},
+
+
+
 		//==================================================================
 		// Classes
 		//==================================================================
+
 
 
 		//==================================================================
@@ -90,27 +119,41 @@
 			var methods = {
 
 				/**
-				 * @description iterate through values calling iterator to change value
-				 * @param {Function} getVal function tat returns value from each item
-				 * @param {Function} compareFn function that compares values / modifies data
-				 * @param {Object} initialVal initial value;
-				 * @return {*}
+				 * @description get max value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
 				 */
-				compareValues: function( getVal, compareFn, initialVal ) {
-					var value = initialVal;
+				maxValue: function( getVal ) {
+					return this.compareValues( getVal, Math.max, Number.MIN_VALUE );
+				},
 
-					if ( typeof getVal === 'string' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, Number( item[getVal] ) );
-						} );
-					}
-					else if ( typeof getVal === 'function' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, getVal.call( this, item ) );
-						} );
-					}
+				/**
+				 * @description get min value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				minValue: function( getVal ) {
+					return this.compareValues( getVal, Math.min, Number.MAX_VALUE );
+				},
 
-					return value;
+				/**
+				 * @description get total value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				totalValue: function( getVal ) {
+					return this.compareValues( getVal, function( a, b ) {
+						return a + b;
+					}, 0 );
+				},
+
+				/**
+				 * @description get averate value
+				 * @param {Function} getVal function to get value from elements
+				 * @return {Number}
+				 */
+				avgValue: function( getVal ) {
+					return this.totalValue( getVal ) / this.elements.length;
 				}
 
 			};
@@ -125,7 +168,10 @@
 	//==================================================================
 
 
+
+
 	//register module
-	lola.registerModule( util );
+	lola.registerModule( math );
 
 })( lola );
+

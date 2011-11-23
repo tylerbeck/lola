@@ -7,7 +7,7 @@
 			<lineno>48</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1232704349</id>
+				<id>astnode1208381540</id>
 				<name>selector</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -32,7 +32,7 @@
 			<lineno>52</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1077868560</id>
+				<id>astnode9949215</id>
 				<name>a</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -58,7 +58,7 @@
 			<lineno>57</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode9949215</id>
+				<id>astnode1696447045</id>
 				<name>b</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -84,7 +84,7 @@
 			<lineno>62</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1578101576</id>
+				<id>astnode2814081</id>
 				<name>c</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -142,7 +142,7 @@
 			<lineno>105</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode51619133</id>
+				<id>astnode1902716336</id>
 				<name>array</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -169,7 +169,7 @@
 			<lineno>113</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode344078580</id>
+				<id>astnode1115192682</id>
 				<name>methods</name>
 				<type>OBJECTLIT</type>
 				<node>OBJECT</node>
@@ -197,7 +197,7 @@
 			<lineno>117</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode774471675</id>
+				<id>astnode1597138052</id>
 				<name>d</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -223,7 +223,7 @@
 			<lineno>122</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1953619005</id>
+				<id>astnode536357250</id>
 				<name>e</name>
 				<type>STRING</type>
 				<node>OBJECT</node>
@@ -249,7 +249,7 @@
 			<lineno>127</lineno>
 			<filename>/Users/tbeck/Projects/tylerbeck/lola/framework/source/test.js</filename>
 			<code>
-				<id>astnode1701136111</id>
+				<id>astnode686231088</id>
 				<name>f</name>
 				<type>STRING</type>
 				<node>OBJECT</node>

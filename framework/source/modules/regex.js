@@ -1,15 +1,22 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Utility Module
+	 * @description Regular Expression Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
-	var util = {
+	var regex = {
 
 		//==================================================================
 		// Attributes
 		//==================================================================
+		extraSpace: /\s\s+/g,
+		isNumber: /^-?\d*(?:\.\d+)?$/,
+		isDimension: /^(-?\d*(?:\.\d+)?)(%|in|cm|mm|em|ex|pt|pc|px)$/,
+		isColor: /^(#|rgb|rgba|hsl|hsla)(.*)$/,
+		isHexColor: /^#([A-F0-9]{3,6})$/,
+		isRGBColor: /^rgba?\(([^\)]+)\)$/,
+		isHSLColor: /^hsla?\(([^\)]+)\)$/,
 
 
 		//==================================================================
@@ -21,14 +28,15 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug( 'lola.util::preinitialize' );
+			lola.debug('lola.regex::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
 
 
+
 			//remove initialization method
-			delete lola.util.preinitialize;
+			delete lola.regex.preinitialize;
 		},
 
 		/**
@@ -37,15 +45,16 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug( 'lola.util::initialize' );
+			lola.debug('lola.regex::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
 
 
+
 			//remove initialization method
-			delete lola.util.initialize;
+			delete lola.regex.initialize;
 		},
 
 		/**
@@ -55,7 +64,7 @@
 		 * @default dom
 		 */
 		getNamespace: function() {
-			return "util";
+			return "regex";
 		},
 
 		/**
@@ -71,6 +80,7 @@
 		//==================================================================
 		// Classes
 		//==================================================================
+
 
 
 		//==================================================================
@@ -89,30 +99,6 @@
 			 */
 			var methods = {
 
-				/**
-				 * @description iterate through values calling iterator to change value
-				 * @param {Function} getVal function tat returns value from each item
-				 * @param {Function} compareFn function that compares values / modifies data
-				 * @param {Object} initialVal initial value;
-				 * @return {*}
-				 */
-				compareValues: function( getVal, compareFn, initialVal ) {
-					var value = initialVal;
-
-					if ( typeof getVal === 'string' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, Number( item[getVal] ) );
-						} );
-					}
-					else if ( typeof getVal === 'function' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, getVal.call( this, item ) );
-						} );
-					}
-
-					return value;
-				}
-
 			};
 
 			return methods;
@@ -125,7 +111,10 @@
 	//==================================================================
 
 
+
+
 	//register module
-	lola.registerModule( util );
+	lola.registerModule( regex );
 
 })( lola );
+

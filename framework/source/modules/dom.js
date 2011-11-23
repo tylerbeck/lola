@@ -233,6 +233,19 @@
 				},
 
 				/**
+				 * @description  prepends node to first selection element in DOM
+				 * @param {Element} node
+				 * @return {lola.Selector}
+				 */
+				prependChild: function( node ) {
+					if ( this.elements.length > 0 ) {
+						this.get().insertBefore( node, this.get().firstChild );
+					}
+
+					return this;
+				},
+
+				/**
 				 * @description  clones first selection element
 				 * @param {Boolean} deep
 				 * @return {Element}

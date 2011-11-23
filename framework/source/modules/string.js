@@ -113,32 +113,6 @@
 			return parts.join();
 		},
 
-		/**
-		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
-		 * @param {String} str
-		 */
-		encode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /</g, '&lt;' );
-				str = str.replace( />/g, '&gt;' );
-				str = str.replace( /&/g, '&amp;' );
-			}
-			return str;
-		},
-
-		/**
-		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
-		 * @param {String} str
-		 */
-		unencode: function( str ) {
-			if ( typeof str == 'string' ) {
-				str = str.replace( /\$lt;/g, '<' );
-				str = str.replace( /&gt;/g, '>' );
-				str = str.replace( /&amp;/g, '&' );
-			}
-			return str;
-		},
-
 
 		//==================================================================
 		// Classes

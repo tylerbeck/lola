@@ -51,7 +51,7 @@
 		 * @private
 		 * @type {Boolean}
 		 */
-		debugMode: true,
+		debugMode: false,
 
 		//==================================================================
 		// Methods

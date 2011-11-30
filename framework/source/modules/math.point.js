@@ -11,8 +11,6 @@
 		// Attributes
 		//==================================================================
 
-
-
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -66,54 +64,104 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ["math"];
 		},
 
 		/**
-		 * @description add p1 and p2
-		 * @param {lola.point.Point} p1
-		 * @param {lola.point.Point} p2
-		 * @return {lola.point.Point}
+		 * @description adds arguments to p1
+		 * @param {lola.math.point.Point} p1
+		 * @return {lola.math.point.Point}
 		 */
-		add: function( p1, p2 ){
-			return new point.Point( p1.x+p2.x, p1.y+p2.y );
+		add: function( p1 ){
+			var r = new point.Point(p1.x,p1.y);
+			var len =  arguments.length;
+			for (var i=1; i<len; i++) {
+				var arg = arguments[i];
+				if (typeof arg == "number") {
+					r.x += arg;
+					r.y += arg;
+				}
+				else {
+					r.x += arg.x;
+					r.y += arg.y;
+				}
+			}
+			return r;
 		},
 
 		/**
-		 * @description subtract p2 from p1
-		 * @param {lola.point.Point} p1
-		 * @param {lola.point.Point} p2
-		 * @return {lola.point.Point}
+		 * @description subtract args from p1
+		 * @param {lola.math.point.Point} p1
+		 * @return {lola.math.point.Point}
 		 */
-		subtract: function( p1, p2 ){
-			return new point.Point( p1.x-p2.x, p1.y-p2.y );
+		subtract: function( p1 ){
+			var r = new point.Point(p1.x,p1.y);
+			var len =  arguments.length;
+			for (var i=1; i<len; i++) {
+				var arg = arguments[i];
+				if (typeof arg == "number") {
+					r.x -= arg;
+					r.y -= arg;
+				}
+				else {
+					r.x -= arg.x;
+					r.y -= arg.y;
+				}
+			}
+			return r;
 		},
 
 		/**
-		 * @description multiply p1 by p2
-		 * @param {lola.point.Point} p1
-		 * @param {lola.point.Point} p2
-		 * @return {lola.point.Point}
+		 * @description multiply p1 by args
+		 * @param {lola.math.point.Point} p1
+		 * @param {lola.math.point.Point|Number} p2
+		 * @return {lola.math.point.Point}
 		 */
-		multiply: function( p1, p2 ){
-			return new point.Point( p1.x*p2.x, p1.y*p2.y );
+		multiply: function( p1 ){
+			var r = new point.Point(p1.x,p1.y);
+			var len =  arguments.length;
+			for (var i=1; i<len; i++) {
+				var arg = arguments[i];
+				if (typeof arg == "number") {
+					r.x *= arg;
+					r.y *= arg;
+				}
+				else {
+					r.x *= arg.x;
+					r.y *= arg.y;
+				}
+			}
+			return r;
 		},
 
 		/**
-		 * @description divide p1 by p2
-		 * @param {lola.point.Point} p1
-		 * @param {lola.point.Point} p2
-		 * @return {lola.point.Point}
+		 * @description divide p1 by args
+		 * @param {lola.math.point.Point} p1
+		 * @param {lola.math.point.Point|Number} p2
+		 * @return {lola.math.point.Point}
 		 */
-		divide: function( p1, p2 ){
-			return new point.Point( p1.x/p2.x, p1.y/p2.y );
+		divide: function( p1 ){
+			var r = new point.Point(p1.x,p1.y);
+			var len =  arguments.length;
+			for (var i=1; i<len; i++) {
+				var arg = arguments[i];
+				if (typeof arg == "number") {
+					r.x /= arg;
+					r.y /= arg;
+				}
+				else {
+					r.x /= arg.x;
+					r.y /= arg.y;
+				}
+			}
+			return r;
 		},
 
 		/**
 		 * @description raise p to the po
-		 * @param {lola.point.Point} p
-		 * @param {lola.point.Point} po
-		 * @return {lola.point.Point}
+		 * @param {lola.math.point.Point} p
+		 * @param {lola.math.point.Point} po
+		 * @return {lola.math.point.Point}
 		 */
 		pow: function( p, po ){
 			return new point.Point( Math.pow( p.x, po ), Math.pow( p.y, po ) );
@@ -121,8 +169,8 @@
 
 		/**
 		 * @description calculates the absolute distance between p1 and p2
-		 * @param {lola.point.Point} p1
-		 * @param {lola.point.Point} p2
+		 * @param {lola.math.point.Point} p1
+		 * @param {lola.math.point.Point} p2
 		 * @return {Number}
 		 */
 		distance: function( p1, p2 ) {
@@ -131,7 +179,7 @@
 
 		/**
 		 * @description offsets a point at the specified angle by the specified distance
-		 * @param {lola.point.Point} p
+		 * @param {lola.math.point.Point} p
 		 * @param {Number} angle angle in radians
 		 * @param {Number} distance
 		 */

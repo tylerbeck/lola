@@ -1,11 +1,11 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description math Module
+	 * @description math.geom Module
 	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @memberof lola.math
 	 */
-	var math = {
+	var geom = {
 
 		//==================================================================
 		// Attributes
@@ -22,15 +22,14 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug('lola.math::preinitialize');
+			lola.debug( 'lola.math.geom::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
 
 
-
 			//remove initialization method
-			delete lola.math.preinitialize;
+			delete lola.math.geom.preinitialize;
 		},
 
 		/**
@@ -39,16 +38,15 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug('lola.math::initialize');
+			lola.debug( 'lola.math.geom::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
 
 
-
 			//remove initialization method
-			delete lola.math.initialize;
+			delete lola.math.geom.initialize;
 		},
 
 		/**
@@ -58,7 +56,7 @@
 		 * @default dom
 		 */
 		getNamespace: function() {
-			return "math";
+			return "math.geom";
 		},
 
 		/**
@@ -68,30 +66,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
-		},
-
-		/**
-		 * @description normalize radians to 0 to 2 * PI
-		 * @param {Number} value radian value
-		 * @return {Number}
-		 */
-		normalizeRadians: function( value ) {
-			var unit = 2 * Math.PI;
-			while (value < unit)
-				value += unit;
-			return value % unit;
-		},
-
-		/**
-		 * @description normalize degrees to 0 to 360
-		 * @param {Number} value radian value
-		 * @return {Number}
-		 */
-		normalizeDegrees: function( value ) {
-			while (value < 360)
-				value += 360;
-			return value % 360;
+			return ['math'];
 		},
 
 
@@ -117,44 +92,6 @@
 			 */
 			var methods = {
 
-				/**
-				 * @description get max value
-				 * @param {Function} getVal function to get value from elements
-				 * @return {Number}
-				 */
-				maxValue: function( getVal ) {
-					return this.compareValues( getVal, Math.max, Number.MIN_VALUE );
-				},
-
-				/**
-				 * @description get min value
-				 * @param {Function} getVal function to get value from elements
-				 * @return {Number}
-				 */
-				minValue: function( getVal ) {
-					return this.compareValues( getVal, Math.min, Number.MAX_VALUE );
-				},
-
-				/**
-				 * @description get total value
-				 * @param {Function} getVal function to get value from elements
-				 * @return {Number}
-				 */
-				totalValue: function( getVal ) {
-					return this.compareValues( getVal, function( a, b ) {
-						return a + b;
-					}, 0 );
-				},
-
-				/**
-				 * @description get averate value
-				 * @param {Function} getVal function to get value from elements
-				 * @return {Number}
-				 */
-				avgValue: function( getVal ) {
-					return this.totalValue( getVal ) / this.elements.length;
-				}
-
 			};
 
 			return methods;
@@ -167,10 +104,7 @@
 	//==================================================================
 
 
-
-
 	//register module
-	lola.registerModule( math );
+	lola.registerModule( geom );
 
 })( lola );
-

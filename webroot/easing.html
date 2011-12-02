@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Easing</title>
+	<script src="bin/lola.js"></script>
+	<script>
+		var draw = {
+
+			ctx: null,
+
+			setContext: function( ctx ){
+				this.ctx = ctx;
+			},
+
+			grid: function( x, y, w, h, s, c, t) {
+				var g = this.ctx;
+				g.strokeStyle = c;
+				g.lineWidth = t;
+
+				var i;
+				//vertical
+				for (i=x+s; i<=w+x; i+=s){
+					g.beginPath();
+					g.moveTo(i,y);
+					g.lineTo(i,y+h);
+					g.stroke();
+					g.closePath();
+				}
+				//horizontal
+				for (i=y+s; i<=h+y; i+=s){
+					g.beginPath();
+					g.moveTo(x,i);
+					g.lineTo(x+w,i);
+					g.stroke();
+					g.closePath();
+				}
+			},
+
+			xAxis: function( x, y, w, c, t, l ) {
+				var g = this.ctx;
+				g.strokeStyle = c;
+				g.lineWidth = t;
+				g.beginPath();
+				g.moveTo( x, y );
+				g.lineTo( w+x, y );
+				g.stroke();
+				g.closePath();
+
+				if (l) {
+					g.textAlign = "right";
+					g.fillText( l, x-5, y+2 );
+				}
+
+			},
+
+			yAxis: function( x, y, h, c, t, l ) {
+				var g = this.ctx;
+				g.strokeStyle = c;
+				g.lineWidth = t;
+				g.beginPath();
+				g.moveTo( x, y );
+				g.lineTo( x, h+y );
+				g.stroke();
+				g.closePath();
+
+				if (l) {
+					g.textAlign = "center";
+					g.fillText( l, x, y+h+15 );
+				}
+			}
+		};
+
+	</script>
+
+	<style>
+		#grid{ margin: 20px; }
+		.anchor{ position: absolute; background-color: blue; };
+		.control{ position: absolute; background-color: red; };
+	</style>
+
+</head>
+<body>
+	<canvas id="grid" width="900" height="640"></canvas>
+	<canvas id="pt0" class="anchor" width="10" height="10"></canvas>
+	<canvas id="pt1" class="control" width="10" height="10"></canvas>
+	<canvas id="pt2" class="control" width="10" height="10"></canvas>
+	<canvas id="pt3" class="anchor" width="10" height="10"></canvas>
+	<script>
+		var grid = $("#grid").get();
+		var p0 = $("#pt0").get();
+		var p1 = $("#pt1").get();
+		var p2 = $("#pt2").get();
+		var p3 = $("#pt3").get();
+		
+		draw.setContext( grid.getContext('2d') );
+
+		draw.grid(50,20,800,600,20,"#EEEEEE",1);
+		draw.grid(50,20,800,600,100,"#DDDDDD",1);
+
+		draw.xAxis(50,20,800,"#999999",1,"max");
+		draw.xAxis(50,120,800,"#999999",1,"end");
+		draw.xAxis(50,520,800,"#999999",1,"start");
+		draw.xAxis(50,620,800,"#999999",1,"min");
+
+		draw.yAxis(50,20,600,"#999999",1,"0");
+		draw.yAxis(850,20,600,"#999999",1,"1");
+
+	</script>
+</body>
+</html>

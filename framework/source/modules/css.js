@@ -123,7 +123,7 @@
 		getProperty: function( property ) {
 			if ( !this.propertyCache[property] )
 				this.propertyCache[property] = lola.string.camelCase( property );
-			return this.propertyCache( property );
+			return this.propertyCache[ property ];
 		},
 
 		/**
@@ -446,10 +446,10 @@
 				 * @param {String} property
 				 * @param {*} value
 				 */
-				css: function( property, value ) {
+				style: function( property, value ) {
 					if ( value != undefined ) {
-						this.foreach( function( item ) {
-							lola.css.style( item, selector, value );
+						this.forEach( function( item ) {
+							lola.css.style( item, property, value );
 						} );
 						return this;
 					}
@@ -458,7 +458,7 @@
 						this.forEach( function(item){
 							values.push( lola.css.style( item, property ) )
 						});
-						return values;
+						return lola.__(values);
 					}
 				},
 
@@ -469,7 +469,7 @@
 				classes: function( values ) {
 					if ( values != undefined ) {
 						//set class names
-						this.foreach( function( item ) {
+						this.forEach( function( item ) {
 							lola.css.classes( item, values );
 						} );
 						return this;
@@ -478,11 +478,11 @@
 					else {
 						//get class names
 						var names = [];
-						this.foreach( function( item ) {
+						this.forEach( function( item ) {
 							names.push( lola.css.classes( item ) );
 						} );
 
-						return names;
+						return lola.__(names);
 					}
 				},
 
@@ -492,7 +492,7 @@
 				 */
 				hasClass: function( name ) {
 					var check = true;
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						if (!lola.css.hasClass( item, name )){
 							check = false;
 						}
@@ -505,7 +505,7 @@
 				 * @param {String} name
 				 */
 				addClass: function( name ) {
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						lola.css.addClass( item, name );
 					} );
 					return this;
@@ -516,7 +516,7 @@
 				 * @param {String} name
 				 */
 				removeClass: function( name ) {
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						lola.css.removeClass( item, name );
 					} );
 					return this;

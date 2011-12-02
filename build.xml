@@ -70,13 +70,13 @@
 	<!-- create documentation -->
 	<target name="create-docs" depends="unify-scripts">
 		<!-- copy versioned file -->
-		<exec executable="assets/java-libs/jsdoc/jsdoc" failonerror="true">
-			<arg path="framework/source/test.js"/>
+		<!--<exec executable="assets/java-libs/jsdoc/jsdoc" failonerror="true">-->
+			<!--<arg path="framework/source/test.js"/>-->
 			<!--<arg path="framework/source/modules/"/>-->
-		</exec>
-		<copy todir="documentation" overwrite="true" >
-			<fileset dir="out" includes="**/*.*"/>
-		</copy>
+		<!--</exec>-->
+		<!--<copy todir="documentation" overwrite="true" >-->
+			<!--<fileset dir="out" includes="**/*.*"/>-->
+		<!--</copy>-->
 	</target>
 
 

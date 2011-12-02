@@ -186,7 +186,7 @@
 						this.forEach( function( item ) {
 							values.push( (item) ? item.innerHTML : null );
 						} );
-						return values;
+						return lola.__(values);
 					}
 					else {
 						this.forEach( function( item ) {
@@ -316,7 +316,7 @@
 						this.forEach( function( item ) {
 							values.push( lola.dom.attr( item, name ) );
 						} );
-						return values;
+						return lola.__(values);
 					}
 				},
 
@@ -350,7 +350,7 @@
 						this.forEach( function( item ) {
 							values.push( item?item.parentNode:null );
 						} );
-						return values;
+						return lola.__(values);
 					}
 				},
 

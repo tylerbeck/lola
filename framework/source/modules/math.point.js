@@ -231,7 +231,7 @@
 	//==================================================================
 	point.Point.prototype = {
 		x: undefined,
-		y:undefined
+		y: undefined
 	};
 
 	//register module

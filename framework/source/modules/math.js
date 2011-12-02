@@ -94,7 +94,16 @@
 			return value % 360;
 		},
 
-
+		/**
+		 * @description normalize a value within a range
+		 * @param {Number} min
+		 * @param {Number} value
+		 * @param {Number} max
+		 * @return {Number}
+		 */
+		normalizeRange: function( min, value, max ){
+			return Math.max( min, Math.min( max, value ) );
+		},
 
 		//==================================================================
 		// Classes

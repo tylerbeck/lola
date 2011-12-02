@@ -68,7 +68,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ['math'];
 		},
 
 

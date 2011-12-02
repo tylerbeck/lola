@@ -434,6 +434,17 @@
 		},
 
 		/**
+		 * @description returns x,y coordinates relative to currentTarget
+		 * @param {Event} e
+		 * @return {Object}
+		 */
+		getDOMLocalXY: function( e ) {
+			var xPos = e.layerX || e.offsetX || 0;
+			var yPos = e.layerY || e.offsetY || 0;
+			return {x:xPos,y:yPos};
+		},
+
+		/**
 		 * @description returns actual event phase to use
 		 * @param {Object} target
 		 * @param {Boolean|undefined} useCapture
@@ -634,6 +645,10 @@
 			var gpos = lola.event.getDOMGlobalXY( event );
 			this.globalX = gpos.x;
 			this.globalY = gpos.y;
+
+			var lpos = lola.event.getDOMLocalXY( event );
+			this.localX = lpos.x;
+			this.localY = lpos.y;
 
 			this.key = lola.event.getDOMKey( event );
 

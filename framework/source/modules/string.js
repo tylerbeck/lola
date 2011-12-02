@@ -98,20 +98,22 @@
 			return str;
 		},
 
-
 		/**
 		 * @description converts hyphenated strings to camelCase
 		 * @param {String} str
 		 */
 		camelCase: function ( str ) {
 			var parts = str.split( "-" );
-			for ( var i in parts ) {
+			var pl = parts.length;
+			for ( var i = 1; i<pl; i++ ) {
 				if ( parts[i].length > 0 )
-					parts[i][0] = parts[i][0].toUpperCase();
+					parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
 			}
 
-			return parts.join();
+			return parts.join("");
 		},
+
+
 
 
 		//==================================================================

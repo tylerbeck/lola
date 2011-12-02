@@ -219,7 +219,7 @@
 					this.forEach( function( item ) {
 						values.push( lola.type.get(item) );
 					} );
-					return values;
+					return lola.__(values);
 				},
 
 				/**

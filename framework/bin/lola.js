@@ -309,6 +309,10 @@
 			}
 		},
 
+		__: function( v ){
+			return (v.length == 1) ? v[0] : v;
+		},
+
 		//==================================================================
 		// Prototype Upgrades
 		//==================================================================
@@ -3092,7 +3096,7 @@ window.Sizzle = Sizzle;
 		getProperty: function( property ) {
 			if ( !this.propertyCache[property] )
 				this.propertyCache[property] = lola.string.camelCase( property );
-			return this.propertyCache( property );
+			return this.propertyCache[ property ];
 		},
 
 		/**
@@ -3415,10 +3419,10 @@ window.Sizzle = Sizzle;
 				 * @param {String} property
 				 * @param {*} value
 				 */
-				css: function( property, value ) {
+				style: function( property, value ) {
 					if ( value != undefined ) {
-						this.foreach( function( item ) {
-							lola.css.style( item, selector, value );
+						this.forEach( function( item ) {
+							lola.css.style( item, property, value );
 						} );
 						return this;
 					}
@@ -3427,7 +3431,7 @@ window.Sizzle = Sizzle;
 						this.forEach( function(item){
 							values.push( lola.css.style( item, property ) )
 						});
-						return values;
+						return lola.__(values);
 					}
 				},
 
@@ -3438,7 +3442,7 @@ window.Sizzle = Sizzle;
 				classes: function( values ) {
 					if ( values != undefined ) {
 						//set class names
-						this.foreach( function( item ) {
+						this.forEach( function( item ) {
 							lola.css.classes( item, values );
 						} );
 						return this;
@@ -3447,11 +3451,11 @@ window.Sizzle = Sizzle;
 					else {
 						//get class names
 						var names = [];
-						this.foreach( function( item ) {
+						this.forEach( function( item ) {
 							names.push( lola.css.classes( item ) );
 						} );
 
-						return names;
+						return lola.__(names);
 					}
 				},
 
@@ -3461,7 +3465,7 @@ window.Sizzle = Sizzle;
 				 */
 				hasClass: function( name ) {
 					var check = true;
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						if (!lola.css.hasClass( item, name )){
 							check = false;
 						}
@@ -3474,7 +3478,7 @@ window.Sizzle = Sizzle;
 				 * @param {String} name
 				 */
 				addClass: function( name ) {
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						lola.css.addClass( item, name );
 					} );
 					return this;
@@ -3485,7 +3489,7 @@ window.Sizzle = Sizzle;
 				 * @param {String} name
 				 */
 				removeClass: function( name ) {
-					this.foreach( function( item ) {
+					this.forEach( function( item ) {
 						lola.css.removeClass( item, name );
 					} );
 					return this;
@@ -4183,7 +4187,7 @@ window.Sizzle = Sizzle;
 						this.forEach( function( item ) {
 							values.push( (item) ? item.innerHTML : null );
 						} );
-						return values;
+						return lola.__(values);
 					}
 					else {
 						this.forEach( function( item ) {
@@ -4313,7 +4317,7 @@ window.Sizzle = Sizzle;
 						this.forEach( function( item ) {
 							values.push( lola.dom.attr( item, name ) );
 						} );
-						return values;
+						return lola.__(values);
 					}
 				},
 
@@ -4347,7 +4351,7 @@ window.Sizzle = Sizzle;
 						this.forEach( function( item ) {
 							values.push( item?item.parentNode:null );
 						} );
-						return values;
+						return lola.__(values);
 					}
 				},
 
@@ -4403,11 +4407,10 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug('lola.easing::preinitialize');
+			lola.debug( 'lola.easing::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
-
 
 
 			//remove initialization method
@@ -4420,12 +4423,11 @@ window.Sizzle = Sizzle;
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug('lola.easing::initialize');
+			lola.debug( 'lola.easing::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
-
 
 
 			//remove initialization method
@@ -4456,23 +4458,25 @@ window.Sizzle = Sizzle;
 		/**
 		 * @description calculates a point on a cubic bezier curve given time and an array of points.
 		 * @private
-		 * @param {Number} time 0 <= time <= 1
+		 * @param {Number} t time 0 <= t <= 1
 		 * @param {lola.point.Point} p0 anchor 1
 		 * @param {lola.point.Point} p1 control 1
 		 * @param {lola.point.Point} p2 control 2
 		 * @param {lola.point.Point} p3 anchor 2
 		 * @return {lola.point.Point}
 		 */
-		cubicBezier: function( time, p0, p1, p2, p3 ){
-			var inv = 1-time;
+		cubicBezier: function( t, p0, p1, p2, p3 ) {
+			var inv = 1 - t;
 			return lola.math.point.add(
-					lola.math.point.multiply(p0, inv*inv*inv ),
-					lola.math.point.multiply(p1, 3*inv*inv*time ),
-					lola.math.point.multiply(p2, 3*inv*time*time ),
-					lola.math.point.multiply(p3, time*time*time )
+					lola.math.point.multiply( p0, inv * inv * inv ),
+					lola.math.point.multiply( p1, 3 * inv * inv * t ),
+					lola.math.point.multiply( p2, 3 * inv * t * t ),
+					lola.math.point.multiply( p3, t * t * t )
 			);
 
 		},
+
+
 
 		//==================================================================
 		// Classes
@@ -4506,8 +4510,6 @@ window.Sizzle = Sizzle;
 	//==================================================================
 	// Class Prototypes
 	//==================================================================
-
-
 
 
 	//register module
@@ -4951,6 +4953,17 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
+		 * @description returns x,y coordinates relative to currentTarget
+		 * @param {Event} e
+		 * @return {Object}
+		 */
+		getDOMLocalXY: function( e ) {
+			var xPos = e.layerX || e.offsetX || 0;
+			var yPos = e.layerY || e.offsetY || 0;
+			return {x:xPos,y:yPos};
+		},
+
+		/**
 		 * @description returns actual event phase to use
 		 * @param {Object} target
 		 * @param {Boolean|undefined} useCapture
@@ -5151,6 +5164,10 @@ window.Sizzle = Sizzle;
 			var gpos = lola.event.getDOMGlobalXY( event );
 			this.globalX = gpos.x;
 			this.globalY = gpos.y;
+
+			var lpos = lola.event.getDOMLocalXY( event );
+			this.localX = lpos.x;
+			this.localY = lpos.y;
 
 			this.key = lola.event.getDOMKey( event );
 
@@ -6487,7 +6504,7 @@ window.Sizzle = Sizzle;
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ['math'];
 		},
 
 
@@ -7014,7 +7031,16 @@ window.Sizzle = Sizzle;
 			return value % 360;
 		},
 
-
+		/**
+		 * @description normalize a value within a range
+		 * @param {Number} min
+		 * @param {Number} value
+		 * @param {Number} max
+		 * @return {Number}
+		 */
+		normalizeRange: function( min, value, max ){
+			return Math.max( min, Math.min( max, value ) );
+		},
 
 		//==================================================================
 		// Classes
@@ -7106,8 +7132,6 @@ window.Sizzle = Sizzle;
 		//==================================================================
 		// Attributes
 		//==================================================================
-
-
 
 		//==================================================================
 		// Methods
@@ -7329,7 +7353,7 @@ window.Sizzle = Sizzle;
 	//==================================================================
 	point.Point.prototype = {
 		x: undefined,
-		y:undefined
+		y: undefined
 	};
 
 	//register module
@@ -7724,20 +7748,22 @@ window.Sizzle = Sizzle;
 			return str;
 		},
 
-
 		/**
 		 * @description converts hyphenated strings to camelCase
 		 * @param {String} str
 		 */
 		camelCase: function ( str ) {
 			var parts = str.split( "-" );
-			for ( var i in parts ) {
+			var pl = parts.length;
+			for ( var i = 1; i<pl; i++ ) {
 				if ( parts[i].length > 0 )
-					parts[i][0] = parts[i][0].toUpperCase();
+					parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
 			}
 
-			return parts.join();
+			return parts.join("");
 		},
+
+
 
 
 		//==================================================================
@@ -8222,7 +8248,7 @@ window.Sizzle = Sizzle;
 					this.forEach( function( item ) {
 						values.push( lola.type.get(item) );
 					} );
-					return values;
+					return lola.__(values);
 				},
 
 				/**

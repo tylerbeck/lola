@@ -8,14 +8,20 @@
 
 			ctx: null,
 
-			setContext: function( ctx ){
-				this.ctx = ctx;
+			setContext: function( target, context ){
+				this.ctx = target.getContext( context );
 			},
 
-			grid: function( x, y, w, h, s, c, t) {
+			grid: function( x, y, w, h, s, c, t, bg) {
 				var g = this.ctx;
 				g.strokeStyle = c;
 				g.lineWidth = t;
+
+				if (bg){
+					g.fillStyle = bg;
+					g.fillRect(x,y,w,h);
+				}
+				g.fillStyle = "#000000";
 
 				var i;
 				//vertical
@@ -34,6 +40,7 @@
 					g.stroke();
 					g.closePath();
 				}
+
 			},
 
 			xAxis: function( x, y, w, c, t, l ) {
@@ -48,7 +55,7 @@
 
 				if (l) {
 					g.textAlign = "right";
-					g.fillText( l, x-5, y+2 );
+					g.fillText( l, x-8, y+2 );
 				}
 
 			},
@@ -65,45 +72,164 @@
 
 				if (l) {
 					g.textAlign = "center";
-					g.fillText( l, x, y+h+15 );
+					g.fillText( l, x, y+h+18 );
 				}
+			},
+
+			circle: function(x,y,r,c){
+				var g = this.ctx;
+				g.fillStyle = c;
+				g.beginPath();
+				g.arc(x+r,y+r,r,0,2*Math.PI,false);
+				g.fill();
+				g.closePath();
+			},
+
+			line: function(from,to,c,t){
+				var g = this.ctx;
+				g.strokeStyle = c;
+				g.lineWidth = t;
+				g.beginPath();
+				g.moveTo( from.x, from.y );
+				g.lineTo( to.x, to.y );
+				g.stroke();
+				g.closePath();
+			},
+
+			curve: function(p0,p1,p2,p3,c,t){
+				var g = this.ctx;
+				g.strokeStyle = c;
+				g.lineWidth = t;
+				g.beginPath();
+				g.moveTo(p0.x,p0.y);
+				g.bezierCurveTo(p1.x,p1.y,p2.x,p2.y,p3.x,p3.y);
+				g.stroke();
+				g.closePath();
+			},
+
+			clear: function(w,h) {
+				var g = this.ctx;
+				g.clearRect( 0, 0, w, h );
 			}
 		};
 
 	</script>
 
 	<style>
-		#grid{ margin: 20px; }
-		.anchor{ position: absolute; background-color: blue; };
-		.control{ position: absolute; background-color: red; };
+		#grid,#lines{ position: absolute; top: 0; left: 0; }
+		.anchor, .control { position: absolute; cursor: move; }
+		#pt0{ top: 515px; left: 45px; }
+		#pt1{ top: 515px; left: 445px; }
+		#pt2{ top: 115px; left: 445px; }
+		#pt3{ top: 115px; left: 845px; }
 	</style>
 
 </head>
 <body>
 	<canvas id="grid" width="900" height="640"></canvas>
+	<canvas id="lines" width="900" height="640"></canvas>
 	<canvas id="pt0" class="anchor" width="10" height="10"></canvas>
 	<canvas id="pt1" class="control" width="10" height="10"></canvas>
 	<canvas id="pt2" class="control" width="10" height="10"></canvas>
 	<canvas id="pt3" class="anchor" width="10" height="10"></canvas>
 	<script>
-		var grid = $("#grid").get();
-		var p0 = $("#pt0").get();
-		var p1 = $("#pt1").get();
-		var p2 = $("#pt2").get();
-		var p3 = $("#pt3").get();
-		
-		draw.setContext( grid.getContext('2d') );
+			var grid = $("#grid").get();
+			var lines = $("#lines").get();
+			var pt0 = new lola.math.point.Point(50,520);
+			var pt1 = new lola.math.point.Point(450,520);
+			var pt2 = new lola.math.point.Point(450,120);
+			var pt3 = new lola.math.point.Point(850,120);
 
-		draw.grid(50,20,800,600,20,"#EEEEEE",1);
-		draw.grid(50,20,800,600,100,"#DDDDDD",1);
+			$("#pt1,#pt2,#pt0,#pt3").addListener("mousedown", beginDrag );
 
-		draw.xAxis(50,20,800,"#999999",1,"max");
-		draw.xAxis(50,120,800,"#999999",1,"end");
-		draw.xAxis(50,520,800,"#999999",1,"start");
-		draw.xAxis(50,620,800,"#999999",1,"min");
+			//draw grid
+			draw.setContext( grid, '2d' );
+			draw.grid(50,20,800,600,20,"#EEEEEE",1, "#F9F9F9");
+			draw.grid(50,20,800,600,100,"#DDDDDD",1);
+			draw.xAxis(50,20,800,"#999999",1,"max");
+			draw.xAxis(50,120,800,"#999999",1,"end");
+			draw.xAxis(50,520,800,"#999999",1,"start");
+			draw.xAxis(50,620,800,"#999999",1,"min");
+			draw.yAxis(50,20,600,"#999999",1,"0");
+			draw.yAxis(850,20,600,"#999999",1,"1");
 
-		draw.yAxis(50,20,600,"#999999",1,"0");
-		draw.yAxis(850,20,600,"#999999",1,"1");
+			//draw initial lines & curve
+			draw.setContext( lines, '2d' );
+			updateCurve();
+
+			//draw points
+			draw.setContext( $("#pt0").get(), '2d' );
+			draw.circle(0,0,5,"#990000");
+
+			draw.setContext( $("#pt1").get(), '2d' );
+			draw.circle(0,0,5,"#000099");
+
+			draw.setContext( $("#pt2").get(), '2d' );
+			draw.circle(0,0,5,"#000099");
+
+			draw.setContext( $("#pt3").get(), '2d' );
+			draw.circle(0,0,5,"#990000");
+
+
+
+
+			var $dragTarget;
+			var dragPoint;
+			var offset = new lola.math.point.Point(0,0);
+
+			function beginDrag( e ){
+				$dragTarget = $(e.currentTarget).style('cursor','none');
+				var id = $dragTarget.attr('id');
+				switch (id) {
+					case "pt0":
+						dragPoint = pt0;
+						break;
+					case "pt1":
+						dragPoint = pt1;
+						break;
+					case "pt2":
+						dragPoint = pt2;
+						break;
+					case "pt3":
+						dragPoint = pt3;
+						break;
+				}
+				$('body').style('cursor','none');
+				offset.x = -e.localX;
+				offset.y = -e.localY;
+				$(document).addListener('mousemove', doDrag );
+				$(document).addListener('mouseup', endDrag );
+
+				draw.setContext( lines, '2d' );
+			}
+
+			function doDrag( e ){
+				var newX = lola.math.normalizeRange( 45, e.globalX, 845 );
+				var newY = lola.math.normalizeRange( 15, e.globalY, 615 );
+				dragPoint.x = newX+5;
+				dragPoint.y = newY+5;
+				$dragTarget.style('left',newX+'px');
+				$dragTarget.style('top',newY+'px');
+				updateCurve();
+			}
+
+			function endDrag( e ){
+				var dot = e.currentTarget;
+				$('body').style('cursor','default');
+				$dragTarget.style('cursor','move');
+				$dragTarget = null;
+				$(document).removeListener('mousemove', doDrag );
+				$(document).removeListener('mouseup', endDrag );
+			}
+
+			function updateCurve() {
+				draw.clear(855,650);
+				draw.line(pt0,pt1,"#009900",2);
+				draw.line(pt2,pt3,"#009900",2);
+				draw.curve(pt0,pt1,pt2,pt3, "#000000", 3);
+			}
+
+
 
 	</script>
 </body>

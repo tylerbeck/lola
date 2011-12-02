@@ -118,10 +118,6 @@
 	<style>
 		#grid,#lines{ position: absolute; top: 0; left: 0; }
 		.anchor, .control { position: absolute; cursor: move; }
-		#pt0{ top: 515px; left: 45px; }
-		#pt1{ top: 515px; left: 445px; }
-		#pt2{ top: 115px; left: 445px; }
-		#pt3{ top: 115px; left: 845px; }
 	</style>
 
 </head>
@@ -132,15 +128,30 @@
 	<canvas id="pt1" class="control" width="10" height="10"></canvas>
 	<canvas id="pt2" class="control" width="10" height="10"></canvas>
 	<canvas id="pt3" class="anchor" width="10" height="10"></canvas>
+	<canvas id="pt4" class="control" width="10" height="10"></canvas>
+	<canvas id="pt5" class="control" width="10" height="10"></canvas>
+	<canvas id="pt6" class="anchor" width="10" height="10"></canvas>
 	<script>
 			var grid = $("#grid").get();
 			var lines = $("#lines").get();
-			var pt0 = new lola.math.point.Point(50,520);
-			var pt1 = new lola.math.point.Point(450,520);
-			var pt2 = new lola.math.point.Point(450,120);
-			var pt3 = new lola.math.point.Point(850,120);
+			var pt = [];
+			pt.push( new lola.math.point.Point(50,520) );
+			pt.push( new lola.math.point.Point(250,520) );
+			pt.push( new lola.math.point.Point(250,320) );
+			pt.push( new lola.math.point.Point(450,320) );
+			pt.push( new lola.math.point.Point(650,320) );
+			pt.push( new lola.math.point.Point(650,120) );
+			pt.push( new lola.math.point.Point(850,120) );
 
-			$("#pt1,#pt2,#pt0,#pt3").addListener("mousedown", beginDrag );
+			var ptIds = [];
+			var i = 0;
+			pt.forEach(function(item){
+				$("#pt"+i).style('top',(item.y-5)+"px").style('left',(item.x-5)+"px");
+				ptIds.push("#pt"+i);
+				i++;
+			});
+
+			$(ptIds.join(",")).addListener("mousedown", beginDrag );
 
 			//draw grid
 			draw.setContext( grid, '2d' );
@@ -170,6 +181,15 @@
 			draw.setContext( $("#pt3").get(), '2d' );
 			draw.circle(0,0,5,"#990000");
 
+			draw.setContext( $("#pt4").get(), '2d' );
+			draw.circle(0,0,5,"#000099");
+
+			draw.setContext( $("#pt5").get(), '2d' );
+			draw.circle(0,0,5,"#000099");
+
+			draw.setContext( $("#pt6").get(), '2d' );
+			draw.circle(0,0,5,"#990000");
+
 
 
 
@@ -179,21 +199,8 @@
 
 			function beginDrag( e ){
 				$dragTarget = $(e.currentTarget).style('cursor','none');
-				var id = $dragTarget.attr('id');
-				switch (id) {
-					case "pt0":
-						dragPoint = pt0;
-						break;
-					case "pt1":
-						dragPoint = pt1;
-						break;
-					case "pt2":
-						dragPoint = pt2;
-						break;
-					case "pt3":
-						dragPoint = pt3;
-						break;
-				}
+				var index = parseInt($dragTarget.attr('id').replace(/pt/g,""));
+				dragPoint = pt[index];
 				$('body').style('cursor','none');
 				offset.x = -e.localX;
 				offset.y = -e.localY;
@@ -224,9 +231,12 @@
 
 			function updateCurve() {
 				draw.clear(855,650);
-				draw.line(pt0,pt1,"#009900",2);
-				draw.line(pt2,pt3,"#009900",2);
-				draw.curve(pt0,pt1,pt2,pt3, "#000000", 3);
+				draw.line(pt[0],pt[1],"#009900",2);
+				draw.line(pt[2],pt[3],"#009900",2);
+				draw.line(pt[3],pt[4],"#009900",2);
+				draw.line(pt[5],pt[6],"#009900",2);
+				draw.curve(pt[0],pt[1],pt[2],pt[3], "#000000", 3);
+				draw.curve(pt[3],pt[4],pt[5],pt[6], "#000000", 3);
 			}
 
 

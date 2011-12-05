@@ -102,7 +102,7 @@
 				g.lineWidth = t;
 				g.beginPath();
 				g.moveTo(p0.x,p0.y);
-				g.bezierCurveTo(p1.x,p1.y,p2.x,p2.y,p3.x,p3.y);
+					g.bezierCurveTo(p1.x,p1.y,p2.x,p2.y,p3.x,p3.y);
 				g.stroke();
 				g.closePath();
 			},
@@ -135,13 +135,13 @@
 			var grid = $("#grid").get();
 			var lines = $("#lines").get();
 			var pt = [];
-			pt.push( new lola.math.point.Point(50,520) );
-			pt.push( new lola.math.point.Point(250,520) );
-			pt.push( new lola.math.point.Point(250,320) );
-			pt.push( new lola.math.point.Point(450,320) );
-			pt.push( new lola.math.point.Point(650,320) );
-			pt.push( new lola.math.point.Point(650,120) );
-			pt.push( new lola.math.point.Point(850,120) );
+			pt.push( new lola.graphics.Point(50,520) );
+			pt.push( new lola.graphics.Point(250,520) );
+			pt.push( new lola.graphics.Point(250,320) );
+			pt.push( new lola.graphics.Point(450,320) );
+			pt.push( new lola.graphics.Point(650,320) );
+			pt.push( new lola.graphics.Point(650,120) );
+			pt.push( new lola.graphics.Point(850,120) );
 
 			var ptIds = [];
 			var i = 0;
@@ -195,7 +195,7 @@
 
 			var $dragTarget;
 			var dragPoint;
-			var offset = new lola.math.point.Point(0,0);
+			var offset = new lola.graphics.Point(0,0);
 
 			function beginDrag( e ){
 				$dragTarget = $(e.currentTarget).style('cursor','none');

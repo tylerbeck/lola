@@ -1,11 +1,11 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Easing Module
+	 * @description String Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
-	var easing = {
+	var string = {
 
 		//==================================================================
 		// Attributes
@@ -22,14 +22,14 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug( 'lola.easing::preinitialize' );
+			lola.debug( 'lola.string::preinitialize' );
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
 
 
 			//remove initialization method
-			delete lola.easing.preinitialize;
+			delete lola.string.preinitialize;
 		},
 
 		/**
@@ -38,7 +38,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug( 'lola.easing::initialize' );
+			lola.debug( 'lola.string::initialize' );
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -46,7 +46,7 @@
 
 
 			//remove initialization method
-			delete lola.easing.initialize;
+			delete lola.string.initialize;
 		},
 
 		/**
@@ -56,7 +56,7 @@
 		 * @default dom
 		 */
 		getNamespace: function() {
-			return "easing";
+			return "string";
 		},
 
 		/**
@@ -66,37 +66,59 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ["math.point","graphics"];
+			return [];
 		},
 
 
 		/**
-		 * @description calculates a point on a cubic bezier curve given time and an array of points.
-		 * @private
-		 * @param {Number} t time 0 <= t <= 1
-		 * @param {lola.graphics.Point} p0 anchor 1
-		 * @param {lola.graphics.Point} p1 control 1
-		 * @param {lola.graphics.Point} p2 control 2
-		 * @param {lola.graphics.Point} p3 anchor 2
-		 * @return {lola.graphics.Point}
+		 * @description pads the front of a string with the specified character to the specified length
+		 * @param {String|int} str
+		 * @param {String} chr character to use in pad
+		 * @param {int} size padded length
 		 */
-		cubicBezier: function( t, p0, p1, p2, p3 ) {
-			var inv = 1 - t;
-			return lola.math.point.add(
-					lola.math.point.multiply( p0, inv * inv * inv ),
-					lola.math.point.multiply( p1, 3 * inv * inv * t ),
-					lola.math.point.multiply( p2, 3 * inv * t * t ),
-					lola.math.point.multiply( p3, t * t * t )
-			);
-
+		padFront: function ( str, chr, size ) {
+			str = str.toString();
+			while ( str.length < size ) {
+				str = chr[0] + str;
+			}
+			return str;
 		},
+
+		/**
+		 * @description pads the end of a string with the specified character to the specified length
+		 * @param {String|int} str
+		 * @param {String} chr character to use in pad
+		 * @param {int} size padded length
+		 */
+		padEnd: function ( str, chr, size ) {
+			str = str.toString();
+			while ( str.length < size ) {
+				str = str + chr[0];
+			}
+			return str;
+		},
+
+		/**
+		 * @description converts hyphenated strings to camelCase
+		 * @param {String} str
+		 */
+		camelCase: function ( str ) {
+			var parts = str.split( "-" );
+			var pl = parts.length;
+			for ( var i = 1; i<pl; i++ ) {
+				if ( parts[i].length > 0 )
+					parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
+			}
+
+			return parts.join("");
+		},
+
 
 
 
 		//==================================================================
 		// Classes
 		//==================================================================
-
 
 
 		//==================================================================
@@ -119,7 +141,25 @@
 
 			return methods;
 
+		},
+
+
+		//==================================================================
+		// Prototype Upgrades
+		//==================================================================
+		/**
+		 * upgrades string prototype and is then deleted
+		 * @private
+		 */
+		upgradeStringPrototype: function() {
+
+			if ( !String.prototype.trim ) {
+				String.prototype.trim = function () {
+					return String( this ).replace( /^\s\s*/, '' ).replace( /\s\s*$/, '' );
+				};
+			}
 		}
+
 	};
 
 	//==================================================================
@@ -127,8 +167,10 @@
 	//==================================================================
 
 
+	string.upgradeStringPrototype();
+	delete string.upgradeStringPrototype;
+
 	//register module
-	lola.registerModule( easing );
+	lola.registerModule( string );
 
 })( lola );
-

@@ -48,6 +48,18 @@
 		safeDeleteHooks: [],
 
 		/**
+		 * @public
+		 * @type {Object}
+		 */
+		urlvars: {},
+
+		/**
+		 * @public
+		 * @type {String}
+		 */
+		hash: "",
+
+		/**
 		 * @private
 		 * @type {Boolean}
 		 */
@@ -103,6 +115,18 @@
 					delete lola.initializers[i];
 				}
 			}
+		},
+
+		parseUrl: function( url ){
+			var parts = url.split("#",2);
+			var vars = {};
+			var hash = parts[1];
+
+			var parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+				vars[key] = value;
+			});
+
+			return {vars:vars, hash:hash};
 		},
 
 		/**
@@ -400,7 +424,7 @@
 		 * @return {lola.Selector}
 		 */
 		identify: function() {
-			this.foreach( function( item ) {
+			this.forEach( function( item ) {
 				if ( !item.id )
 					item.id = "lola-guid-" + guid++;
 			} );
@@ -462,7 +486,7 @@
 		 * @return {lola.Selector}
 		 */
 		safeDelete: function() {
-			this.foreach( function( item ){
+			this.forEach( function( item ){
 				safeDelete( item );
 			});
 			return this;
@@ -523,6 +547,11 @@
 	lola = main;
 	window['$'] = lola;
 	window['lola'] = lola;
+
+	var parts = lola.parseUrl( window.location.href );
+	lola.urlvars = parts.vars;
+	lola.hash = parts.hash;
+	lola.debugMode = lola.urlvars['debug'] == "true";
 
 	if ( document.readyState === "complete" ) {
 		lola.initialize( window );

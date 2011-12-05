@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>bspline</title>
+	<script src="bin/lola.js"></script>
+
+	<style>
+		#canvas{ position: absolute; top: 0; left: 0; }
+	</style>
+
+</head>
+<body>
+	<canvas id="canvas" width="1000" height="800"></canvas>
+	<script>
+		var bspline = new lola.graphics.Spline([],true);
+
+		bspline.addPoint( new lola.graphics.SplinePoint(50,50,200,0,100) );
+		bspline.addPoint( new lola.graphics.SplinePoint(200,200,100,0,100) );
+		bspline.addPoint( new lola.graphics.SplinePoint(400,0,100,0,100) );
+		bspline.addPoint( new lola.graphics.SplinePoint(500,400,100,3*Math.PI/4,100) );
+		bspline.addPoint( new lola.graphics.SplinePoint(50,300,200,3*Math.PI/2,100) );
+		$('canvas').map2dContext();
+		var ctx = lola.graphics.get2dContext( 'canvas' );
+		ctx.beginPath();
+		ctx.lineWidth = 3;
+		lola.graphics.drawSpline( bspline, ctx );
+		ctx.stroke();
+		ctx.closePath();
+
+	</script>
+</body>
+</html>

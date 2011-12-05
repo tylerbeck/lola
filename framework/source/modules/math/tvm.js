@@ -1,11 +1,11 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Easing Module
+	 * @description Math Time Value of Money Module
 	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @memberof lola.math
 	 */
-	var easing = {
+	var tvm = {
 
 		//==================================================================
 		// Attributes
@@ -22,14 +22,15 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug( 'lola.easing::preinitialize' );
+			lola.debug('lola.math.tvm::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
 
 
+
 			//remove initialization method
-			delete lola.easing.preinitialize;
+			delete lola.math.tvm.preinitialize;
 		},
 
 		/**
@@ -38,15 +39,16 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug( 'lola.easing::initialize' );
+			lola.debug('lola.math.tvm::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
 
 
+
 			//remove initialization method
-			delete lola.easing.initialize;
+			delete lola.math.tvm.initialize;
 		},
 
 		/**
@@ -56,7 +58,7 @@
 		 * @default dom
 		 */
 		getNamespace: function() {
-			return "easing";
+			return "math.tvm";
 		},
 
 		/**
@@ -66,31 +68,61 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ["math.point","graphics"];
+			return [];
+		},
+
+		/**
+		 * @description present value
+		 * @param fv future value
+		 * @param rate rate per term
+		 * @param term
+		 */
+		pv: function( fv, rate, term ) {
+			return fv / Math.pow( 1 + rate, term );
+		},
+
+		/**
+		 * @description future value
+		 * @param pv present value
+		 * @param rate rate per term
+		 * @param term
+		 */
+		fv: function( pv, rate, term ) {
+			return pv * Math.pow( 1 + rate, term );
 		},
 
 
 		/**
-		 * @description calculates a point on a cubic bezier curve given time and an array of points.
-		 * @private
-		 * @param {Number} t time 0 <= t <= 1
-		 * @param {lola.graphics.Point} p0 anchor 1
-		 * @param {lola.graphics.Point} p1 control 1
-		 * @param {lola.graphics.Point} p2 control 2
-		 * @param {lola.graphics.Point} p3 anchor 2
-		 * @return {lola.graphics.Point}
+		 * @description present value of an annuity
+		 * @param a annuity
+		 * @param rate rate per term
+		 * @param term
 		 */
-		cubicBezier: function( t, p0, p1, p2, p3 ) {
-			var inv = 1 - t;
-			return lola.math.point.add(
-					lola.math.point.multiply( p0, inv * inv * inv ),
-					lola.math.point.multiply( p1, 3 * inv * inv * t ),
-					lola.math.point.multiply( p2, 3 * inv * t * t ),
-					lola.math.point.multiply( p3, t * t * t )
-			);
-
+		pva: function( a, rate, term ) {
+			return a * (1 - ( 1 / Math.pow( 1 + rate, term ) ) ) / rate;
 		},
 
+		/**
+		 * @description future value of an annuity
+		 * @param a annuity
+		 * @param rate rate per term
+		 * @param term
+		 */
+		fva: function( a, rate, term ) {
+			return a * (Math.pow( 1 + rate, term ) - 1) / rate;
+		},
+
+		/**
+		 * @description payment
+		 * @param pv present value
+		 * @param rate rate per term
+		 * @param term
+		 * @param fv future value
+		 */
+		payment: function( pv, rate, term, fv ) {
+			var rp = Math.pow( 1 + rate, term );
+			return  pv * rate / ( 1 - (1 / rp)) - fv * rate / (rp - 1);
+		},
 
 
 		//==================================================================
@@ -127,8 +159,10 @@
 	//==================================================================
 
 
+
+
 	//register module
-	lola.registerModule( easing );
+	lola.registerModule( tvm );
 
 })( lola );
 

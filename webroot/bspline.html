@@ -10,22 +10,29 @@
 
 </head>
 <body>
-	<canvas id="canvas" width="1000" height="800"></canvas>
+	<canvas id="test" width="1000" height="800"></canvas>
 	<script>
-		var bspline = new lola.graphics.Spline([],true);
 
-		bspline.addPoint( new lola.graphics.SplinePoint(50,50,200,0,100) );
-		bspline.addPoint( new lola.graphics.SplinePoint(200,200,100,0,100) );
-		bspline.addPoint( new lola.graphics.SplinePoint(400,0,100,0,100) );
-		bspline.addPoint( new lola.graphics.SplinePoint(500,400,100,3*Math.PI/4,100) );
-		bspline.addPoint( new lola.graphics.SplinePoint(50,300,200,3*Math.PI/2,100) );
-		$('canvas').map2dContext();
-		var ctx = lola.graphics.get2dContext( 'canvas' );
-		ctx.beginPath();
-		ctx.lineWidth = 3;
-		lola.graphics.drawSpline( bspline, ctx );
-		ctx.stroke();
-		ctx.closePath();
+        var g = $.g;
+		var bspline = new g.Spline();
+		bspline.addPoint( new g.SplinePoint(50,50,200,0,100) );
+		bspline.addPoint( new g.SplinePoint(200,200,100,0,100) );
+		bspline.addPoint( new g.SplinePoint(400,0,100,0,100) );
+		bspline.addPoint( new g.SplinePoint(500,400,100,3*Math.PI/4,100) );
+		bspline.addPoint( new g.SplinePoint(50,300,200,3*Math.PI/2,100) );
+
+        g.registerStyle( {lineWidth:25, strokeStyle:"red"}, "red" );
+        g.registerStyle( {lineWidth:25, strokeStyle:"blue"}, "blue" );
+        g.registerStyle( {lineWidth:25, strokeStyle:"green"}, "green" );
+
+		$('canvas').register2dContext();
+        g.setContext('test');
+        g.applyStyle("blue");
+        g.beginPath();
+        bspline.draw(true);
+        g.fill();
+        g.stroke();
+        g.closePath();
 
 	</script>
 </body>

@@ -68,6 +68,15 @@
 			return [];
 		},
 
+        copyPrimitives: function( source, target ){
+            for (var k in source){
+                if (lola.type.isPrimitive(source[k])){
+                    console.log('copying: '+k);
+                    target[k] = source[k];
+                }
+            }
+        },
+
 		//==================================================================
 		// Classes
 		//==================================================================

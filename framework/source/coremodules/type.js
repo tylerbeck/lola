@@ -193,6 +193,9 @@
 			return 'null'
 		},
 
+        isPrimitive: function( object ) {
+            return this.primitives.indexOf(this.get(object)) >= 0;
+        },
 
 		//==================================================================
 		// Selector Methods

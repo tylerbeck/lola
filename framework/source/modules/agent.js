@@ -58,8 +58,17 @@
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
-			//do module initialization
+            //execute agent initialization stack
+            var stackSize = lola.agent.initializers.length;
 
+            for ( i = 0; i < stackSize; i++ ) {
+                var initializer = lola.agent.initializers[i];
+                if (typeof initializer == "function"){
+                    initializer();
+                }
+
+                delete lola.agent.initializers[i];
+            }
 
 
 			//remove initialization method
@@ -92,16 +101,17 @@
 		 * @param {Object} agent object that implements the agent interface
 		 */
 		register: function( agent ) {
-			console.info('register agent: '+agent.name);
-			if (agent.sign && agent.drop) {
+            var name = agent.getName();
+			console.info('register agent: '+name);
+			if (name && agent.sign && agent.drop) {
 				//setup namespace
-				var pkg = lola.getPkgChain( lola.agent, agent.name );
+				var pkg = lola.getPkgChain( lola.agent, name );
 
 				//copy module methods and attributes
 				lola.extend( pkg, agent, true );
 
 				//map agent
-				this.map[ agent.name ] = pkg;
+				this.map[ name ] = pkg;
 
 				//add initializer
 				if ( agent.initialize && typeof agent.initialize === "function" ) {

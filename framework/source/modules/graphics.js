@@ -208,8 +208,8 @@
 
         /**
          * @description copies properties of styleObject into style cache with given name
-         * @param {Object|name} style
-         * @param {String} name
+         * @param {Object|String} style
+         * @param {Object|String} ctx
          */
         applyStyle: function( style, ctx ) {
             console.log('lola.graphics.applyStyle');

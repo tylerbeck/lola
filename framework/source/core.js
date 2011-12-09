@@ -108,8 +108,8 @@
 
 				for ( i = 0; i < stackSize; i++ ) {
 					var initializer = lola.initializers[i];
-					if (initializer){
-						initializer.call( window );
+					if (typeof initializer == "function"){
+						initializer();
 					}
 
 					delete lola.initializers[i];

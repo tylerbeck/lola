@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Point Math Module
+	 * Point Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -15,7 +15,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -31,7 +31,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -48,17 +48,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.point";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -68,7 +67,7 @@
 		},
 
 		/**
-		 * @description adds arguments to p1
+		 * adds arguments to p1
 		 * @param {lola.graphics.Point} p1
 		 * @return {lola.graphics.Point}
 		 */
@@ -91,7 +90,7 @@
 
 
 		/**
-		 * @description subtract args from p1
+		 * subtract args from p1
 		 * @param {lola.graphics.Point} p1
 		 * @return {lola.graphics.Point}
 		 */
@@ -113,7 +112,7 @@
 		},
 
 		/**
-		 * @description multiply p1 by args
+		 * multiply p1 by args
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point|Number} p2
 		 * @return {lola.graphics.Point}
@@ -136,7 +135,7 @@
 		},
 
 		/**
-		 * @description divide p1 by args
+		 * divide p1 by args
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point|Number} p2
 		 * @return {lola.graphics.Point}
@@ -159,7 +158,7 @@
 		},
 
 		/**
-		 * @description raise p to the po
+		 * raise p to the po
 		 * @param {lola.graphics.Point} p
 		 * @param {lola.graphics.Point} po
 		 * @return {lola.graphics.Point}
@@ -169,7 +168,7 @@
 		},
 
 		/**
-		 * @description calculates the absolute distance between p1 and p2
+		 * calculates the absolute distance between p1 and p2
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point} p2
 		 * @return {Number}
@@ -179,7 +178,7 @@
 		},
 
 		/**
-		 * @description offsets a point at the specified angle by the specified distance
+		 * offsets a point at the specified angle by the specified distance
 		 * @param {lola.graphics.Point} p
 		 * @param {Number} angle angle in radians
 		 * @param {Number} distance
@@ -202,14 +201,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description JSON Module adapted from json.org code
+	 * JSON Module adapted from json.org code
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -31,7 +31,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -47,7 +47,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -64,17 +64,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "json";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -84,7 +83,7 @@
 		},
 
 		/**
-		 * @description json parsing method
+		 * json parsing method
 		 * @private
 		 * @param {String} string
 		 */
@@ -105,7 +104,7 @@
 
 
 		/**
-		 * @description json parsing method
+		 * json parsing method
 		 * @private
 		 * @param {String} key
 		 * @param {Object} holder
@@ -217,7 +216,7 @@
 		},
 
 		/**
-		 * @description json encodes a javascript object
+		 * json encodes a javascript object
 		 * @public
 		 * @param {Object} obj
 		 * @return {String}
@@ -227,7 +226,7 @@
 		},
 
 		/**
-		 * @description decodes a json string
+		 * decodes a json string
 		 * @public
 		 * @param {String} text
 		 * @return {Object}
@@ -237,7 +236,7 @@
 		},
 
 		/**
-		 * @description json encodes a javascript object
+		 * json encodes a javascript object
 		 * @private
 		 * @param {Object} value
 		 * @param {Object} replacer
@@ -284,7 +283,7 @@
 		},
 
 		/**
-		 * @description decodes a json string
+		 * decodes a json string
 		 * @private
 		 * @param text
 		 * @param reviver
@@ -367,14 +366,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

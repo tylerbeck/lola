@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Math Color Module
+	 * Math Color Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -17,7 +17,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -34,7 +34,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -52,17 +52,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.color";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -73,7 +72,7 @@
 
 
 		/**
-		 * @description converts red,green,blue values to hue,saturation,lightness
+		 * converts red,green,blue values to hue,saturation,lightness
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -127,7 +126,7 @@
 		},
 
 		/**
-		 * @description converts red,green,blue values to hex string
+		 * converts red,green,blue values to hex string
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -168,7 +167,7 @@
 
 
 		/**
-		 * @description converts red,green,blue values to int
+		 * converts red,green,blue values to int
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -179,7 +178,7 @@
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to red,green,blue
+		 * converts hue,saturation,lightness values to red,green,blue
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -248,7 +247,7 @@
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to uint
+		 * converts hue,saturation,lightness values to uint
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -260,7 +259,7 @@
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to hex
+		 * converts hue,saturation,lightness values to hex
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -272,7 +271,7 @@
 		},
 
 		/**
-		 * @description converts int values to rgb
+		 * converts int values to rgb
 		 * @param {int} value
 		 * @return {Object}
 		 */
@@ -292,7 +291,7 @@
 		},
 
 		/**
-		 * @description converts int values to hsl
+		 * converts int values to hsl
 		 * @param {int} value
 		 * @return {Object}
 		 */
@@ -302,7 +301,7 @@
 		},
 
 		/**
-		 * @description converts int values to hex string
+		 * converts int values to hex string
 		 * @param {int} value
 		 * @return {String}
 		 */
@@ -312,7 +311,7 @@
 		},
 
 		/**
-		 * @description converts hex values to int
+		 * converts hex values to int
 		 * @param {String} value
 		 * @return {int}
 		 */
@@ -330,7 +329,7 @@
 		},
 
 		/**
-		 * @description converts hex values to rgb
+		 * converts hex values to rgb
 		 * @param {String} value
 		 * @return {Object}
 		 */
@@ -339,7 +338,7 @@
 		},
 
 		/**
-		 * @description converts hex values to hsl
+		 * converts hex values to hsl
 		 * @param {String} value
 		 * @return {Object}
 		 */
@@ -358,14 +357,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

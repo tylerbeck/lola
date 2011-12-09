@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Easing Module
+	 * Easing Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -17,7 +17,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -33,7 +33,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -50,17 +50,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "easing";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -71,7 +70,7 @@
 
 
 		/**
-		 * @description calculates a point on a cubic bezier curve given time and an array of points.
+		 * calculates a point on a cubic bezier curve given time and an array of points.
 		 * @private
 		 * @param {Number} t time 0 <= t <= 1
 		 * @param {lola.graphics.Point} p0 anchor 1
@@ -103,14 +102,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

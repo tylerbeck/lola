@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Support Module
+	 * Support Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,56 +11,56 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description can script text nodes be appended to script nodes
+		 * can script text nodes be appended to script nodes
 		 * @public
 		 * @type {Boolean}
 		 */
 		domEval: false,
 
 		/**
-		 * @description can delete expando properties
+		 * can delete expando properties
 		 * @public
 		 * @type {Boolean}
 		 */
 		deleteExpando: true,
 
 		/**
-		 * @description dom event model
+		 * dom event model
 		 * @public
 		 * @type {Boolean}
 		 */
 		domEvent: false,
 
 		/**
-		 * @description ms event model
+		 * ms event model
 		 * @public
 		 * @type {Boolean}
 		 */
 		msEvent: false,
 
 		/**
-		 * @description browser animation frame timing
+		 * browser animation frame timing
 		 * @public
 		 * @type {Boolean}
 		 */
 		browserAnimationFrame: false,
 
 		/**
-		 * @description IE style
+		 * IE style
 		 * @public
 		 * @type {Boolean}
 		 */
 		style: false,
 
 		/**
-		 * @description float is reserved check whether to user cssFloat or styleFloat
+		 * float is reserved check whether to user cssFloat or styleFloat
 		 * @public
 		 * @type {Boolean}
 		 */
 		cssFloat: false,
 
 		/**
-		 * @description check color alpha channel support
+		 * check color alpha channel support
 		 * @public
 		 * @type {Boolean}
 		 */
@@ -70,7 +70,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -134,7 +134,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -152,17 +152,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "support";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -176,14 +175,14 @@
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

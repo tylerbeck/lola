@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description math Module
+	 * math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -17,7 +17,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -34,7 +34,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -52,17 +52,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -72,7 +71,7 @@
 		},
 
 		/**
-		 * @description normalize radians to 0 to 2 * PI
+		 * normalize radians to 0 to 2 * PI
 		 * @param {Number} value radian value
 		 * @return {Number}
 		 */
@@ -84,7 +83,7 @@
 		},
 
 		/**
-		 * @description normalize degrees to 0 to 360
+		 * normalize degrees to 0 to 360
 		 * @param {Number} value radian value
 		 * @return {Number}
 		 */
@@ -95,7 +94,7 @@
 		},
 
 		/**
-		 * @description normalize a value within a range
+		 * normalize a value within a range
 		 * @param {Number} min
 		 * @param {Number} value
 		 * @param {Number} max
@@ -114,20 +113,20 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description get max value
+				 * get max value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -136,7 +135,7 @@
 				},
 
 				/**
-				 * @description get min value
+				 * get min value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -145,7 +144,7 @@
 				},
 
 				/**
-				 * @description get total value
+				 * get total value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -156,7 +155,7 @@
 				},
 
 				/**
-				 * @description get averate value
+				 * get averate value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */

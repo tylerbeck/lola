@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Type Module
+	 * Type Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -26,7 +26,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -46,7 +46,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -62,17 +62,16 @@
 			delete lola.type.initialize;
 		},
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "type";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -82,7 +81,7 @@
 		},
 
 		/**
-		 * @description creates map of object and element types
+		 * creates map of object and element types
 		 * @private
 		 */
 		createMap: function() {
@@ -131,7 +130,7 @@
 		},
 
 		/**
-		 * @description maps tag type
+		 * maps tag type
 		 * @private
 		 * @param item
 		 * @param index
@@ -148,7 +147,7 @@
 		},
 
 		/**
-		 * @description maps special tag types
+		 * maps special tag types
 		 * @private
 		 * @param item
 		 * @param index
@@ -165,7 +164,7 @@
 		},
 
 		/**
-		 * @description maps object types
+		 * maps object types
 		 * @private
 		 * @param item
 		 * @param index
@@ -179,7 +178,7 @@
 		},
 
 		/**
-		 * @description gets the specified object's type
+		 * gets the specified object's type
 		 * @param {Object} object
 		 * @return {String}
 		 */
@@ -201,19 +200,19 @@
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 				/**
-				 * @description gets the type if the specified index
+				 * gets the type if the specified index
 				 * @param {int} index
 				 * @return {Array}
 				 */
@@ -226,7 +225,7 @@
 				},
 
 				/**
-				 * @description checks if element at index is a type, or all elements are a type
+				 * checks if element at index is a type, or all elements are a type
 				 * @param {String} type
 				 * @param {int|undefined} index
 				 */
@@ -242,7 +241,7 @@
 				},
 
 				/**
-				 * @description checks if element at index is a primitive, or all elements are primitives
+				 * checks if element at index is a primitive, or all elements are primitives
 				 * @param {int|undefined} index
 				 */
 				isPrimitive: function( index ) {

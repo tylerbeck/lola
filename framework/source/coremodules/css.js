@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description CSS Module
+	 * CSS Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,25 +11,25 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description cache for fixed/mapped style properties
+		 * cache for fixed/mapped style properties
 		 * @private
 		 */
 		propertyCache: {},
 
 		/**
-		 * @description cache for fixed/mapped selectors
+		 * cache for fixed/mapped selectors
 		 * @private
 		 */
 		selectorCache: {},
 
 		/**
-		 * @description style property hooks
+		 * style property hooks
 		 * @private
 		 */
 		propertyHooks: {},
 
 		/**
-		 * @description references to dynamic stylesheets
+		 * references to dynamic stylesheets
 		 * @private
 		 */
 		stylesheets: {},
@@ -38,7 +38,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -53,7 +53,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -76,17 +76,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "css";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -96,7 +95,7 @@
 		},
 
 		/**
-		 * @description returns whether or not an object can have styles applied
+		 * returns whether or not an object can have styles applied
 		 * @param {*} obj
 		 */
 		canStyle: function( obj ) {
@@ -105,7 +104,7 @@
 		},
 
 		/**
-		 * @description gets mapped selector string
+		 * gets mapped selector string
 		 * @param {String} selector
 		 * @return {String}
 		 */
@@ -116,7 +115,7 @@
 		},
 
 		/**
-		 * @description gets mapped selector string
+		 * gets mapped selector string
 		 * @param {String} property
 		 * @return {String}
 		 */
@@ -163,7 +162,7 @@
 		},
 
 		/**
-		 * @description adds a stylesheet to the document head with an optional source
+		 * adds a stylesheet to the document head with an optional source
 		 * @param {String|undefined} id reference id for stylesheet
 		 * @param {String|undefined} source url for external stylesheet
 		 */
@@ -179,7 +178,7 @@
 		},
 
 		/**
-		 * @description registers a stylesheet with the css module
+		 * registers a stylesheet with the css module
 		 * @param {Node} stylesheet stylesheet object reference
 		 * @param {String} id the id with which to register stylesheet
 		 */
@@ -188,7 +187,7 @@
 		},
 
 		/**
-		 * @description adds a selector to a stylesheet
+		 * adds a selector to a stylesheet
 		 * @param {String} selector
 		 * @param {Object} styles an object containing key value pairs of style properties and values
 		 * @param {String|Object|undefined} stylesheet registered stylesheet id or stylesheet reference
@@ -218,7 +217,7 @@
 			return rule;
 		},
 		/**
-		 * @description performs action on matching rules
+		 * performs action on matching rules
 		 * @param {String} selector
 		 * @param {Function} action
 		 * @param {String} media
@@ -244,7 +243,7 @@
 		},
 
 		/**
-		 * @description returns an array of matching rules
+		 * returns an array of matching rules
 		 * @param {String} selector
 		 * @param {String} media
 		 * @return {Array}
@@ -261,7 +260,7 @@
 		},
 
 		/**
-		 * @description updates rules in matching selectors
+		 * updates rules in matching selectors
 		 * @param {String} selector
 		 * @param {Object} styles an object containing key value pairs of style properties and values
 		 * @param {String} media
@@ -280,7 +279,7 @@
 		},
 
 		/**
-		 * @description deletes matching rules
+		 * deletes matching rules
 		 * @param selector
 		 * @param media
 		 */
@@ -294,7 +293,7 @@
 		},
 
 		/**
-		 * @description gets or sets an objects classes
+		 * gets or sets an objects classes
 		 * @param {Node} obj
 		 * @param {String|Array|undefined} classes leave undefined to get classes
 		 * @return {Array}
@@ -319,7 +318,7 @@
 		},
 
 		/**
-		 * @description returns
+		 * returns
 		 * @param obj
 		 * @param className
 		 */
@@ -329,7 +328,7 @@
 		},
 
 		/**
-		 * @description adds class to object if not already added
+		 * adds class to object if not already added
 		 * @param {Node} obj
 		 * @param {String} className
 		 */
@@ -342,7 +341,7 @@
 		},
 
 		/**
-		 * @description removes a class from an object
+		 * removes a class from an object
 		 * @param {Node} obj
 		 * @param {String} className
 		 */
@@ -356,7 +355,7 @@
 		},
 
 		/**
-		 * @description removes an objects style property
+		 * removes an objects style property
 		 * @param obj
 		 * @param style
 		 */
@@ -365,7 +364,7 @@
 		},
 
 		/**
-		 * @description parses an RGB or RGBA color
+		 * parses an RGB or RGBA color
 		 * @param {String} val
 		 */
 		parseRGBColor: function( val ) {
@@ -383,7 +382,7 @@
 		},
 
 		/**
-		 * @description parses an HSL or HSLA color
+		 * parses an HSL or HSLA color
 		 * @param {String} val
 		 * @return {Object}
 		 */
@@ -402,7 +401,7 @@
 		},
 
 		/**
-		 * @description parses color part value
+		 * parses color part value
 		 * @private
 		 * @param {String} val
 		 * @return {Number}
@@ -430,19 +429,19 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 				/**
-				 * @description sets or gets element css property
+				 * sets or gets element css property
 				 * @param {String} property
 				 * @param {*} value
 				 */
@@ -463,7 +462,7 @@
 				},
 
 				/**
-				 * @description sets or gets classes for elements
+				 * sets or gets classes for elements
 				 * @param {String|Array|undefined} values
 				 */
 				classes: function( values ) {
@@ -487,7 +486,7 @@
 				},
 
 				/**
-				 * @description checks that all elements in selector have class
+				 * checks that all elements in selector have class
 				 * @param {String} name
 				 */
 				hasClass: function( name ) {
@@ -501,7 +500,7 @@
 				},
 
 				/**
-				 * @description adds class to all elements
+				 * adds class to all elements
 				 * @param {String} name
 				 */
 				addClass: function( name ) {
@@ -512,7 +511,7 @@
 				},
 
 				/**
-				 * @description removes class from all elements
+				 * removes class from all elements
 				 * @param {String} name
 				 */
 				removeClass: function( name ) {
@@ -535,31 +534,31 @@
 	css.Color.prototype = {
 
 		/**
-		 * @description output color type
+		 * output color type
 		 * @private
 		 */
 		outputType: "",
 
 		/**
-		 * @description hex color value object
+		 * hex color value object
 		 * @public
 		 */
 		hexValue: null,
 
 		/**
-		 * @description rgba color value object
+		 * rgba color value object
 		 * @public
 		 */
 		rgbValue: null,
 
 		/**
-		 * @description hsla color value object
+		 * hsla color value object
 		 * @public
 		 */
 		hslValue: null,
 
 		/**
-		 * @description class initialization function
+		 * class initialization function
 		 * @param value
 		 */
 		init: function( value ){
@@ -568,7 +567,7 @@
 		},
 
 		/**
-		 * @description parses style color values returns rgba object
+		 * parses style color values returns rgba object
 		 * @public
 		 * @param {String} val
 		 */
@@ -610,7 +609,7 @@
 		},
 
 		/**
-		 * @description outputs a css color string of the type specified in outputType
+		 * outputs a css color string of the type specified in outputType
 		 * @return {String}
 		 */
 		toString: function() {
@@ -629,7 +628,7 @@
 		},
 
 		/**
-		 * @description returns the uint value of color object
+		 * returns the uint value of color object
 		 * @return {uint}
 		 */
 		toInt: function() {
@@ -637,7 +636,7 @@
 		},
 
 		/**
-		 * @description outputs a css color hex string
+		 * outputs a css color hex string
 		 * @return {String}
 		 */
 		toHexString: function() {
@@ -645,7 +644,7 @@
 		},
 
 		/**
-		 * @description outputs a css color hsl string
+		 * outputs a css color hsl string
 		 * @return {String}
 		 */
 		toHslString: function() {
@@ -656,7 +655,7 @@
 		},
 
 		/**
-		 * @description outputs a css color hsla string
+		 * outputs a css color hsla string
 		 * @return {String}
 		 */
 		toHslaString: function() {
@@ -668,7 +667,7 @@
 		},
 
 		/**
-		 * @description outputs a css color rgb string
+		 * outputs a css color rgb string
 		 * @return {String}
 		 */
 		toRgbString: function() {
@@ -679,7 +678,7 @@
 		},
 
 		/**
-		 * @description outputs a css color rgba string
+		 * outputs a css color rgba string
 		 * @return {String}
 		 */
 		toRgbaString: function() {

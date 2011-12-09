@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Array Module
+	 * Array Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -16,7 +16,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -34,7 +34,7 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
 		 * @default array
@@ -44,7 +44,7 @@
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -54,7 +54,7 @@
 		},
 
 		/**
-		 * @description checks an array of objects for a property with value
+		 * checks an array of objects for a property with value
 		 * @public
 		 * @param {Array<Object>} array array to check
 		 * @param {String} property property to inspect
@@ -69,7 +69,7 @@
 		},
 
 		/**
-		 * @description returns a unique copy of the array
+		 * returns a unique copy of the array
 		 * @public
 		 * @param array
 		 * @return {Array}
@@ -86,7 +86,7 @@
 		},
 
 		/**
-		 * @description checks if array contains object
+		 * checks if array contains object
 		 * @public
 		 * @param {Array} array
 		 * @return {Boolean}
@@ -96,7 +96,7 @@
 		},
 
 		/**
-		 * @description removes null values from array
+		 * removes null values from array
 		 * @public
 		 * @param {Array} array
 		 * @return {Array}
@@ -113,7 +113,7 @@
 
 
 		/**
-		 * @description creates a sort function for property
+		 * creates a sort function for property
 		 * @param {String} property
 		 * @return {Function}
 		 */
@@ -126,7 +126,7 @@
 		},
 
 		/**
-		 * @description sort an array on a property
+		 * sort an array on a property
 		 * @param {Array} array
 		 * @param {String} property
 		 */
@@ -139,20 +139,20 @@
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description iterates each element in Selector and applies callback.
+				 * iterates each element in Selector and applies callback.
 				 * @param {Function} callback function callback( item, index, array ):void
 				 */
 				forEach: function( callback ) {
@@ -161,7 +161,7 @@
 				},
 
 				/**
-				 * @description iterates each element in Selector and checks that every callback returns true.
+				 * iterates each element in Selector and checks that every callback returns true.
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				every: function( callback ) {
@@ -169,7 +169,7 @@
 				},
 
 				/**
-				 * @description iterates each element in Selector and checks that at least one callback returns true.
+				 * iterates each element in Selector and checks that at least one callback returns true.
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				some: function( callback ) {

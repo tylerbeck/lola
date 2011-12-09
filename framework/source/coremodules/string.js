@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description String Module
+	 * String Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -17,7 +17,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -33,7 +33,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -50,17 +50,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "string";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -71,7 +70,7 @@
 
 
 		/**
-		 * @description pads the front of a string with the specified character to the specified length
+		 * pads the front of a string with the specified character to the specified length
 		 * @param {String|int} str
 		 * @param {String} chr character to use in pad
 		 * @param {int} size padded length
@@ -85,7 +84,7 @@
 		},
 
 		/**
-		 * @description pads the end of a string with the specified character to the specified length
+		 * pads the end of a string with the specified character to the specified length
 		 * @param {String|int} str
 		 * @param {String} chr character to use in pad
 		 * @param {int} size padded length
@@ -99,7 +98,7 @@
 		},
 
 		/**
-		 * @description converts hyphenated strings to camelCase
+		 * converts hyphenated strings to camelCase
 		 * @param {String} str
 		 */
 		camelCase: function ( str ) {
@@ -125,14 +124,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

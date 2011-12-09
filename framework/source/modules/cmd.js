@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Command Module
+	 * Command Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,13 +11,13 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description registry of commands
+		 * registry of commands
 		 * @private
 		 */
 		registry: {},
 
 		/**
-		 * @description holds calls to unloaded commands
+		 * holds calls to unloaded commands
 		 * @private
 		 */
 		callLater: {},
@@ -27,7 +27,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -43,7 +43,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -60,17 +60,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "cmd";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -80,7 +79,7 @@
 		},
 
 		/**
-		 * @description registers command with the module
+		 * registers command with the module
 		 * @param {Class|String} cmd the comman ./d b class or url of the class' js file
 		 * @param {String} name the name with which tobv register the command
 		 */
@@ -99,7 +98,7 @@
 		},
 
 		/**
-		 * @description executes a registered command
+		 * executes a registered command
 		 * @param {String} name registered command name
 		 * @param {Object} params parameter object to be passed to command
 		 * @param {lola.cmd.Responder} responder responder object to handle command events
@@ -159,7 +158,7 @@
 		},
 
 		/**
-		 * @description handles executing commands triggered via event model
+		 * handles executing commands triggered via event model
 		 * @private
 		 * @param event
 		 */
@@ -172,7 +171,7 @@
 		// Classes
 		//==================================================================
 		/**
-		 * @description Responder class handles command events
+		 * Responder class handles command events
 		 * @class
 		 * @param {Function} resultHandler
 		 * @param {Function} faultHandler
@@ -183,7 +182,7 @@
 		},
 
 		/**
-		 * @description Data object for executing commands via event model
+		 * Data object for executing commands via event model
 		 * @param {Object} parameters parameter object
 		 * @param {lola.cmd.Responder} responder responder object
 		 */
@@ -196,14 +195,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -220,28 +219,28 @@
 	//==================================================================
 	cmd.Responder.prototype = {
 		/**
-		 * @description user defined result handler
+		 * user defined result handler
 		 */
 		resultHandler:undefined,
 
 		/**
-		 * @description user defined fault handler
+		 * user defined fault handler
 		 */
 		faultHandler:undefined,
 
 		/**
-		 * @description user defined status handler
+		 * user defined status handler
 		 */
 		statusHandler:undefined,
 
 		/**
-		 * @description last response event
+		 * last response event
 		 * @private
 		 */
 		lastResponse: undefined,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @private
 		 * @param {Function} resultHandler
 		 * @param {Function} faultHandler
@@ -254,7 +253,7 @@
 		},
 
 		/**
-		 * @description handle status events from command
+		 * handle status events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -266,7 +265,7 @@
 		},
 
 		/**
-		 * @description handle result events from command
+		 * handle result events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -277,7 +276,7 @@
 		},
 
 		/**
-		 * @description handle fault events from command
+		 * handle fault events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -288,7 +287,7 @@
 		},
 
 		/**
-		 * @description get last response
+		 * get last response
 		 * @return {Object|undefined}
 		 */
 		getLastResponse: function(){
@@ -300,19 +299,19 @@
 
 	cmd.Data.prototype = {
 		/**
-		 * @description command parameters
+		 * command parameters
 		 * @type {Object}
 		 */
 		parameters: undefined,
 
 		/**
-		 * @description command responder
+		 * command responder
 		 * @type {lola.cmd.Responder}
 		 */
 		responder: undefined,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @private
 		 * @param {Object} parameters
 		 * @param {lola.cmd.Responder} responder

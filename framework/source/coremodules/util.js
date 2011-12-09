@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Utility Module
+	 * Utility Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -16,7 +16,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -32,7 +32,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -49,17 +49,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "util";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -71,7 +70,6 @@
         copyPrimitives: function( source, target ){
             for (var k in source){
                 if (lola.type.isPrimitive(source[k])){
-                    console.log('copying: '+k);
                     target[k] = source[k];
                 }
             }
@@ -86,20 +84,20 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description iterate through values calling iterator to change value
+				 * iterate through values calling iterator to change value
 				 * @param {Function} getVal function tat returns value from each item
 				 * @param {Function} compareFn function that compares values / modifies data
 				 * @param {Object} initialVal initial value;

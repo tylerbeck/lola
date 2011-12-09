@@ -37,9 +37,9 @@
 
 		/**
 		 * @private
-		 * @type {Array}
+		 * @type {Object}
 		 */
-		dependencies: [],
+		dependencies: {},
 
 		/**
 		 * @private
@@ -69,7 +69,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description framework initialization function
+		 * framework initialization function
 		 * @private
 		 * @param wnd {Object} reference to window
 		 */
@@ -90,26 +90,15 @@
 				}
 
 				//check dependencies
-				//TODO: Update dependencie checks
-				var fails = [];
-				var dependenciesLength = lola.dependencies.length;
-				for ( i = 0; i < dependenciesLength; i++ ) {
-					var dependency = lola.dependencies[i];
-					//if ( this.hasProperties( this, this.dependencies[module] ) )
-					//	break;
-					//fails.push( module );
-				}
-				if ( fails.length > 0 ) {
-					throw new Error( "module dependency checks failed for: " + fails.join( ", " ) );
-				}
+                lola.checkDependencies(lola.dependencies);
 
 				//execute initialization stack
 				var stackSize = lola.initializers.length;
 
 				for ( i = 0; i < stackSize; i++ ) {
 					var initializer = lola.initializers[i];
-					if (initializer){
-						initializer.call( window );
+					if (typeof initializer == "function"){
+						initializer();
 					}
 
 					delete lola.initializers[i];
@@ -117,7 +106,43 @@
 			}
 		},
 
-		parseUrl: function( url ){
+        /**
+         * checks a dependency map for modules
+         * @param {Object} map
+         */
+        checkDependencies: function( map ){
+            var fails = [];
+            for ( var k in map ) {
+                var missing = this.checkModules( map[k] );
+                if ( missing.length > 0 )
+                    fails.push(k+': '+missing.join(', '));
+            }
+            if ( fails.length > 0 ) {
+                throw new Error( "module dependency checks failed for: \n\t" + fails.join( "\n\t" ) );
+            }
+        },
+
+        /**
+         * checks if modules are registered and returns missing modules
+         * @param {Array} modules
+         * @return {Array} missing modules
+         */
+        checkModules: function( modules ){
+            var missing = [];
+            modules.forEach( function(item){
+                if (!lola.hasPackage( lola, item ))
+                    missing.push(item);
+            });
+
+            return missing;
+        },
+
+        /**
+         * parses a url to get hash and vars
+         * @param {String} url
+         * @return {Object} vars, hash
+         */
+        parseUrl: function( url ){
 			var parts = url.split("#",2);
 			var vars = {};
 			var hash = parts[1];
@@ -126,11 +151,11 @@
 				vars[key] = value;
 			});
 
-			return {vars:vars, hash:hash};
+			return { vars:vars, hash:hash};
 		},
 
 		/**
-		 * @description creates/gets and returns the object lineage defined in chain param
+		 * creates/gets and returns the object lineage defined in chain param
 		 * @public
 		 * @param {!Object} base object on which to build chain
 		 * @param {!String} chain "." seperated namespace / package
@@ -143,15 +168,38 @@
 				var parts = chain.split( '.' );
 				var part;
 				while ( part = parts.shift() ) {
-					if ( result[part] == null  ) result[part] = {};
+					if ( result[part] == null  )
+                        result[part] = {};
 					result = result[part];
 				}
 			}
 			return result;
 		},
 
+        /**
+         * checks the existence of the object lineage defined in chain param
+         * @public
+         * @param {!Object} base object on which to build chain
+         * @param {!String} chain "." seperated namespace / package
+         * @return {Boolean}
+         */
+        hasPackage: function( base, chain ) {
+            var result = base;
+            if ( typeof chain === 'string' ) {
+                var parts = chain.split( '.' );
+                var part;
+                while ( part = parts.shift() ) {
+                    if ( result[part] == null  )
+                        return false;
+                    else
+                        result = result[part];
+                }
+            }
+            return true;
+        },
+
 		/**
-		 * @description extends the target with properties from the source
+		 * extends the target with properties from the source
 		 * @public
 		 * @param target {Object}
 		 * @param source {Object}
@@ -163,7 +211,7 @@
 			//lola.debug('lola::extend');
 			//TODO: make deep copy an option
 			if ( overwrite == undefined ) overwrite = false;
-			if ( errors == null ) errors = false;
+			if ( errors == undefined ) errors = false;
 			for ( var k in source ) {
 				if ( overwrite || target[k] == null )
 					target[k] = source[k];
@@ -174,7 +222,7 @@
 
 
 		/**
-		 * @description eval abstraction
+		 * eval abstraction
 		 * @param {String} expression the expression to evaluate
 		 * @param {Object|undefined} node the node in which to load the script
 		 */
@@ -201,7 +249,7 @@
 		},
 
 		/**
-		 * @description loads a script from a url src
+		 * loads a script from a url src
 		 * @param {String} src the uri of the script to load
 		 * @param {Function|undefined} callback the function to call after the script has loaded
 		 */
@@ -225,18 +273,21 @@
 
 
 		/**
-		 * @description registers a module with the Lola Framework
+		 * registers a module with the Lola Framework
 		 * @public
 		 * @param {lola.Module} module
 		 * @return {void}
 		 */
 		registerModule: function( module ) {
-			lola.debug('lola::registerModule - ' + module.getNamespace() );
+            var ns = module.getNamespace();
+            lola.debug('lola::registerModule - ' + ns );
+
 			//add module dependencies
-			lola.dependencies.push( module.getDependencies() );
+            if (module.hasOwnProperty('getDependencies') && typeof module.getDependencies=="function")
+			    lola.dependencies[ns] =  module.getDependencies();
 
 			//add module to namespace
-			lola.extend( lola.getPackage( lola, module.getNamespace() ), module );
+			lola.extend( lola.getPackage( lola, ns ), module );
 
 			//add selector methods
 			lola.extend( lola.Selector.prototype, module.getSelectorMethods() );
@@ -256,7 +307,7 @@
 		},
 
 		/**
-		 * @description delete a property on an object and removes framework references
+		 * delete a property on an object and removes framework references
 		 * @public
 		 * @param {Object} object object on which to delete property
 		 * @param {String} property property to delete
@@ -276,14 +327,14 @@
 		},
 
 		/**
-		 * @description Object prototype's to string method
+		 * Object prototype's to string method
 		 * @param {Object} object
 		 * @return {String}
 		 */
 		toString: Object.prototype.toString,
 
 		/**
-		 * @description checks for required arguments
+		 * checks for required arguments
 		 * @param {String} group
 		 * @param {Array} required
 		 * @param {Array} info
@@ -363,7 +414,7 @@
 		// Classes
 		//==================================================================
 		/**
-		 * @description Selector class
+		 * Selector class
 		 * @param {String} selector selector string
 		 * @param {Object|undefined} context for selection
 		 * @constructor
@@ -373,7 +424,7 @@
 		},
 
 		/**
-		 * @description Lola Module Interface
+		 * Lola Module Interface
 		 * @interface
 		 */
 		Module: function() {
@@ -387,14 +438,14 @@
 	//==================================================================
 	lola.Selector.prototype = {
 		/**
-		 * @description internal selection element array
+		 * internal selection element array
 		 * @private
 		 * @type {Array}
 		 */
 		elements: [],
 
 		/**
-		 * @description Selector initialization function
+		 * Selector initialization function
 		 * @param {String} selector selector string
 		 * @param {Object} context context in which to
 		 * @return {lola.Selector}
@@ -420,20 +471,20 @@
 		},
 
 		/**
-		 * @description assigns guid to elements
+		 * assigns guid to elements
 		 * @return {lola.Selector}
 		 */
 		identify: function() {
 			this.forEach( function( item ) {
 				if ( !item.id )
-					item.id = "lola-guid-" + guid++;
+					item.id = "lola-guid-" + lola.guid++;
 			} );
 
 			return this;
 		},
 
 		/**
-		 * @description returns the element at the specified index
+		 * returns the element at the specified index
 		 * @param {int} index
 		 * @return {Object}
 		 */
@@ -444,7 +495,7 @@
 		},
 
 		/**
-		 * @description returns all of the selected elements
+		 * returns all of the selected elements
 		 * @return {Array}
 		 */
 		getAll: function() {
@@ -452,7 +503,7 @@
 		},
 
 		/**
-		 * @description returns element count
+		 * returns element count
 		 * @return {int}
 		 */
 		count: function() {
@@ -460,7 +511,7 @@
 		},
 
 		/**
-		 *@description concatenates the elements from one or more
+		 *concatenates the elements from one or more
 		 * @param {lola.Selector|Array|Object} obj object to concatenate
 		 * @return {lola.Selector}
 		 */
@@ -482,7 +533,7 @@
 		},
 
 		/**
-		 * @description  removes framework references for elements
+		 *  removes framework references for elements
 		 * @return {lola.Selector}
 		 */
 		safeDelete: function() {
@@ -500,14 +551,14 @@
 	lola.Module.prototype = {
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @return {void}
 		 */
 		initialize: function() {
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @return {String}
 		 */
 		getNamespace: function() {
@@ -515,7 +566,7 @@
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @return {Array}
 		 */
 		getDependencies: function() {
@@ -523,7 +574,7 @@
 		},
 
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
@@ -2015,7 +2066,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Array Module
+	 * Array Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -2030,7 +2081,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -2048,7 +2099,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
 		 * @default array
@@ -2058,7 +2109,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -2068,7 +2119,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description checks an array of objects for a property with value
+		 * checks an array of objects for a property with value
 		 * @public
 		 * @param {Array<Object>} array array to check
 		 * @param {String} property property to inspect
@@ -2083,7 +2134,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns a unique copy of the array
+		 * returns a unique copy of the array
 		 * @public
 		 * @param array
 		 * @return {Array}
@@ -2100,7 +2151,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description checks if array contains object
+		 * checks if array contains object
 		 * @public
 		 * @param {Array} array
 		 * @return {Boolean}
@@ -2110,7 +2161,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description removes null values from array
+		 * removes null values from array
 		 * @public
 		 * @param {Array} array
 		 * @return {Array}
@@ -2127,7 +2178,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description creates a sort function for property
+		 * creates a sort function for property
 		 * @param {String} property
 		 * @return {Function}
 		 */
@@ -2140,7 +2191,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description sort an array on a property
+		 * sort an array on a property
 		 * @param {Array} array
 		 * @param {String} property
 		 */
@@ -2153,20 +2204,20 @@ window.Sizzle = Sizzle;
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description iterates each element in Selector and applies callback.
+				 * iterates each element in Selector and applies callback.
 				 * @param {Function} callback function callback( item, index, array ):void
 				 */
 				forEach: function( callback ) {
@@ -2175,7 +2226,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description iterates each element in Selector and checks that every callback returns true.
+				 * iterates each element in Selector and checks that every callback returns true.
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				every: function( callback ) {
@@ -2183,7 +2234,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description iterates each element in Selector and checks that at least one callback returns true.
+				 * iterates each element in Selector and checks that at least one callback returns true.
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				some: function( callback ) {
@@ -2450,7 +2501,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description CSS Module
+	 * CSS Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -2460,25 +2511,25 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description cache for fixed/mapped style properties
+		 * cache for fixed/mapped style properties
 		 * @private
 		 */
 		propertyCache: {},
 
 		/**
-		 * @description cache for fixed/mapped selectors
+		 * cache for fixed/mapped selectors
 		 * @private
 		 */
 		selectorCache: {},
 
 		/**
-		 * @description style property hooks
+		 * style property hooks
 		 * @private
 		 */
 		propertyHooks: {},
 
 		/**
-		 * @description references to dynamic stylesheets
+		 * references to dynamic stylesheets
 		 * @private
 		 */
 		stylesheets: {},
@@ -2487,7 +2538,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -2502,7 +2553,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -2525,17 +2576,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "css";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -2545,7 +2595,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns whether or not an object can have styles applied
+		 * returns whether or not an object can have styles applied
 		 * @param {*} obj
 		 */
 		canStyle: function( obj ) {
@@ -2554,7 +2604,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets mapped selector string
+		 * gets mapped selector string
 		 * @param {String} selector
 		 * @return {String}
 		 */
@@ -2565,7 +2615,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets mapped selector string
+		 * gets mapped selector string
 		 * @param {String} property
 		 * @return {String}
 		 */
@@ -2612,7 +2662,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description adds a stylesheet to the document head with an optional source
+		 * adds a stylesheet to the document head with an optional source
 		 * @param {String|undefined} id reference id for stylesheet
 		 * @param {String|undefined} source url for external stylesheet
 		 */
@@ -2628,7 +2678,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description registers a stylesheet with the css module
+		 * registers a stylesheet with the css module
 		 * @param {Node} stylesheet stylesheet object reference
 		 * @param {String} id the id with which to register stylesheet
 		 */
@@ -2637,7 +2687,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description adds a selector to a stylesheet
+		 * adds a selector to a stylesheet
 		 * @param {String} selector
 		 * @param {Object} styles an object containing key value pairs of style properties and values
 		 * @param {String|Object|undefined} stylesheet registered stylesheet id or stylesheet reference
@@ -2667,7 +2717,7 @@ window.Sizzle = Sizzle;
 			return rule;
 		},
 		/**
-		 * @description performs action on matching rules
+		 * performs action on matching rules
 		 * @param {String} selector
 		 * @param {Function} action
 		 * @param {String} media
@@ -2693,7 +2743,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns an array of matching rules
+		 * returns an array of matching rules
 		 * @param {String} selector
 		 * @param {String} media
 		 * @return {Array}
@@ -2710,7 +2760,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description updates rules in matching selectors
+		 * updates rules in matching selectors
 		 * @param {String} selector
 		 * @param {Object} styles an object containing key value pairs of style properties and values
 		 * @param {String} media
@@ -2729,7 +2779,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description deletes matching rules
+		 * deletes matching rules
 		 * @param selector
 		 * @param media
 		 */
@@ -2743,7 +2793,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets or sets an objects classes
+		 * gets or sets an objects classes
 		 * @param {Node} obj
 		 * @param {String|Array|undefined} classes leave undefined to get classes
 		 * @return {Array}
@@ -2768,7 +2818,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns
+		 * returns
 		 * @param obj
 		 * @param className
 		 */
@@ -2778,7 +2828,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description adds class to object if not already added
+		 * adds class to object if not already added
 		 * @param {Node} obj
 		 * @param {String} className
 		 */
@@ -2791,7 +2841,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description removes a class from an object
+		 * removes a class from an object
 		 * @param {Node} obj
 		 * @param {String} className
 		 */
@@ -2805,7 +2855,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description removes an objects style property
+		 * removes an objects style property
 		 * @param obj
 		 * @param style
 		 */
@@ -2814,7 +2864,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description parses an RGB or RGBA color
+		 * parses an RGB or RGBA color
 		 * @param {String} val
 		 */
 		parseRGBColor: function( val ) {
@@ -2832,7 +2882,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description parses an HSL or HSLA color
+		 * parses an HSL or HSLA color
 		 * @param {String} val
 		 * @return {Object}
 		 */
@@ -2851,7 +2901,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description parses color part value
+		 * parses color part value
 		 * @private
 		 * @param {String} val
 		 * @return {Number}
@@ -2879,19 +2929,19 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 				/**
-				 * @description sets or gets element css property
+				 * sets or gets element css property
 				 * @param {String} property
 				 * @param {*} value
 				 */
@@ -2912,7 +2962,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description sets or gets classes for elements
+				 * sets or gets classes for elements
 				 * @param {String|Array|undefined} values
 				 */
 				classes: function( values ) {
@@ -2936,7 +2986,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description checks that all elements in selector have class
+				 * checks that all elements in selector have class
 				 * @param {String} name
 				 */
 				hasClass: function( name ) {
@@ -2950,7 +3000,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description adds class to all elements
+				 * adds class to all elements
 				 * @param {String} name
 				 */
 				addClass: function( name ) {
@@ -2961,7 +3011,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description removes class from all elements
+				 * removes class from all elements
 				 * @param {String} name
 				 */
 				removeClass: function( name ) {
@@ -2984,31 +3034,31 @@ window.Sizzle = Sizzle;
 	css.Color.prototype = {
 
 		/**
-		 * @description output color type
+		 * output color type
 		 * @private
 		 */
 		outputType: "",
 
 		/**
-		 * @description hex color value object
+		 * hex color value object
 		 * @public
 		 */
 		hexValue: null,
 
 		/**
-		 * @description rgba color value object
+		 * rgba color value object
 		 * @public
 		 */
 		rgbValue: null,
 
 		/**
-		 * @description hsla color value object
+		 * hsla color value object
 		 * @public
 		 */
 		hslValue: null,
 
 		/**
-		 * @description class initialization function
+		 * class initialization function
 		 * @param value
 		 */
 		init: function( value ){
@@ -3017,7 +3067,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description parses style color values returns rgba object
+		 * parses style color values returns rgba object
 		 * @public
 		 * @param {String} val
 		 */
@@ -3059,7 +3109,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color string of the type specified in outputType
+		 * outputs a css color string of the type specified in outputType
 		 * @return {String}
 		 */
 		toString: function() {
@@ -3078,7 +3128,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns the uint value of color object
+		 * returns the uint value of color object
 		 * @return {uint}
 		 */
 		toInt: function() {
@@ -3086,7 +3136,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color hex string
+		 * outputs a css color hex string
 		 * @return {String}
 		 */
 		toHexString: function() {
@@ -3094,7 +3144,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color hsl string
+		 * outputs a css color hsl string
 		 * @return {String}
 		 */
 		toHslString: function() {
@@ -3105,7 +3155,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color hsla string
+		 * outputs a css color hsla string
 		 * @return {String}
 		 */
 		toHslaString: function() {
@@ -3117,7 +3167,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color rgb string
+		 * outputs a css color rgb string
 		 * @return {String}
 		 */
 		toRgbString: function() {
@@ -3128,7 +3178,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description outputs a css color rgba string
+		 * outputs a css color rgba string
 		 * @return {String}
 		 */
 		toRgbaString: function() {
@@ -3147,7 +3197,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Data Module
+	 * Data Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -3157,19 +3207,19 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description cache for all data storage
+		 * cache for all data storage
 		 * @private
 		 */
 		cache: {},
 
 		/**
-		 * @description uid for data references
+		 * uid for data references
 		 * @private
 		 */
 		uid: 1,
 
 		/**
-		 * @description attribute for data storage uid
+		 * attribute for data storage uid
 		 * @private
 		 */
 		cacheIDProp: "LOLA-DATA-UID",
@@ -3178,7 +3228,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -3194,7 +3244,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -3211,17 +3261,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "data";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -3231,7 +3280,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get next data uid
+		 * get next data uid
 		 * @return {int}
 		 * @private
 		 */
@@ -3240,7 +3289,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description links element with data cache
+		 * links element with data cache
 		 * @param {Object} object
 		 * @param {Boolean|undefined} create defaults to true,
 		 * set to false to prevent creating a cache if one doesn't already exist
@@ -3288,7 +3337,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets an objects data for the specified namespace
+		 * gets an objects data for the specified namespace
 		 * @param {Object} object the object for which to retrieve data
 		 * @param {String} namespace the namespace to retrieve
 		 * @param {Boolean|undefined} create namespace data for object if not found,
@@ -3311,7 +3360,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets data for entire namespace
+		 * gets data for entire namespace
 		 * @param {String} namespace the namespace to get from data cache
 		 */
 		getNamespaceData: function( namespace ) {
@@ -3319,7 +3368,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description replaces/updates existing object data
+		 * replaces/updates existing object data
 		 * @param {Object} object
 		 * @param {Object} data
 		 * @param {String} namespace namespace to put data
@@ -3342,7 +3391,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description removes object data
+		 * removes object data
 		 * @param {Object} object
 		 * @param {String|undefined} namespace namespace to remove data,
 		 * removes data from all namespaces if undefined
@@ -3388,20 +3437,20 @@ window.Sizzle = Sizzle;
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description get data for elements
+				 * get data for elements
 				 * @param {String} namespace
 				 * @param {Boolean|undefined} create create data object if null
 				 * @return {Array}
@@ -3415,7 +3464,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description put data for elements
+				 * put data for elements
 				 * @param {Object} data data to put in cache for elements (overwrites)
 				 * @param {String} namespace
 				 * @return {lola.Selector}
@@ -3428,7 +3477,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description updates data for elements
+				 * updates data for elements
 				 * @param {Object} data
 				 * @param {String} namespace
 				 * @return {lola.Selector}
@@ -3442,7 +3491,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description remove specified namespaces from data cache
+				 * remove specified namespaces from data cache
 				 * @param {Array|String|undefined} namespace
 				 * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
 				 * @return {lola.Selector}
@@ -3456,7 +3505,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description remove specified namespaces from data cache
+				 * remove specified namespaces from data cache
 				 * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
 				 * @return {lola.Selector}
 				 */
@@ -3481,7 +3530,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description DOM Module
+	 * DOM Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -3492,7 +3541,7 @@ window.Sizzle = Sizzle;
 		//==================================================================
 
 		/**
-		 * @description map of attribute getter/setter hooks
+		 * map of attribute getter/setter hooks
 		 * @private
 		 * @type {Array}
 		 */
@@ -3502,7 +3551,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -3519,17 +3568,16 @@ window.Sizzle = Sizzle;
 
 		},
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "dom";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -3540,7 +3588,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description sets or gets an node attribute
+		 * sets or gets an node attribute
 		 * @param {Object} object the object on which to access the attribute
 		 * @param {String} name the name of the attribute
 		 * @param {*} value (optional) value to set
@@ -3566,7 +3614,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description deletes expando properties
+		 * deletes expando properties
 		 * @param {Object} object
 		 * @param {String} name
 		 */
@@ -3581,7 +3629,7 @@ window.Sizzle = Sizzle;
 		// isDescendant - determines if a is descendant of b
 		//------------------------------------------------------------------
 		/**
-		 * @description determines if element a is descendant of element b
+		 * determines if element a is descendant of element b
 		 * @param {Node} a
 		 * @param {Node} b
 		 */
@@ -3590,7 +3638,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description determines if element a is an ancestor of element b
+		 * determines if element a is an ancestor of element b
 		 * @param {Node} a
 		 * @param {Node} b
 		 */
@@ -3608,20 +3656,20 @@ window.Sizzle = Sizzle;
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description  gets sub selection
+				 *  gets sub selection
 				 * @return {lola.Selector}
 				 */
 				find: function( selector ) {
@@ -3635,7 +3683,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  generation selection
+				 *  generation selection
 				 * @return {lola.Selector}
 				 */
 				generation: function( count ) {
@@ -3657,7 +3705,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  sets or gets html on elements
+				 *  sets or gets html on elements
 				 * @return {lola.Selector|Array}
 				 */
 				html: function( content ) {
@@ -3700,7 +3748,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  appends node to first selection element in DOM
+				 *  appends node to first selection element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -3713,7 +3761,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  prepends node to first selection element in DOM
+				 *  prepends node to first selection element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -3726,7 +3774,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  clones first selection element
+				 *  clones first selection element
 				 * @param {Boolean} deep
 				 * @return {Element}
 				 */
@@ -3738,7 +3786,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  inserts node before first element in DOM
+				 *  inserts node before first element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -3750,7 +3798,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  removes node from first element in DOM
+				 *  removes node from first element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -3763,7 +3811,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  replaces node in first element in DOM
+				 *  replaces node in first element in DOM
 				 * @param {Element} newChild
 				 * @param {Element} oldChild
 				 * @return {lola.Selector}
@@ -3779,7 +3827,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  sets or gets attributes
+				 *  sets or gets attributes
 				 * @param {String} name
 				 * @param {*} value
 				 * @return {lola.Selector|Array}
@@ -3801,7 +3849,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  removes attribute from elements
+				 *  removes attribute from elements
 				 * @param {String} name
 				 * @return {lola.Selector}
 				 */
@@ -3813,7 +3861,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  sets new parent elements
+				 *  sets new parent elements
 				 * @param {String} newParent
 				 * @return {lola.Selector|Array}
 				 */
@@ -3835,7 +3883,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description  deletes expando property on elements
+				 *  deletes expando property on elements
 				 * @param {String} name
 				 * @return {lola.Selector}
 				 */
@@ -3865,7 +3913,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Event Module
+	 * Event Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -3875,21 +3923,21 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description event maping
+		 * event maping
 		 * @private
 		 * @type {Object}
 		 */
 		map: { 'mousewheel':['mousewheel','DOMMouseScroll'] },
 
 		/**
-		 * @description event hooks
+		 * event hooks
 		 * @private
 		 * @type {Object}
 		 */
 		hooks: {},
 
 		/**
-		 * @description event listener uid
+		 * event listener uid
 		 * @type {int}
 		 */
 		uid: 0,
@@ -3900,7 +3948,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -3916,7 +3964,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -3933,17 +3981,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "event";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -3954,7 +4001,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description add a framework event listener
+		 * add a framework event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -4004,7 +4051,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description remove a framework event listener
+		 * remove a framework event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -4043,7 +4090,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description removes all listeners associated with handler
+		 * removes all listeners associated with handler
 		 * @param {String|Array} types
 		 * @param {Function} handler
 		 * @param {Boolean|undefined} useCapture
@@ -4087,7 +4134,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description internal capture listener
+		 * internal capture listener
 		 * @param {Object} event
 		 * @private
 		 */
@@ -4097,7 +4144,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description internal bubble listener
+		 * internal bubble listener
 		 * @param {Object} event
 		 * @private
 		 */
@@ -4107,7 +4154,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description internal capture listener
+		 * internal capture listener
 		 * @private
 		 * @param {Object} event
 		 * @param {String} phase
@@ -4137,7 +4184,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description triggers a framework event on an object
+		 * triggers a framework event on an object
 		 * @param {Object} object
 		 * @param {String} type
 		 * @param {Boolean|undefined} bubbles
@@ -4176,7 +4223,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description add a DOM event listener
+		 * add a DOM event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -4202,7 +4249,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description remove a DOM event listener
+		 * remove a DOM event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -4227,7 +4274,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets the dom target
+		 * gets the dom target
 		 * @param {Object} event
 		 * @param {Object} target
 		 * @return {Object}
@@ -4262,7 +4309,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns key string for key events
+		 * returns key string for key events
 		 * @param {Event} e
 		 * @return {String}
 		 */
@@ -4278,7 +4325,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns x,y coordinates relative to document
+		 * returns x,y coordinates relative to document
 		 * @param {Event} e
 		 * @return {Object}
 		 */
@@ -4298,7 +4345,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns x,y coordinates relative to currentTarget
+		 * returns x,y coordinates relative to currentTarget
 		 * @param {Event} e
 		 * @return {Object}
 		 */
@@ -4309,7 +4356,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description returns actual event phase to use
+		 * returns actual event phase to use
 		 * @param {Object} target
 		 * @param {Boolean|undefined} useCapture
 		 * @return {String}
@@ -4319,7 +4366,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description prevent default event action
+		 * prevent default event action
 		 * @param {Event} e
 		 * @return {Boolean}
 		 */
@@ -4349,7 +4396,7 @@ window.Sizzle = Sizzle;
 		// Classes
 		//==================================================================
 		/**
-		 * @description LolqEvent class used with internal events
+		 * LolqEvent class used with internal events
 		 * @class
 		 * @param {Object} event
 		 * @param {Object} target
@@ -4362,20 +4409,20 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description adds a framework event listener
+				 * adds a framework event listener
 				 * @param {String} type
 				 * @param {Function} handler
 				 * @param {Boolean|undefined} useCapture
@@ -4391,7 +4438,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description removes a framework event listener
+				 * removes a framework event listener
 				 * @param {String} type
 				 * @param {Function} handler
 				 * @param {Boolean|undefined} useCapture
@@ -4405,7 +4452,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description removes all listeners associated with handler
+				 * removes all listeners associated with handler
 				 * @param {Function} handler
 				 * @param {Array|undefined} types event types to remove for handler, undefined removes all
 				 * @param {String|undefined} phase
@@ -4419,7 +4466,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description triggers an framework event on an object
+				 * triggers an framework event on an object
 				 * @param {String} type
 				 * @param {Boolean|undefined} bubbles
 				 * @param {Boolean|undefined} cancelable
@@ -4445,57 +4492,57 @@ window.Sizzle = Sizzle;
 	event.LolaEvent.prototype = {
 
 		/**
-		 * @description reference to original event
+		 * reference to original event
 		 * @type {Event}
 		 */
 		originalEvent: null,
 
 		/**
-		 * @description flag for propagation stopped
+		 * flag for propagation stopped
 		 * @type {Boolean}
 		 * @private
 		 */
 		propagationStopped: false,
 
 		/**
-		 * @description flag for immediate propagation stopped
+		 * flag for immediate propagation stopped
 		 * @type {Boolean}
 		 * @private
 		 */
 		immediatePropagationStopped: false,
 
 		/**
-		 * @description event's target
+		 * event's target
 		 * @type {Object}
 		 */
 		target: null,
 
 		/**
-		 * @description event's currentTarget
+		 * event's currentTarget
 		 * @type {Object}
 		 */
 		currentTarget: null,
 
 		/**
-		 * @description global x position (Mouse/Touch Events)
+		 * global x position (Mouse/Touch Events)
 		 * @type {Number}
 		 */
 		globalX: null,
 
 		/**
-		 * @description global y position (Mouse/Touch Events)
+		 * global y position (Mouse/Touch Events)
 		 * @type {Number}
 		 */
 		globalY: null,
 
 		/**
-		 * @description key code for Key Events
+		 * key code for Key Events
 		 * @type {int}
 		 */
 		key: null,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @param {Event} event
 		 * @param {Object} target
 		 */
@@ -4520,14 +4567,14 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description prevents an events default behavior
+		 * prevents an events default behavior
 		 */
 		preventDefault: function(){
 			this.originalEvent.preventDefault();
 		},
 
 		/**
-		 * @description stops event propagation
+		 * stops event propagation
 		 */
 		stopPropagation: function(){
 			this.originalEvent.stopPropagation();
@@ -4535,7 +4582,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description stops immediate event propagation
+		 * stops immediate event propagation
 		 */
 		stopImmediatePropagation: function(){
 			this.originalEvent.stopImmediatePropagation();
@@ -4550,7 +4597,7 @@ window.Sizzle = Sizzle;
 	//==================================================================
 
 	/**
-	 * @description delayed hover intent event hook
+	 * delayed hover intent event hook
 	 * @event hover
 	 */
 	event.hooks['hover'] = {
@@ -4607,7 +4654,7 @@ window.Sizzle = Sizzle;
 	};
 
 	/**
-	 * @description mouse enter state event
+	 * mouse enter state event
 	 * @event mouseenterstate
 	 */
 	event.hooks['mouseenterstate'] = {
@@ -4673,13 +4720,13 @@ window.Sizzle = Sizzle;
 	};
 
 	/**
-	 * @description mouse leave event
+	 * mouse leave event
 	 * @event mouseleave
 	 */
 	event.hooks['mouseleave'] = event.hooks['mouseenterstate'];
 
 	/**
-	 * @description mouse enter event
+	 * mouse enter event
 	 * @event mouseleave
 	 */
 	event.hooks['mouseenter'] = event.hooks['mouseenterstate'];
@@ -4692,7 +4739,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description math Module
+	 * math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -4708,7 +4755,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -4725,7 +4772,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -4743,17 +4790,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -4763,7 +4809,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description normalize radians to 0 to 2 * PI
+		 * normalize radians to 0 to 2 * PI
 		 * @param {Number} value radian value
 		 * @return {Number}
 		 */
@@ -4775,7 +4821,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description normalize degrees to 0 to 360
+		 * normalize degrees to 0 to 360
 		 * @param {Number} value radian value
 		 * @return {Number}
 		 */
@@ -4786,7 +4832,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description normalize a value within a range
+		 * normalize a value within a range
 		 * @param {Number} min
 		 * @param {Number} value
 		 * @param {Number} max
@@ -4805,20 +4851,20 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description get max value
+				 * get max value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -4827,7 +4873,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description get min value
+				 * get min value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -4836,7 +4882,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description get total value
+				 * get total value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -4847,7 +4893,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description get averate value
+				 * get averate value
 				 * @param {Function} getVal function to get value from elements
 				 * @return {Number}
 				 */
@@ -4877,7 +4923,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Regular Expression Module
+	 * Regular Expression Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -4899,7 +4945,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -4916,7 +4962,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -4934,17 +4980,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "regex";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -4963,14 +5008,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -4997,7 +5042,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description String Module
+	 * String Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -5013,7 +5058,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -5029,7 +5074,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -5046,17 +5091,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "string";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -5067,7 +5111,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description pads the front of a string with the specified character to the specified length
+		 * pads the front of a string with the specified character to the specified length
 		 * @param {String|int} str
 		 * @param {String} chr character to use in pad
 		 * @param {int} size padded length
@@ -5081,7 +5125,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description pads the end of a string with the specified character to the specified length
+		 * pads the end of a string with the specified character to the specified length
 		 * @param {String|int} str
 		 * @param {String} chr character to use in pad
 		 * @param {int} size padded length
@@ -5095,7 +5139,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hyphenated strings to camelCase
+		 * converts hyphenated strings to camelCase
 		 * @param {String} str
 		 */
 		camelCase: function ( str ) {
@@ -5121,14 +5165,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -5173,7 +5217,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Support Module
+	 * Support Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -5183,56 +5227,56 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description can script text nodes be appended to script nodes
+		 * can script text nodes be appended to script nodes
 		 * @public
 		 * @type {Boolean}
 		 */
 		domEval: false,
 
 		/**
-		 * @description can delete expando properties
+		 * can delete expando properties
 		 * @public
 		 * @type {Boolean}
 		 */
 		deleteExpando: true,
 
 		/**
-		 * @description dom event model
+		 * dom event model
 		 * @public
 		 * @type {Boolean}
 		 */
 		domEvent: false,
 
 		/**
-		 * @description ms event model
+		 * ms event model
 		 * @public
 		 * @type {Boolean}
 		 */
 		msEvent: false,
 
 		/**
-		 * @description browser animation frame timing
+		 * browser animation frame timing
 		 * @public
 		 * @type {Boolean}
 		 */
 		browserAnimationFrame: false,
 
 		/**
-		 * @description IE style
+		 * IE style
 		 * @public
 		 * @type {Boolean}
 		 */
 		style: false,
 
 		/**
-		 * @description float is reserved check whether to user cssFloat or styleFloat
+		 * float is reserved check whether to user cssFloat or styleFloat
 		 * @public
 		 * @type {Boolean}
 		 */
 		cssFloat: false,
 
 		/**
-		 * @description check color alpha channel support
+		 * check color alpha channel support
 		 * @public
 		 * @type {Boolean}
 		 */
@@ -5242,7 +5286,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -5306,7 +5350,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -5324,17 +5368,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "support";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -5348,14 +5391,14 @@ window.Sizzle = Sizzle;
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -5376,7 +5419,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Type Module
+	 * Type Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -5401,7 +5444,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -5421,7 +5464,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -5437,17 +5480,16 @@ window.Sizzle = Sizzle;
 			delete lola.type.initialize;
 		},
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "type";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -5457,7 +5499,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description creates map of object and element types
+		 * creates map of object and element types
 		 * @private
 		 */
 		createMap: function() {
@@ -5506,7 +5548,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description maps tag type
+		 * maps tag type
 		 * @private
 		 * @param item
 		 * @param index
@@ -5523,7 +5565,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description maps special tag types
+		 * maps special tag types
 		 * @private
 		 * @param item
 		 * @param index
@@ -5540,7 +5582,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description maps object types
+		 * maps object types
 		 * @private
 		 * @param item
 		 * @param index
@@ -5554,7 +5596,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets the specified object's type
+		 * gets the specified object's type
 		 * @param {Object} object
 		 * @return {String}
 		 */
@@ -5576,19 +5618,19 @@ window.Sizzle = Sizzle;
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 				/**
-				 * @description gets the type if the specified index
+				 * gets the type if the specified index
 				 * @param {int} index
 				 * @return {Array}
 				 */
@@ -5601,7 +5643,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description checks if element at index is a type, or all elements are a type
+				 * checks if element at index is a type, or all elements are a type
 				 * @param {String} type
 				 * @param {int|undefined} index
 				 */
@@ -5617,7 +5659,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description checks if element at index is a primitive, or all elements are primitives
+				 * checks if element at index is a primitive, or all elements are primitives
 				 * @param {int|undefined} index
 				 */
 				isPrimitive: function( index ) {
@@ -5650,7 +5692,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Utility Module
+	 * Utility Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -5665,7 +5707,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -5681,7 +5723,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -5698,17 +5740,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "util";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -5720,7 +5761,6 @@ window.Sizzle = Sizzle;
         copyPrimitives: function( source, target ){
             for (var k in source){
                 if (lola.type.isPrimitive(source[k])){
-                    console.log('copying: '+k);
                     target[k] = source[k];
                 }
             }
@@ -5735,20 +5775,20 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description iterate through values calling iterator to change value
+				 * iterate through values calling iterator to change value
 				 * @param {Function} getVal function tat returns value from each item
 				 * @param {Function} compareFn function that compares values / modifies data
 				 * @param {Object} initialVal initial value;
@@ -5790,7 +5830,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Ag Module
+	 * Ag Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -5800,28 +5840,35 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description registration index
+		 * registration index
 		 * @private
 		 */
 		index: 0,
 
 		/**
-		 * @description registration map
+		 * registration map
 		 * @private
 		 */
 		map: {},
 
 		/**
-		 * @description initializers
+		 * initializers
 		 * @private
 		 */
 		initializers: [],
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        dependencies: {},
+
 
 		//==================================================================
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -5838,7 +5885,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -5847,8 +5894,20 @@ window.Sizzle = Sizzle;
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
-			//do module initialization
+            //check agent dependencies
+            lola.checkDependencies( this.dependencies );
 
+            //execute agent initialization stack
+            var stackSize = lola.agent.initializers.length;
+
+            for ( i = 0; i < stackSize; i++ ) {
+                var initializer = lola.agent.initializers[i];
+                if (typeof initializer == "function"){
+                    initializer();
+                }
+
+                delete lola.agent.initializers[i];
+            }
 
 
 			//remove initialization method
@@ -5856,17 +5915,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "agent";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -5877,20 +5935,25 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description used to register an agent with the framework
+		 * used to register an agent with the framework
 		 * @param {Object} agent object that implements the agent interface
 		 */
-		register: function( agent ) {
-			console.info('register agent: '+agent.name);
-			if (agent.sign && agent.drop) {
+        registerAgent: function( agent ) {
+            var ns = agent.getNamespace();
+			console.info('register agent: '+ns);
+			if (ns && agent.sign && agent.drop) {
 				//setup namespace
-				var pkg = lola.getPkgChain( lola.agent, agent.name );
+				var pkg = lola.getPackage( lola.agent, ns );
 
 				//copy module methods and attributes
 				lola.extend( pkg, agent, true );
 
+                //add dependencies
+                if (agent.hasOwnProperty('getDependencies') && typeof agent.getDependencies=="function")
+                    this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
+
 				//map agent
-				this.map[ agent.name ] = pkg;
+				this.map[ ns ] = pkg;
 
 				//add initializer
 				if ( agent.initialize && typeof agent.initialize === "function" ) {
@@ -5912,7 +5975,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description assign a client to an agent
+		 * assign a client to an agent
 		 * @param {Object} client
 		 * @param {String} name name of registered agent
 		 */
@@ -5927,7 +5990,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description drop a client from an agent
+		 * drop a client from an agent
 		 * @param {Object} client
 		 * @param {String} name name of registered agent
 		 */
@@ -5951,6 +6014,7 @@ window.Sizzle = Sizzle;
 		},
 
 
+
 		//==================================================================
 		// Classes
 		//==================================================================
@@ -5961,35 +6025,35 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description assigns an agent to selector elements
+				 * assigns an agent to selector elements
 				 * @param {String} agentName name of registered agent
 				 */
 				assignAgent: function( agentName ) {
-					this.foreach( function(item){
+					this.forEach( function(item){
 						lola.agent.assign( item, agentName );
 					});
 					return this;
 				},
 
 				/**
-				 * @description drops client from agent
+				 * drops client from agent
 				 * @param {String} agentName name of registered agent
 				 */
 				dropAgent: function( agentName ) {
-					this.foreach( function(item){
+					this.forEach( function(item){
 						lola.agent.drop( item, agentName );
 					})
 				}
@@ -6016,7 +6080,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Command Module
+	 * Command Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -6026,13 +6090,13 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description registry of commands
+		 * registry of commands
 		 * @private
 		 */
 		registry: {},
 
 		/**
-		 * @description holds calls to unloaded commands
+		 * holds calls to unloaded commands
 		 * @private
 		 */
 		callLater: {},
@@ -6042,7 +6106,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -6058,7 +6122,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -6075,17 +6139,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "cmd";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -6095,7 +6158,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description registers command with the module
+		 * registers command with the module
 		 * @param {Class|String} cmd the comman ./d b class or url of the class' js file
 		 * @param {String} name the name with which tobv register the command
 		 */
@@ -6114,7 +6177,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description executes a registered command
+		 * executes a registered command
 		 * @param {String} name registered command name
 		 * @param {Object} params parameter object to be passed to command
 		 * @param {lola.cmd.Responder} responder responder object to handle command events
@@ -6174,7 +6237,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description handles executing commands triggered via event model
+		 * handles executing commands triggered via event model
 		 * @private
 		 * @param event
 		 */
@@ -6187,7 +6250,7 @@ window.Sizzle = Sizzle;
 		// Classes
 		//==================================================================
 		/**
-		 * @description Responder class handles command events
+		 * Responder class handles command events
 		 * @class
 		 * @param {Function} resultHandler
 		 * @param {Function} faultHandler
@@ -6198,7 +6261,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description Data object for executing commands via event model
+		 * Data object for executing commands via event model
 		 * @param {Object} parameters parameter object
 		 * @param {lola.cmd.Responder} responder responder object
 		 */
@@ -6211,14 +6274,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -6235,28 +6298,28 @@ window.Sizzle = Sizzle;
 	//==================================================================
 	cmd.Responder.prototype = {
 		/**
-		 * @description user defined result handler
+		 * user defined result handler
 		 */
 		resultHandler:undefined,
 
 		/**
-		 * @description user defined fault handler
+		 * user defined fault handler
 		 */
 		faultHandler:undefined,
 
 		/**
-		 * @description user defined status handler
+		 * user defined status handler
 		 */
 		statusHandler:undefined,
 
 		/**
-		 * @description last response event
+		 * last response event
 		 * @private
 		 */
 		lastResponse: undefined,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @private
 		 * @param {Function} resultHandler
 		 * @param {Function} faultHandler
@@ -6269,7 +6332,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description handle status events from command
+		 * handle status events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -6281,7 +6344,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description handle result events from command
+		 * handle result events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -6292,7 +6355,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description handle fault events from command
+		 * handle fault events from command
 		 * @private
 		 * @param {Object} event
 		 */
@@ -6303,7 +6366,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get last response
+		 * get last response
 		 * @return {Object|undefined}
 		 */
 		getLastResponse: function(){
@@ -6315,19 +6378,19 @@ window.Sizzle = Sizzle;
 
 	cmd.Data.prototype = {
 		/**
-		 * @description command parameters
+		 * command parameters
 		 * @type {Object}
 		 */
 		parameters: undefined,
 
 		/**
-		 * @description command responder
+		 * command responder
 		 * @type {lola.cmd.Responder}
 		 */
 		responder: undefined,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @private
 		 * @param {Object} parameters
 		 * @param {lola.cmd.Responder} responder
@@ -6345,7 +6408,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Easing Module
+	 * Easing Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -6361,7 +6424,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -6377,7 +6440,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -6394,17 +6457,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "easing";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -6415,7 +6477,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description calculates a point on a cubic bezier curve given time and an array of points.
+		 * calculates a point on a cubic bezier curve given time and an array of points.
 		 * @private
 		 * @param {Number} t time 0 <= t <= 1
 		 * @param {lola.graphics.Point} p0 anchor 1
@@ -6447,14 +6509,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -6479,7 +6541,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Graphics Module
+	 * Graphics Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -6489,25 +6551,25 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
         /**
-         * @description default context
+         * default context
          * @private
          */
 		ctx: null,
 
         /**
-         * @description 2d context map
+         * 2d context map
          * @private
          */
 		map2d: {},
 
         /**
-         * @description 2d context reset object
+         * 2d context reset object
          * @private
          */
 		reset2d: {},
 
         /**
-         * @description 2d style map
+         * 2d style map
          * @private
          */
         styles2d: {},
@@ -6516,7 +6578,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -6555,7 +6617,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -6572,17 +6634,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "graphics";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -6592,7 +6653,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description maps 2d context of specified canvas
+         * maps 2d context of specified canvas
          * @param {Element} canvas
          * @param {String|undefined} id
          */
@@ -6610,7 +6671,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description unmaps 2d context for specified canvas
+         * unmaps 2d context for specified canvas
          * @param canvas
          */
 		remove2dContext:function( canvas ){
@@ -6624,7 +6685,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description get a mapped context
+         * get a mapped context
          * @param {String} id
          * @return {Object}
          */
@@ -6633,7 +6694,7 @@ window.Sizzle = Sizzle;
         },
 
         /**
-         * @description resolves string to context
+         * resolves string to context
          * if a context is passed the same context is returned.
          * if nothing is found the current default context is returned
          * @param {Object|String|undefined} ctx
@@ -6654,7 +6715,7 @@ window.Sizzle = Sizzle;
         },
 
         /**
-         * @description returns a context to its original state
+         * returns a context to its original state
          * @param {Object|String|undefined} ctx
          */
 		reset2dContext: function( ctx ) {
@@ -6665,19 +6726,18 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description copies properties of styleObject into style cache with given name
+         * copies properties of styleObject into style cache with given name
          * @param {Object} styleObj
          * @param {String} name
          */
         registerStyle: function( styleObj, name ) {
-            console.log('lola.graphics.registerStyle: '+name);
             var obj = {};
             lola.util.copyPrimitives( styleObj, obj );
             this.styles2d[ name ] = obj;
         },
 
         /**
-         * @description removes style with specified name
+         * removes style with specified name
          * @param {String} name
          */
         removeStyle: function(  name ) {
@@ -6685,16 +6745,23 @@ window.Sizzle = Sizzle;
         },
 
         /**
-         * @description copies properties of styleObject into style cache with given name
-         * @param {Object|name} style
-         * @param {String} name
+         * copies properties of styleObject into style cache with given name
+         * @param {Object|String} style
+         * @param {Object|String} ctx
          */
         applyStyle: function( style, ctx ) {
-            console.log('lola.graphics.applyStyle');
             ctx = this.resolveContext( ctx );
             var styles = (typeof style == "string") ?  this.styles2d[ style ] || this.reset2d : style;
             lola.util.copyPrimitives( this.reset2d, ctx );
             lola.util.copyPrimitives( styles, ctx );
+        },
+
+        draw: function( object ){
+            console.log('draw: '+object);
+            if ( object.draw && typeof object.draw === "function" ){
+                console.log('   drawing');
+                object.draw( this.ctx );
+            }
         },
 
 
@@ -6702,7 +6769,7 @@ window.Sizzle = Sizzle;
 		// Classes
 		//==================================================================
         /**
-         * @description Point class
+         * Point class
          * @class
          * @param {Number|undefined} x x coordinate
          * @param {Number|undefined} y y coordinate
@@ -6714,17 +6781,18 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description Spline class
+         * Spline class
          * @class
          * @param {Array|undefined} points array of spline points
          */
-		Spline: function( points ){
+		Spline: function( points, closed ){
 			this.points = points?points:[];
+            this.closed = closed===true;
 			return this;
 		},
 
         /**
-         * @description SplinePoint class
+         * SplinePoint class
          * @class
          * @param anchorX
          * @param anchorY
@@ -6738,7 +6806,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description Vector class
+         * Vector class
          * @class
          * @param velocity
          * @param angle
@@ -6756,14 +6824,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -6786,19 +6854,19 @@ window.Sizzle = Sizzle;
 	//==================================================================
 	graphics.Point.prototype = {
         /**
-         * @description x coordinate
+         * x coordinate
          * @type {Number}
          */
 		x: undefined,
 
         /**
-         * @description y coordinate
+         * y coordinate
          * @type {Number}
          */
 		y: undefined,
 
         /**
-         * @description converts point to vector
+         * converts point to vector
          * @return {lola.graphics.Vector}
          */
 		toVector: function(){
@@ -6810,13 +6878,19 @@ window.Sizzle = Sizzle;
 
 	graphics.Spline.prototype = {
         /**
-         * @description array of {lola.graphics.SplinePoint}
+         * array of {lola.graphics.SplinePoint}
          * @type {Array}
          */
 		points: [],
 
         /**
-         * @description adds a point at the specified index.
+         * flag wether Spline should be rendered closed
+         * @type {Boolean}
+         */
+        closed: false,
+
+        /**
+         * adds a point at the specified index.
          * if index is not passed, point will be added at last position
          * @param {lola.graphics.SplinePoint} splinePoint
          * @param {uint|undefined} index
@@ -6829,7 +6903,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description removes the point at the specified index.
+         * removes the point at the specified index.
          * @param {uint} index
          */
 		removePoint: function( index ){
@@ -6838,7 +6912,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description updates/replaces a point at the specified index.
+         * updates/replaces a point at the specified index.
          * @param {lola.graphics.SplinePoint} splinePoint
          * @param {uint} index
          */
@@ -6848,7 +6922,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description gets the splinePoint at the specified index.
+         * gets the splinePoint at the specified index.
          * @param {uint} index
          */
 		getPoint: function( index ){
@@ -6856,13 +6930,11 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description draws spline
+         * draws spline
          * @param {Boolean} close draw a closed spline
          * @param {Object|String|undefined} ctx
          */
-        draw: function(close, ctx){
-            ctx = lola.graphics.resolveContext( ctx );
-            close = (close === true);
+        draw: function( ctx ){
             var sl = this.points.length;
             //console.log('drawSpline: '+sl);
             if (sl > 1) {
@@ -6883,7 +6955,7 @@ window.Sizzle = Sizzle;
                     );
                 }
 
-                if (close){
+                if (this.closed){
                     ctx.bezierCurveTo(
                         pts[pl-1].x,pts[pl-1].y,
                         pts[0].x,pts[0].y,
@@ -6902,25 +6974,25 @@ window.Sizzle = Sizzle;
 	graphics.SplinePoint.prototype = {
 
         /**
-         * @description splinepoint anchor point
+         * splinepoint anchor point
          * @type {lola.graphics.Point|undefined}
          */
 		anchor: undefined,
 
         /**
-         * @description splinepoint entry vector
+         * splinepoint entry vector
          * @type {lola.graphics.Vector|undefined}
          */
 		entry: undefined,
 
         /**
-         * @description splinepoint exit vector
+         * splinepoint exit vector
          * @type {lola.graphics.Vector|undefined}
          */
 		exit: undefined,
 
         /**
-         * @description initialization function
+         * initialization function
          * @param ax
          * @param ay
          * @param es
@@ -6935,7 +7007,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description sets the SplinePont's entry and exit angles
+         * sets the SplinePont's entry and exit angles
          * if exitAngle is omitted the same angle is set for both
          * @param {Number} entryAngle
          * @param {Number|undefined} exitAngle
@@ -6946,7 +7018,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description gets the spline point's anchor
+         * gets the spline point's anchor
          * @return {lola.graphics.Point}
          */
 		getAnchor: function(){
@@ -6954,7 +7026,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description gets the spline point's entry control point
+         * gets the spline point's entry control point
          * @return {lola.graphics.Point}
          */
 		getControl1: function(){
@@ -6962,7 +7034,7 @@ window.Sizzle = Sizzle;
 		},
 
         /**
-         * @description gets the spline point's exit control point
+         * gets the spline point's exit control point
          * @return {lola.graphics.Point}
          */
 		getControl2: function(){
@@ -6973,19 +7045,19 @@ window.Sizzle = Sizzle;
 
 	graphics.Vector.prototype = {
         /**
-         * @description velocity or length of the vector
+         * velocity or length of the vector
          * @type {Number}
          */
 		velocity: undefined,
 
         /**
-         * @description angle of vector (horizontal pointing right is 0 radians)
+         * angle of vector (horizontal pointing right is 0 radians)
          * @type {Number}
          */
 		angle: undefined,
 
         /**
-         * @description converts a vector to a (0,0) based point
+         * converts a vector to a (0,0) based point
          * @return {lola.graphics.Point}
          */
 		toPoint: function() {
@@ -7003,7 +7075,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description HTTP Request Module
+	 * HTTP Request Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -7013,7 +7085,7 @@ window.Sizzle = Sizzle;
 		// Attributes
 		//==================================================================
 		/**
-		 * @description storage for cached xsl requests
+		 * storage for cached xsl requests
 		 */
 		xslCache: {},
 
@@ -7022,7 +7094,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -7038,7 +7110,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -7055,17 +7127,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "http";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -7114,7 +7185,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description caches xsl request
+		 * caches xsl request
 		 * @public
 		 * @param {String} id
 		 * @param {lola.http.Request} xsl
@@ -7124,7 +7195,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
+		 * replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
 		 * @param {String} str
 		 */
 		encode: function( str ) {
@@ -7137,7 +7208,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
+		 * replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
 		 * @param {String} str
 		 */
 		unencode: function( str ) {
@@ -7153,7 +7224,7 @@ window.Sizzle = Sizzle;
 		// Classes
 		//==================================================================
 		/**
-		 * @description Base HTTP Request Class
+		 * Base HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -7167,7 +7238,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description Asynchronous HTTP Request Class
+		 * Asynchronous HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -7181,7 +7252,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description Synchronous HTTP Request Class
+		 * Synchronous HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -7195,7 +7266,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description AJAX Transform Class
+		 * AJAX Transform Class
 		 * @param {lola.http.Request} xml request object
 		 * @param {lola.http.Request|String} xsl request object or string id for cached xsl
 		 * @param {Object} xslParams
@@ -7209,14 +7280,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -7235,7 +7306,7 @@ window.Sizzle = Sizzle;
 
 				},
 				/**
-				 * @description loads a request's content into elements
+				 * loads a request's content into elements
 				 * @param {lola.http.Request} request
 				 * @param {Object} requestParams
 				 * @param {*} interimContent
@@ -7256,7 +7327,7 @@ window.Sizzle = Sizzle;
 				},
 
 				/**
-				 * @description loads http content into elements asynchronously
+				 * loads http content into elements asynchronously
 				 * @param {String} url
 				 * @param {*} interimContent
 				 * @param {*} faultContent
@@ -7277,55 +7348,55 @@ window.Sizzle = Sizzle;
 	//==================================================================
 	http.Request.prototype = {
 		/**
-		 * @description request url
+		 * request url
 		 * @private
 		 */
 		url: "",
 
 		/**
-		 * @description request method
+		 * request method
 		 * @private
 		 */
 		method: 'POST',
 
 		/**
-		 * @description request headers
+		 * request headers
 		 * @private
 		 */
 		headers: [],
 
 		/**
-		 * @description execute request asyncronously
+		 * execute request asyncronously
 		 * @private
 		 */
 		async: true,
 
 		/**
-		 * @description username
+		 * username
 		 * @private
 		 */
 		user: null,
 
 		/**
-		 * @description password
+		 * password
 		 * @private
 		 */
 		password: null,
 
 		/**
-		 * @description DOM xmlhttprequest
+		 * DOM xmlhttprequest
 		 * @private
 		 */
 		request: false,
 
 		/**
-		 * @description readyFlag
+		 * readyFlag
 		 * @public
 		 */
 		ready: false,
 
 		/**
-		 * @description http.Request initializer
+		 * http.Request initializer
 		 * @param {String} url request url
 		 * @param {String} method request method
 		 * @param {Array} headers request headers
@@ -7345,7 +7416,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description gets correct request object
+		 * gets correct request object
 		 * @private
 		 */
 		getRequestObject: function() {
@@ -7379,7 +7450,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description builds and executes request
+		 * builds and executes request
 		 * @private
 		 * @param url
 		 * @param params
@@ -7426,7 +7497,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description send request
+		 * send request
 		 * @public
 		 * @param {Object|String|undefined} params
 		 */
@@ -7435,7 +7506,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description ready state change listener
+		 * ready state change listener
 		 * @private
 		 */
 		readyStateChange: function() {
@@ -7473,7 +7544,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get raw response text
+		 * get raw response text
 		 * @return {String}
 		 */
 		responseText: function() {
@@ -7484,7 +7555,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get response xml document
+		 * get response xml document
 		 * @return {XML}
 		 */
 		responseXML: function() {
@@ -7501,48 +7572,48 @@ window.Sizzle = Sizzle;
 
 	http.Transform.prototype = {
 		/**
-		 * @description xml request object
+		 * xml request object
 		 * @private
 		 * @type {lola.http.Request}
 		 */
 		xml: null,
 
 		/**
-		 * @description xsl request object
+		 * xsl request object
 		 * @private
 		 * @type {lola.http.Request}
 		 */
 		xsl: null,
 
 		/**
-		 * @description transformation xsl request params
+		 * transformation xsl request params
 		 * @private
 		 * @type {Object}
 		 */
 		xslParams: null,
 
 		/**
-		 * @description transformation xml request params
+		 * transformation xml request params
 		 * @private
 		 * @type {Object}
 		 */
 		xmlParams: null,
 
 		/**
-		 * @description cache xsl onceLoaded
+		 * cache xsl onceLoaded
 		 * @private
 		 * @type {String}
 		 */
 		xslCacheId: "",
 
 		/**
-		 * @description holds transformation result
+		 * holds transformation result
 		 * @type {Array}
 		 */
 		resultNodes: [],
 
 		/**
-		 * @description Transform class initializer
+		 * Transform class initializer
 		 * @private
 		 * @param xml
 		 * @param xsl
@@ -7580,7 +7651,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description checks the states of both requests to see if the transform can be applied
+		 * checks the states of both requests to see if the transform can be applied
 		 * @private
 		 */
 		checkStates: function() {
@@ -7597,7 +7668,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description  handles xsl fault
+		 *  handles xsl fault
 		 * @private
 		 */
 		handleXSLFault: function() {
@@ -7605,7 +7676,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description  handles xml fault
+		 *  handles xml fault
 		 * @private
 		 */
 		handleXMLFault: function() {
@@ -7613,7 +7684,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description sends the transform requests if not yet sent
+		 * sends the transform requests if not yet sent
 		 * @public
 		 */
 		load: function() {
@@ -7626,7 +7697,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description  cancels transform request... aborts requests and removes listeners
+		 *  cancels transform request... aborts requests and removes listeners
 		 * @public
 		 */
 		cancel: function() {
@@ -7645,7 +7716,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get the result of the transformation
+		 * get the result of the transformation
 		 * @public
 		 * @return {Array} array of nodes
 		 */
@@ -7664,7 +7735,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description JSON Module adapted from json.org code
+	 * JSON Module adapted from json.org code
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -7694,7 +7765,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -7710,7 +7781,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -7727,17 +7798,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "json";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -7747,7 +7817,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description json parsing method
+		 * json parsing method
 		 * @private
 		 * @param {String} string
 		 */
@@ -7768,7 +7838,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description json parsing method
+		 * json parsing method
 		 * @private
 		 * @param {String} key
 		 * @param {Object} holder
@@ -7880,7 +7950,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description json encodes a javascript object
+		 * json encodes a javascript object
 		 * @public
 		 * @param {Object} obj
 		 * @return {String}
@@ -7890,7 +7960,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description decodes a json string
+		 * decodes a json string
 		 * @public
 		 * @param {String} text
 		 * @return {Object}
@@ -7900,7 +7970,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description json encodes a javascript object
+		 * json encodes a javascript object
 		 * @private
 		 * @param {Object} value
 		 * @param {Object} replacer
@@ -7947,7 +8017,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description decodes a json string
+		 * decodes a json string
 		 * @private
 		 * @param text
 		 * @param reviver
@@ -8030,14 +8100,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -8093,7 +8163,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Math Color Module
+	 * Math Color Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -8109,7 +8179,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -8126,7 +8196,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -8144,17 +8214,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.color";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -8165,7 +8234,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description converts red,green,blue values to hue,saturation,lightness
+		 * converts red,green,blue values to hue,saturation,lightness
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -8219,7 +8288,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts red,green,blue values to hex string
+		 * converts red,green,blue values to hex string
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -8260,7 +8329,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description converts red,green,blue values to int
+		 * converts red,green,blue values to int
 		 * @param {Number} r
 		 * @param {Number} g
 		 * @param {Number} b
@@ -8271,7 +8340,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to red,green,blue
+		 * converts hue,saturation,lightness values to red,green,blue
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -8340,7 +8409,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to uint
+		 * converts hue,saturation,lightness values to uint
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -8352,7 +8421,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hue,saturation,lightness values to hex
+		 * converts hue,saturation,lightness values to hex
 		 * @param {Number} h
 		 * @param {Number} s
 		 * @param {Number} l
@@ -8364,7 +8433,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts int values to rgb
+		 * converts int values to rgb
 		 * @param {int} value
 		 * @return {Object}
 		 */
@@ -8384,7 +8453,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts int values to hsl
+		 * converts int values to hsl
 		 * @param {int} value
 		 * @return {Object}
 		 */
@@ -8394,7 +8463,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts int values to hex string
+		 * converts int values to hex string
 		 * @param {int} value
 		 * @return {String}
 		 */
@@ -8404,7 +8473,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hex values to int
+		 * converts hex values to int
 		 * @param {String} value
 		 * @return {int}
 		 */
@@ -8422,7 +8491,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hex values to rgb
+		 * converts hex values to rgb
 		 * @param {String} value
 		 * @return {Object}
 		 */
@@ -8431,7 +8500,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description converts hex values to hsl
+		 * converts hex values to hsl
 		 * @param {String} value
 		 * @return {Object}
 		 */
@@ -8450,14 +8519,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -8484,7 +8553,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description math.geom Module
+	 * math.geom Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -8500,7 +8569,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -8516,7 +8585,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -8533,17 +8602,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.geom";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -8563,14 +8631,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -8594,7 +8662,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Point Math Module
+	 * Point Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -8608,7 +8676,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -8624,7 +8692,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -8641,17 +8709,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.point";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -8661,7 +8728,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description adds arguments to p1
+		 * adds arguments to p1
 		 * @param {lola.graphics.Point} p1
 		 * @return {lola.graphics.Point}
 		 */
@@ -8684,7 +8751,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description subtract args from p1
+		 * subtract args from p1
 		 * @param {lola.graphics.Point} p1
 		 * @return {lola.graphics.Point}
 		 */
@@ -8706,7 +8773,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description multiply p1 by args
+		 * multiply p1 by args
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point|Number} p2
 		 * @return {lola.graphics.Point}
@@ -8729,7 +8796,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description divide p1 by args
+		 * divide p1 by args
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point|Number} p2
 		 * @return {lola.graphics.Point}
@@ -8752,7 +8819,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description raise p to the po
+		 * raise p to the po
 		 * @param {lola.graphics.Point} p
 		 * @param {lola.graphics.Point} po
 		 * @return {lola.graphics.Point}
@@ -8762,7 +8829,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description calculates the absolute distance between p1 and p2
+		 * calculates the absolute distance between p1 and p2
 		 * @param {lola.graphics.Point} p1
 		 * @param {lola.graphics.Point} p2
 		 * @return {Number}
@@ -8772,7 +8839,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description offsets a point at the specified angle by the specified distance
+		 * offsets a point at the specified angle by the specified distance
 		 * @param {lola.graphics.Point} p
 		 * @param {Number} angle angle in radians
 		 * @param {Number} distance
@@ -8795,14 +8862,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -8825,7 +8892,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Math Time Value of Money Module
+	 * Math Time Value of Money Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -8841,7 +8908,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -8858,7 +8925,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -8876,17 +8943,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.tvm";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -8896,7 +8962,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description present value
+		 * present value
 		 * @param fv future value
 		 * @param rate rate per term
 		 * @param term
@@ -8906,7 +8972,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description future value
+		 * future value
 		 * @param pv present value
 		 * @param rate rate per term
 		 * @param term
@@ -8917,7 +8983,7 @@ window.Sizzle = Sizzle;
 
 
 		/**
-		 * @description present value of an annuity
+		 * present value of an annuity
 		 * @param a annuity
 		 * @param rate rate per term
 		 * @param term
@@ -8927,7 +8993,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description future value of an annuity
+		 * future value of an annuity
 		 * @param a annuity
 		 * @param rate rate per term
 		 * @param term
@@ -8937,7 +9003,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description payment
+		 * payment
 		 * @param pv present value
 		 * @param rate rate per term
 		 * @param term
@@ -8959,14 +9025,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -8993,7 +9059,7 @@ window.Sizzle = Sizzle;
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Vector Module
+	 * Vector Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -9009,7 +9075,7 @@ window.Sizzle = Sizzle;
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -9025,7 +9091,7 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -9042,17 +9108,16 @@ window.Sizzle = Sizzle;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.vector";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -9072,14 +9137,14 @@ window.Sizzle = Sizzle;
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

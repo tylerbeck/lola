@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description HTTP Request Module
+	 * HTTP Request Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,7 +11,7 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description storage for cached xsl requests
+		 * storage for cached xsl requests
 		 */
 		xslCache: {},
 
@@ -20,7 +20,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -36,7 +36,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -53,17 +53,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "http";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -112,7 +111,7 @@
 		},
 
 		/**
-		 * @description caches xsl request
+		 * caches xsl request
 		 * @public
 		 * @param {String} id
 		 * @param {lola.http.Request} xsl
@@ -122,7 +121,7 @@
 		},
 
 		/**
-		 * @description replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
+		 * replaces "<" ">" "&" with "&lt;" "&gt;" "&amp;"
 		 * @param {String} str
 		 */
 		encode: function( str ) {
@@ -135,7 +134,7 @@
 		},
 
 		/**
-		 * @description replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
+		 * replaces "&lt;" "&gt;" "&amp;" with "<" ">" "&"
 		 * @param {String} str
 		 */
 		unencode: function( str ) {
@@ -151,7 +150,7 @@
 		// Classes
 		//==================================================================
 		/**
-		 * @description Base HTTP Request Class
+		 * Base HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -165,7 +164,7 @@
 		},
 
 		/**
-		 * @description Asynchronous HTTP Request Class
+		 * Asynchronous HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -179,7 +178,7 @@
 		},
 
 		/**
-		 * @description Synchronous HTTP Request Class
+		 * Synchronous HTTP Request Class
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -193,7 +192,7 @@
 		},
 
 		/**
-		 * @description AJAX Transform Class
+		 * AJAX Transform Class
 		 * @param {lola.http.Request} xml request object
 		 * @param {lola.http.Request|String} xsl request object or string id for cached xsl
 		 * @param {Object} xslParams
@@ -207,14 +206,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -233,7 +232,7 @@
 
 				},
 				/**
-				 * @description loads a request's content into elements
+				 * loads a request's content into elements
 				 * @param {lola.http.Request} request
 				 * @param {Object} requestParams
 				 * @param {*} interimContent
@@ -254,7 +253,7 @@
 				},
 
 				/**
-				 * @description loads http content into elements asynchronously
+				 * loads http content into elements asynchronously
 				 * @param {String} url
 				 * @param {*} interimContent
 				 * @param {*} faultContent
@@ -275,55 +274,55 @@
 	//==================================================================
 	http.Request.prototype = {
 		/**
-		 * @description request url
+		 * request url
 		 * @private
 		 */
 		url: "",
 
 		/**
-		 * @description request method
+		 * request method
 		 * @private
 		 */
 		method: 'POST',
 
 		/**
-		 * @description request headers
+		 * request headers
 		 * @private
 		 */
 		headers: [],
 
 		/**
-		 * @description execute request asyncronously
+		 * execute request asyncronously
 		 * @private
 		 */
 		async: true,
 
 		/**
-		 * @description username
+		 * username
 		 * @private
 		 */
 		user: null,
 
 		/**
-		 * @description password
+		 * password
 		 * @private
 		 */
 		password: null,
 
 		/**
-		 * @description DOM xmlhttprequest
+		 * DOM xmlhttprequest
 		 * @private
 		 */
 		request: false,
 
 		/**
-		 * @description readyFlag
+		 * readyFlag
 		 * @public
 		 */
 		ready: false,
 
 		/**
-		 * @description http.Request initializer
+		 * http.Request initializer
 		 * @param {String} url request url
 		 * @param {String} method request method
 		 * @param {Array} headers request headers
@@ -343,7 +342,7 @@
 		},
 
 		/**
-		 * @description gets correct request object
+		 * gets correct request object
 		 * @private
 		 */
 		getRequestObject: function() {
@@ -377,7 +376,7 @@
 		},
 
 		/**
-		 * @description builds and executes request
+		 * builds and executes request
 		 * @private
 		 * @param url
 		 * @param params
@@ -424,7 +423,7 @@
 		},
 
 		/**
-		 * @description send request
+		 * send request
 		 * @public
 		 * @param {Object|String|undefined} params
 		 */
@@ -433,7 +432,7 @@
 		},
 
 		/**
-		 * @description ready state change listener
+		 * ready state change listener
 		 * @private
 		 */
 		readyStateChange: function() {
@@ -471,7 +470,7 @@
 		},
 
 		/**
-		 * @description get raw response text
+		 * get raw response text
 		 * @return {String}
 		 */
 		responseText: function() {
@@ -482,7 +481,7 @@
 		},
 
 		/**
-		 * @description get response xml document
+		 * get response xml document
 		 * @return {XML}
 		 */
 		responseXML: function() {
@@ -499,48 +498,48 @@
 
 	http.Transform.prototype = {
 		/**
-		 * @description xml request object
+		 * xml request object
 		 * @private
 		 * @type {lola.http.Request}
 		 */
 		xml: null,
 
 		/**
-		 * @description xsl request object
+		 * xsl request object
 		 * @private
 		 * @type {lola.http.Request}
 		 */
 		xsl: null,
 
 		/**
-		 * @description transformation xsl request params
+		 * transformation xsl request params
 		 * @private
 		 * @type {Object}
 		 */
 		xslParams: null,
 
 		/**
-		 * @description transformation xml request params
+		 * transformation xml request params
 		 * @private
 		 * @type {Object}
 		 */
 		xmlParams: null,
 
 		/**
-		 * @description cache xsl onceLoaded
+		 * cache xsl onceLoaded
 		 * @private
 		 * @type {String}
 		 */
 		xslCacheId: "",
 
 		/**
-		 * @description holds transformation result
+		 * holds transformation result
 		 * @type {Array}
 		 */
 		resultNodes: [],
 
 		/**
-		 * @description Transform class initializer
+		 * Transform class initializer
 		 * @private
 		 * @param xml
 		 * @param xsl
@@ -578,7 +577,7 @@
 		},
 
 		/**
-		 * @description checks the states of both requests to see if the transform can be applied
+		 * checks the states of both requests to see if the transform can be applied
 		 * @private
 		 */
 		checkStates: function() {
@@ -595,7 +594,7 @@
 		},
 
 		/**
-		 * @description  handles xsl fault
+		 *  handles xsl fault
 		 * @private
 		 */
 		handleXSLFault: function() {
@@ -603,7 +602,7 @@
 		},
 
 		/**
-		 * @description  handles xml fault
+		 *  handles xml fault
 		 * @private
 		 */
 		handleXMLFault: function() {
@@ -611,7 +610,7 @@
 		},
 
 		/**
-		 * @description sends the transform requests if not yet sent
+		 * sends the transform requests if not yet sent
 		 * @public
 		 */
 		load: function() {
@@ -624,7 +623,7 @@
 		},
 
 		/**
-		 * @description  cancels transform request... aborts requests and removes listeners
+		 *  cancels transform request... aborts requests and removes listeners
 		 * @public
 		 */
 		cancel: function() {
@@ -643,7 +642,7 @@
 		},
 
 		/**
-		 * @description get the result of the transformation
+		 * get the result of the transformation
 		 * @public
 		 * @return {Array} array of nodes
 		 */

@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Graphics Module
+	 * Graphics Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,25 +11,25 @@
 		// Attributes
 		//==================================================================
         /**
-         * @description default context
+         * default context
          * @private
          */
 		ctx: null,
 
         /**
-         * @description 2d context map
+         * 2d context map
          * @private
          */
 		map2d: {},
 
         /**
-         * @description 2d context reset object
+         * 2d context reset object
          * @private
          */
 		reset2d: {},
 
         /**
-         * @description 2d style map
+         * 2d style map
          * @private
          */
         styles2d: {},
@@ -38,7 +38,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -77,7 +77,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -94,17 +94,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "graphics";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -114,7 +113,7 @@
 		},
 
         /**
-         * @description maps 2d context of specified canvas
+         * maps 2d context of specified canvas
          * @param {Element} canvas
          * @param {String|undefined} id
          */
@@ -132,7 +131,7 @@
 		},
 
         /**
-         * @description unmaps 2d context for specified canvas
+         * unmaps 2d context for specified canvas
          * @param canvas
          */
 		remove2dContext:function( canvas ){
@@ -146,7 +145,7 @@
 		},
 
         /**
-         * @description get a mapped context
+         * get a mapped context
          * @param {String} id
          * @return {Object}
          */
@@ -155,7 +154,7 @@
         },
 
         /**
-         * @description resolves string to context
+         * resolves string to context
          * if a context is passed the same context is returned.
          * if nothing is found the current default context is returned
          * @param {Object|String|undefined} ctx
@@ -176,7 +175,7 @@
         },
 
         /**
-         * @description returns a context to its original state
+         * returns a context to its original state
          * @param {Object|String|undefined} ctx
          */
 		reset2dContext: function( ctx ) {
@@ -187,19 +186,18 @@
 		},
 
         /**
-         * @description copies properties of styleObject into style cache with given name
+         * copies properties of styleObject into style cache with given name
          * @param {Object} styleObj
          * @param {String} name
          */
         registerStyle: function( styleObj, name ) {
-            console.log('lola.graphics.registerStyle: '+name);
             var obj = {};
             lola.util.copyPrimitives( styleObj, obj );
             this.styles2d[ name ] = obj;
         },
 
         /**
-         * @description removes style with specified name
+         * removes style with specified name
          * @param {String} name
          */
         removeStyle: function(  name ) {
@@ -207,16 +205,21 @@
         },
 
         /**
-         * @description copies properties of styleObject into style cache with given name
+         * copies properties of styleObject into style cache with given name
          * @param {Object|String} style
          * @param {Object|String} ctx
          */
         applyStyle: function( style, ctx ) {
-            console.log('lola.graphics.applyStyle');
             ctx = this.resolveContext( ctx );
             var styles = (typeof style == "string") ?  this.styles2d[ style ] || this.reset2d : style;
             lola.util.copyPrimitives( this.reset2d, ctx );
             lola.util.copyPrimitives( styles, ctx );
+        },
+
+        draw: function( object ){
+            if ( object.draw && typeof object.draw === "function" ){
+                object.draw( this.ctx );
+            }
         },
 
 
@@ -224,7 +227,7 @@
 		// Classes
 		//==================================================================
         /**
-         * @description Point class
+         * Point class
          * @class
          * @param {Number|undefined} x x coordinate
          * @param {Number|undefined} y y coordinate
@@ -236,17 +239,18 @@
 		},
 
         /**
-         * @description Spline class
+         * Spline class
          * @class
          * @param {Array|undefined} points array of spline points
          */
-		Spline: function( points ){
+		Spline: function( points, closed ){
 			this.points = points?points:[];
+            this.closed = closed===true;
 			return this;
 		},
 
         /**
-         * @description SplinePoint class
+         * SplinePoint class
          * @class
          * @param anchorX
          * @param anchorY
@@ -260,7 +264,7 @@
 		},
 
         /**
-         * @description Vector class
+         * Vector class
          * @class
          * @param velocity
          * @param angle
@@ -278,14 +282,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
@@ -308,19 +312,19 @@
 	//==================================================================
 	graphics.Point.prototype = {
         /**
-         * @description x coordinate
+         * x coordinate
          * @type {Number}
          */
 		x: undefined,
 
         /**
-         * @description y coordinate
+         * y coordinate
          * @type {Number}
          */
 		y: undefined,
 
         /**
-         * @description converts point to vector
+         * converts point to vector
          * @return {lola.graphics.Vector}
          */
 		toVector: function(){
@@ -332,13 +336,19 @@
 
 	graphics.Spline.prototype = {
         /**
-         * @description array of {lola.graphics.SplinePoint}
+         * array of {lola.graphics.SplinePoint}
          * @type {Array}
          */
 		points: [],
 
         /**
-         * @description adds a point at the specified index.
+         * flag wether Spline should be rendered closed
+         * @type {Boolean}
+         */
+        closed: false,
+
+        /**
+         * adds a point at the specified index.
          * if index is not passed, point will be added at last position
          * @param {lola.graphics.SplinePoint} splinePoint
          * @param {uint|undefined} index
@@ -351,7 +361,7 @@
 		},
 
         /**
-         * @description removes the point at the specified index.
+         * removes the point at the specified index.
          * @param {uint} index
          */
 		removePoint: function( index ){
@@ -360,7 +370,7 @@
 		},
 
         /**
-         * @description updates/replaces a point at the specified index.
+         * updates/replaces a point at the specified index.
          * @param {lola.graphics.SplinePoint} splinePoint
          * @param {uint} index
          */
@@ -370,7 +380,7 @@
 		},
 
         /**
-         * @description gets the splinePoint at the specified index.
+         * gets the splinePoint at the specified index.
          * @param {uint} index
          */
 		getPoint: function( index ){
@@ -378,13 +388,11 @@
 		},
 
         /**
-         * @description draws spline
+         * draws spline
          * @param {Boolean} close draw a closed spline
          * @param {Object|String|undefined} ctx
          */
-        draw: function(close, ctx){
-            ctx = lola.graphics.resolveContext( ctx );
-            close = (close === true);
+        draw: function( ctx ){
             var sl = this.points.length;
             //console.log('drawSpline: '+sl);
             if (sl > 1) {
@@ -405,7 +413,7 @@
                     );
                 }
 
-                if (close){
+                if (this.closed){
                     ctx.bezierCurveTo(
                         pts[pl-1].x,pts[pl-1].y,
                         pts[0].x,pts[0].y,
@@ -424,25 +432,25 @@
 	graphics.SplinePoint.prototype = {
 
         /**
-         * @description splinepoint anchor point
+         * splinepoint anchor point
          * @type {lola.graphics.Point|undefined}
          */
 		anchor: undefined,
 
         /**
-         * @description splinepoint entry vector
+         * splinepoint entry vector
          * @type {lola.graphics.Vector|undefined}
          */
 		entry: undefined,
 
         /**
-         * @description splinepoint exit vector
+         * splinepoint exit vector
          * @type {lola.graphics.Vector|undefined}
          */
 		exit: undefined,
 
         /**
-         * @description initialization function
+         * initialization function
          * @param ax
          * @param ay
          * @param es
@@ -457,7 +465,7 @@
 		},
 
         /**
-         * @description sets the SplinePont's entry and exit angles
+         * sets the SplinePont's entry and exit angles
          * if exitAngle is omitted the same angle is set for both
          * @param {Number} entryAngle
          * @param {Number|undefined} exitAngle
@@ -468,7 +476,7 @@
 		},
 
         /**
-         * @description gets the spline point's anchor
+         * gets the spline point's anchor
          * @return {lola.graphics.Point}
          */
 		getAnchor: function(){
@@ -476,7 +484,7 @@
 		},
 
         /**
-         * @description gets the spline point's entry control point
+         * gets the spline point's entry control point
          * @return {lola.graphics.Point}
          */
 		getControl1: function(){
@@ -484,7 +492,7 @@
 		},
 
         /**
-         * @description gets the spline point's exit control point
+         * gets the spline point's exit control point
          * @return {lola.graphics.Point}
          */
 		getControl2: function(){
@@ -495,19 +503,19 @@
 
 	graphics.Vector.prototype = {
         /**
-         * @description velocity or length of the vector
+         * velocity or length of the vector
          * @type {Number}
          */
 		velocity: undefined,
 
         /**
-         * @description angle of vector (horizontal pointing right is 0 radians)
+         * angle of vector (horizontal pointing right is 0 radians)
          * @type {Number}
          */
 		angle: undefined,
 
         /**
-         * @description converts a vector to a (0,0) based point
+         * converts a vector to a (0,0) based point
          * @return {lola.graphics.Point}
          */
 		toPoint: function() {

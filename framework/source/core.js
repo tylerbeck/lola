@@ -37,9 +37,9 @@
 
 		/**
 		 * @private
-		 * @type {Array}
+		 * @type {Object}
 		 */
-		dependencies: [],
+		dependencies: {},
 
 		/**
 		 * @private
@@ -69,7 +69,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description framework initialization function
+		 * framework initialization function
 		 * @private
 		 * @param wnd {Object} reference to window
 		 */
@@ -90,18 +90,7 @@
 				}
 
 				//check dependencies
-				//TODO: Update dependencie checks
-				var fails = [];
-				var dependenciesLength = lola.dependencies.length;
-				for ( i = 0; i < dependenciesLength; i++ ) {
-					var dependency = lola.dependencies[i];
-					//if ( this.hasProperties( this, this.dependencies[module] ) )
-					//	break;
-					//fails.push( module );
-				}
-				if ( fails.length > 0 ) {
-					throw new Error( "module dependency checks failed for: " + fails.join( ", " ) );
-				}
+                lola.checkDependencies(lola.dependencies);
 
 				//execute initialization stack
 				var stackSize = lola.initializers.length;
@@ -117,7 +106,43 @@
 			}
 		},
 
-		parseUrl: function( url ){
+        /**
+         * checks a dependency map for modules
+         * @param {Object} map
+         */
+        checkDependencies: function( map ){
+            var fails = [];
+            for ( var k in map ) {
+                var missing = this.checkModules( map[k] );
+                if ( missing.length > 0 )
+                    fails.push(k+': '+missing.join(', '));
+            }
+            if ( fails.length > 0 ) {
+                throw new Error( "module dependency checks failed for: \n\t" + fails.join( "\n\t" ) );
+            }
+        },
+
+        /**
+         * checks if modules are registered and returns missing modules
+         * @param {Array} modules
+         * @return {Array} missing modules
+         */
+        checkModules: function( modules ){
+            var missing = [];
+            modules.forEach( function(item){
+                if (!lola.hasPackage( lola, item ))
+                    missing.push(item);
+            });
+
+            return missing;
+        },
+
+        /**
+         * parses a url to get hash and vars
+         * @param {String} url
+         * @return {Object} vars, hash
+         */
+        parseUrl: function( url ){
 			var parts = url.split("#",2);
 			var vars = {};
 			var hash = parts[1];
@@ -126,11 +151,11 @@
 				vars[key] = value;
 			});
 
-			return {vars:vars, hash:hash};
+			return { vars:vars, hash:hash};
 		},
 
 		/**
-		 * @description creates/gets and returns the object lineage defined in chain param
+		 * creates/gets and returns the object lineage defined in chain param
 		 * @public
 		 * @param {!Object} base object on which to build chain
 		 * @param {!String} chain "." seperated namespace / package
@@ -143,15 +168,38 @@
 				var parts = chain.split( '.' );
 				var part;
 				while ( part = parts.shift() ) {
-					if ( result[part] == null  ) result[part] = {};
+					if ( result[part] == null  )
+                        result[part] = {};
 					result = result[part];
 				}
 			}
 			return result;
 		},
 
+        /**
+         * checks the existence of the object lineage defined in chain param
+         * @public
+         * @param {!Object} base object on which to build chain
+         * @param {!String} chain "." seperated namespace / package
+         * @return {Boolean}
+         */
+        hasPackage: function( base, chain ) {
+            var result = base;
+            if ( typeof chain === 'string' ) {
+                var parts = chain.split( '.' );
+                var part;
+                while ( part = parts.shift() ) {
+                    if ( result[part] == null  )
+                        return false;
+                    else
+                        result = result[part];
+                }
+            }
+            return true;
+        },
+
 		/**
-		 * @description extends the target with properties from the source
+		 * extends the target with properties from the source
 		 * @public
 		 * @param target {Object}
 		 * @param source {Object}
@@ -163,7 +211,7 @@
 			//lola.debug('lola::extend');
 			//TODO: make deep copy an option
 			if ( overwrite == undefined ) overwrite = false;
-			if ( errors == null ) errors = false;
+			if ( errors == undefined ) errors = false;
 			for ( var k in source ) {
 				if ( overwrite || target[k] == null )
 					target[k] = source[k];
@@ -174,7 +222,7 @@
 
 
 		/**
-		 * @description eval abstraction
+		 * eval abstraction
 		 * @param {String} expression the expression to evaluate
 		 * @param {Object|undefined} node the node in which to load the script
 		 */
@@ -201,7 +249,7 @@
 		},
 
 		/**
-		 * @description loads a script from a url src
+		 * loads a script from a url src
 		 * @param {String} src the uri of the script to load
 		 * @param {Function|undefined} callback the function to call after the script has loaded
 		 */
@@ -225,18 +273,21 @@
 
 
 		/**
-		 * @description registers a module with the Lola Framework
+		 * registers a module with the Lola Framework
 		 * @public
 		 * @param {lola.Module} module
 		 * @return {void}
 		 */
 		registerModule: function( module ) {
-			lola.debug('lola::registerModule - ' + module.getNamespace() );
+            var ns = module.getNamespace();
+            lola.debug('lola::registerModule - ' + ns );
+
 			//add module dependencies
-			lola.dependencies.push( module.getDependencies() );
+            if (module.hasOwnProperty('getDependencies') && typeof module.getDependencies=="function")
+			    lola.dependencies[ns] =  module.getDependencies();
 
 			//add module to namespace
-			lola.extend( lola.getPackage( lola, module.getNamespace() ), module );
+			lola.extend( lola.getPackage( lola, ns ), module );
 
 			//add selector methods
 			lola.extend( lola.Selector.prototype, module.getSelectorMethods() );
@@ -256,7 +307,7 @@
 		},
 
 		/**
-		 * @description delete a property on an object and removes framework references
+		 * delete a property on an object and removes framework references
 		 * @public
 		 * @param {Object} object object on which to delete property
 		 * @param {String} property property to delete
@@ -276,14 +327,14 @@
 		},
 
 		/**
-		 * @description Object prototype's to string method
+		 * Object prototype's to string method
 		 * @param {Object} object
 		 * @return {String}
 		 */
 		toString: Object.prototype.toString,
 
 		/**
-		 * @description checks for required arguments
+		 * checks for required arguments
 		 * @param {String} group
 		 * @param {Array} required
 		 * @param {Array} info
@@ -363,7 +414,7 @@
 		// Classes
 		//==================================================================
 		/**
-		 * @description Selector class
+		 * Selector class
 		 * @param {String} selector selector string
 		 * @param {Object|undefined} context for selection
 		 * @constructor
@@ -373,7 +424,7 @@
 		},
 
 		/**
-		 * @description Lola Module Interface
+		 * Lola Module Interface
 		 * @interface
 		 */
 		Module: function() {
@@ -387,14 +438,14 @@
 	//==================================================================
 	lola.Selector.prototype = {
 		/**
-		 * @description internal selection element array
+		 * internal selection element array
 		 * @private
 		 * @type {Array}
 		 */
 		elements: [],
 
 		/**
-		 * @description Selector initialization function
+		 * Selector initialization function
 		 * @param {String} selector selector string
 		 * @param {Object} context context in which to
 		 * @return {lola.Selector}
@@ -420,20 +471,20 @@
 		},
 
 		/**
-		 * @description assigns guid to elements
+		 * assigns guid to elements
 		 * @return {lola.Selector}
 		 */
 		identify: function() {
 			this.forEach( function( item ) {
 				if ( !item.id )
-					item.id = "lola-guid-" + guid++;
+					item.id = "lola-guid-" + lola.guid++;
 			} );
 
 			return this;
 		},
 
 		/**
-		 * @description returns the element at the specified index
+		 * returns the element at the specified index
 		 * @param {int} index
 		 * @return {Object}
 		 */
@@ -444,7 +495,7 @@
 		},
 
 		/**
-		 * @description returns all of the selected elements
+		 * returns all of the selected elements
 		 * @return {Array}
 		 */
 		getAll: function() {
@@ -452,7 +503,7 @@
 		},
 
 		/**
-		 * @description returns element count
+		 * returns element count
 		 * @return {int}
 		 */
 		count: function() {
@@ -460,7 +511,7 @@
 		},
 
 		/**
-		 *@description concatenates the elements from one or more
+		 *concatenates the elements from one or more
 		 * @param {lola.Selector|Array|Object} obj object to concatenate
 		 * @return {lola.Selector}
 		 */
@@ -482,7 +533,7 @@
 		},
 
 		/**
-		 * @description  removes framework references for elements
+		 *  removes framework references for elements
 		 * @return {lola.Selector}
 		 */
 		safeDelete: function() {
@@ -500,14 +551,14 @@
 	lola.Module.prototype = {
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @return {void}
 		 */
 		initialize: function() {
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @return {String}
 		 */
 		getNamespace: function() {
@@ -515,7 +566,7 @@
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @return {Array}
 		 */
 		getDependencies: function() {
@@ -523,7 +574,7 @@
 		},
 
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {

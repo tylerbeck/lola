@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Math Time Value of Money Module
+	 * Math Time Value of Money Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -17,7 +17,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -34,7 +34,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -52,17 +52,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "math.tvm";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -72,7 +71,7 @@
 		},
 
 		/**
-		 * @description present value
+		 * present value
 		 * @param fv future value
 		 * @param rate rate per term
 		 * @param term
@@ -82,7 +81,7 @@
 		},
 
 		/**
-		 * @description future value
+		 * future value
 		 * @param pv present value
 		 * @param rate rate per term
 		 * @param term
@@ -93,7 +92,7 @@
 
 
 		/**
-		 * @description present value of an annuity
+		 * present value of an annuity
 		 * @param a annuity
 		 * @param rate rate per term
 		 * @param term
@@ -103,7 +102,7 @@
 		},
 
 		/**
-		 * @description future value of an annuity
+		 * future value of an annuity
 		 * @param a annuity
 		 * @param rate rate per term
 		 * @param term
@@ -113,7 +112,7 @@
 		},
 
 		/**
-		 * @description payment
+		 * payment
 		 * @param pv present value
 		 * @param rate rate per term
 		 * @param term
@@ -135,14 +134,14 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {

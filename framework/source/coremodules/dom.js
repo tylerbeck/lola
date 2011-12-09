@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description DOM Module
+	 * DOM Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -12,7 +12,7 @@
 		//==================================================================
 
 		/**
-		 * @description map of attribute getter/setter hooks
+		 * map of attribute getter/setter hooks
 		 * @private
 		 * @type {Array}
 		 */
@@ -22,7 +22,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -39,17 +39,16 @@
 
 		},
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "dom";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -60,7 +59,7 @@
 
 
 		/**
-		 * @description sets or gets an node attribute
+		 * sets or gets an node attribute
 		 * @param {Object} object the object on which to access the attribute
 		 * @param {String} name the name of the attribute
 		 * @param {*} value (optional) value to set
@@ -86,7 +85,7 @@
 		},
 
 		/**
-		 * @description deletes expando properties
+		 * deletes expando properties
 		 * @param {Object} object
 		 * @param {String} name
 		 */
@@ -101,7 +100,7 @@
 		// isDescendant - determines if a is descendant of b
 		//------------------------------------------------------------------
 		/**
-		 * @description determines if element a is descendant of element b
+		 * determines if element a is descendant of element b
 		 * @param {Node} a
 		 * @param {Node} b
 		 */
@@ -110,7 +109,7 @@
 		},
 
 		/**
-		 * @description determines if element a is an ancestor of element b
+		 * determines if element a is an ancestor of element b
 		 * @param {Node} a
 		 * @param {Node} b
 		 */
@@ -128,20 +127,20 @@
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description  gets sub selection
+				 *  gets sub selection
 				 * @return {lola.Selector}
 				 */
 				find: function( selector ) {
@@ -155,7 +154,7 @@
 				},
 
 				/**
-				 * @description  generation selection
+				 *  generation selection
 				 * @return {lola.Selector}
 				 */
 				generation: function( count ) {
@@ -177,7 +176,7 @@
 				},
 
 				/**
-				 * @description  sets or gets html on elements
+				 *  sets or gets html on elements
 				 * @return {lola.Selector|Array}
 				 */
 				html: function( content ) {
@@ -220,7 +219,7 @@
 				},
 
 				/**
-				 * @description  appends node to first selection element in DOM
+				 *  appends node to first selection element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -233,7 +232,7 @@
 				},
 
 				/**
-				 * @description  prepends node to first selection element in DOM
+				 *  prepends node to first selection element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -246,7 +245,7 @@
 				},
 
 				/**
-				 * @description  clones first selection element
+				 *  clones first selection element
 				 * @param {Boolean} deep
 				 * @return {Element}
 				 */
@@ -258,7 +257,7 @@
 				},
 
 				/**
-				 * @description  inserts node before first element in DOM
+				 *  inserts node before first element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -270,7 +269,7 @@
 				},
 
 				/**
-				 * @description  removes node from first element in DOM
+				 *  removes node from first element in DOM
 				 * @param {Element} node
 				 * @return {lola.Selector}
 				 */
@@ -283,7 +282,7 @@
 				},
 
 				/**
-				 * @description  replaces node in first element in DOM
+				 *  replaces node in first element in DOM
 				 * @param {Element} newChild
 				 * @param {Element} oldChild
 				 * @return {lola.Selector}
@@ -299,7 +298,7 @@
 				},
 
 				/**
-				 * @description  sets or gets attributes
+				 *  sets or gets attributes
 				 * @param {String} name
 				 * @param {*} value
 				 * @return {lola.Selector|Array}
@@ -321,7 +320,7 @@
 				},
 
 				/**
-				 * @description  removes attribute from elements
+				 *  removes attribute from elements
 				 * @param {String} name
 				 * @return {lola.Selector}
 				 */
@@ -333,7 +332,7 @@
 				},
 
 				/**
-				 * @description  sets new parent elements
+				 *  sets new parent elements
 				 * @param {String} newParent
 				 * @return {lola.Selector|Array}
 				 */
@@ -355,7 +354,7 @@
 				},
 
 				/**
-				 * @description  deletes expando property on elements
+				 *  deletes expando property on elements
 				 * @param {String} name
 				 * @return {lola.Selector}
 				 */

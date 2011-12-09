@@ -15,6 +15,7 @@
 
         var g = lola.graphics;
 		var bspline = new g.Spline();
+        bspline.closed = true;
 		bspline.addPoint( new g.SplinePoint(50,50,200,0,100) );
 		bspline.addPoint( new g.SplinePoint(200,200,100,0,100) );
 		bspline.addPoint( new g.SplinePoint(400,0,100,0,100) );
@@ -29,7 +30,7 @@
         g.setContext('test');
         g.applyStyle("blue");
         g.beginPath();
-        bspline.draw(true);
+        g.draw( bspline );
         g.fill();
         g.stroke();
         g.closePath();

@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Ag Module
+	 * Ag Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,28 +11,35 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description registration index
+		 * registration index
 		 * @private
 		 */
 		index: 0,
 
 		/**
-		 * @description registration map
+		 * registration map
 		 * @private
 		 */
 		map: {},
 
 		/**
-		 * @description initializers
+		 * initializers
 		 * @private
 		 */
 		initializers: [],
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        dependencies: {},
+
 
 		//==================================================================
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -49,7 +56,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -57,6 +64,9 @@
 			lola.debug('lola.agent::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
+
+            //check agent dependencies
+            lola.checkDependencies( this.dependencies );
 
             //execute agent initialization stack
             var stackSize = lola.agent.initializers.length;
@@ -76,17 +86,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "agent";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -97,21 +106,25 @@
 
 
 		/**
-		 * @description used to register an agent with the framework
+		 * used to register an agent with the framework
 		 * @param {Object} agent object that implements the agent interface
 		 */
-		register: function( agent ) {
-            var name = agent.getName();
-			console.info('register agent: '+name);
-			if (name && agent.sign && agent.drop) {
+        registerAgent: function( agent ) {
+            var ns = agent.getNamespace();
+			console.info('register agent: '+ns);
+			if (ns && agent.sign && agent.drop) {
 				//setup namespace
-				var pkg = lola.getPkgChain( lola.agent, name );
+				var pkg = lola.getPackage( lola.agent, ns );
 
 				//copy module methods and attributes
 				lola.extend( pkg, agent, true );
 
+                //add dependencies
+                if (agent.hasOwnProperty('getDependencies') && typeof agent.getDependencies=="function")
+                    this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
+
 				//map agent
-				this.map[ name ] = pkg;
+				this.map[ ns ] = pkg;
 
 				//add initializer
 				if ( agent.initialize && typeof agent.initialize === "function" ) {
@@ -133,7 +146,7 @@
 		},
 
 		/**
-		 * @description assign a client to an agent
+		 * assign a client to an agent
 		 * @param {Object} client
 		 * @param {String} name name of registered agent
 		 */
@@ -148,7 +161,7 @@
 		},
 
 		/**
-		 * @description drop a client from an agent
+		 * drop a client from an agent
 		 * @param {Object} client
 		 * @param {String} name name of registered agent
 		 */
@@ -172,6 +185,7 @@
 		},
 
 
+
 		//==================================================================
 		// Classes
 		//==================================================================
@@ -182,35 +196,35 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description assigns an agent to selector elements
+				 * assigns an agent to selector elements
 				 * @param {String} agentName name of registered agent
 				 */
 				assignAgent: function( agentName ) {
-					this.foreach( function(item){
+					this.forEach( function(item){
 						lola.agent.assign( item, agentName );
 					});
 					return this;
 				},
 
 				/**
-				 * @description drops client from agent
+				 * drops client from agent
 				 * @param {String} agentName name of registered agent
 				 */
 				dropAgent: function( agentName ) {
-					this.foreach( function(item){
+					this.forEach( function(item){
 						lola.agent.drop( item, agentName );
 					})
 				}

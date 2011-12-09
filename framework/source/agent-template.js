@@ -1,23 +1,28 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description AGENT Agent
+	 * AGENT Agent
 	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @memberof lola.agent
 	 */
 	var AGENT = {
 
 		//==================================================================
 		// Attributes
 		//==================================================================
-
+        /**
+         * map of agent's clients
+         * @private
+         * @type {Object}
+         */
+        clients: {},
 
 
 		//==================================================================
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -30,11 +35,11 @@
 
 
 			//remove initialization method
-			delete lola.AGENT.preinitialize;
+			delete lola.agent.AGENT.preinitialize;
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -48,21 +53,20 @@
 
 
 			//remove initialization method
-			delete lola.AGENT.initialize;
+			delete lola.agent.AGENT.initialize;
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
-		getName: function() {
+		getNamespace: function() {
 			return "AGENT";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -71,44 +75,47 @@
 			return [];
 		},
 
-		//==================================================================
-		// Classes
-		//==================================================================
+        /**
+         * signs a client
+         * @param {*} client
+         */
+        sign: function( client ) {
+            var $client = $(client);
+            $client.identify();
+            if (this.clients[ client.id ] == null) {
+
+                //not a client yet
+                this.clients[ client.id ] = client;
+                var data = {};
+                $client.putData( data, this.getNamespace() );
+
+                //add listeners
+
+            }
+        },
+
+        /**
+         * drops a client
+         * @param {*} client
+         */
+        drop: function( client ) {
+            var $client = $(client);
+            var data = $client.getData( this.getNamespace(), true );
+            if (this.clients[ client.id ] ) {
+                $client.removeData( this.name );
+
+                //remove listeners
+
+                delete this.clients[ client.id ];
+            }
+        }
 
 
 
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * @description get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
-
-			/**
-			 * @description module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-			};
-
-			return methods;
-
-		}
 	};
 
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
-
-
-
-
 	//register module
-	lola.registerModule( AGENT );
+	lola.agent.registerAgent( AGENT );
 
 })( lola );
 

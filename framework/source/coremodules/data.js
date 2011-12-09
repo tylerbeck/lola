@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Data Module
+	 * Data Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,19 +11,19 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description cache for all data storage
+		 * cache for all data storage
 		 * @private
 		 */
 		cache: {},
 
 		/**
-		 * @description uid for data references
+		 * uid for data references
 		 * @private
 		 */
 		uid: 1,
 
 		/**
-		 * @description attribute for data storage uid
+		 * attribute for data storage uid
 		 * @private
 		 */
 		cacheIDProp: "LOLA-DATA-UID",
@@ -32,7 +32,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -48,7 +48,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -65,17 +65,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "data";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -85,7 +84,7 @@
 		},
 
 		/**
-		 * @description get next data uid
+		 * get next data uid
 		 * @return {int}
 		 * @private
 		 */
@@ -94,7 +93,7 @@
 		},
 
 		/**
-		 * @description links element with data cache
+		 * links element with data cache
 		 * @param {Object} object
 		 * @param {Boolean|undefined} create defaults to true,
 		 * set to false to prevent creating a cache if one doesn't already exist
@@ -142,7 +141,7 @@
 		},
 
 		/**
-		 * @description gets an objects data for the specified namespace
+		 * gets an objects data for the specified namespace
 		 * @param {Object} object the object for which to retrieve data
 		 * @param {String} namespace the namespace to retrieve
 		 * @param {Boolean|undefined} create namespace data for object if not found,
@@ -165,7 +164,7 @@
 		},
 
 		/**
-		 * @description gets data for entire namespace
+		 * gets data for entire namespace
 		 * @param {String} namespace the namespace to get from data cache
 		 */
 		getNamespaceData: function( namespace ) {
@@ -173,7 +172,7 @@
 		},
 
 		/**
-		 * @description replaces/updates existing object data
+		 * replaces/updates existing object data
 		 * @param {Object} object
 		 * @param {Object} data
 		 * @param {String} namespace namespace to put data
@@ -196,7 +195,7 @@
 		},
 
 		/**
-		 * @description removes object data
+		 * removes object data
 		 * @param {Object} object
 		 * @param {String|undefined} namespace namespace to remove data,
 		 * removes data from all namespaces if undefined
@@ -242,20 +241,20 @@
 		// Selector Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description get data for elements
+				 * get data for elements
 				 * @param {String} namespace
 				 * @param {Boolean|undefined} create create data object if null
 				 * @return {Array}
@@ -269,7 +268,7 @@
 				},
 
 				/**
-				 * @description put data for elements
+				 * put data for elements
 				 * @param {Object} data data to put in cache for elements (overwrites)
 				 * @param {String} namespace
 				 * @return {lola.Selector}
@@ -282,7 +281,7 @@
 				},
 
 				/**
-				 * @description updates data for elements
+				 * updates data for elements
 				 * @param {Object} data
 				 * @param {String} namespace
 				 * @return {lola.Selector}
@@ -296,7 +295,7 @@
 				},
 
 				/**
-				 * @description remove specified namespaces from data cache
+				 * remove specified namespaces from data cache
 				 * @param {Array|String|undefined} namespace
 				 * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
 				 * @return {lola.Selector}
@@ -310,7 +309,7 @@
 				},
 
 				/**
-				 * @description remove specified namespaces from data cache
+				 * remove specified namespaces from data cache
 				 * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
 				 * @return {lola.Selector}
 				 */

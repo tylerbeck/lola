@@ -1,7 +1,7 @@
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * @description Event Module
+	 * Event Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -11,21 +11,21 @@
 		// Attributes
 		//==================================================================
 		/**
-		 * @description event maping
+		 * event maping
 		 * @private
 		 * @type {Object}
 		 */
 		map: { 'mousewheel':['mousewheel','DOMMouseScroll'] },
 
 		/**
-		 * @description event hooks
+		 * event hooks
 		 * @private
 		 * @type {Object}
 		 */
 		hooks: {},
 
 		/**
-		 * @description event listener uid
+		 * event listener uid
 		 * @type {int}
 		 */
 		uid: 0,
@@ -36,7 +36,7 @@
 		// Methods
 		//==================================================================
 		/**
-		 * @description preinitializes module
+		 * preinitializes module
 		 * @private
 		 * @return {void}
 		 */
@@ -52,7 +52,7 @@
 		},
 
 		/**
-		 * @description initializes module
+		 * initializes module
 		 * @public
 		 * @return {void}
 		 */
@@ -69,17 +69,16 @@
 		},
 
 		/**
-		 * @description get module's namespace
+		 * get module's namespace
 		 * @public
 		 * @return {String}
-		 * @default dom
 		 */
 		getNamespace: function() {
 			return "event";
 		},
 
 		/**
-		 * @description get module's dependencies
+		 * get module's dependencies
 		 * @public
 		 * @return {Array}
 		 * @default []
@@ -90,7 +89,7 @@
 
 
 		/**
-		 * @description add a framework event listener
+		 * add a framework event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -140,7 +139,7 @@
 		},
 
 		/**
-		 * @description remove a framework event listener
+		 * remove a framework event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -179,7 +178,7 @@
 
 
 		/**
-		 * @description removes all listeners associated with handler
+		 * removes all listeners associated with handler
 		 * @param {String|Array} types
 		 * @param {Function} handler
 		 * @param {Boolean|undefined} useCapture
@@ -223,7 +222,7 @@
 		},
 
 		/**
-		 * @description internal capture listener
+		 * internal capture listener
 		 * @param {Object} event
 		 * @private
 		 */
@@ -233,7 +232,7 @@
 		},
 
 		/**
-		 * @description internal bubble listener
+		 * internal bubble listener
 		 * @param {Object} event
 		 * @private
 		 */
@@ -243,7 +242,7 @@
 		},
 
 		/**
-		 * @description internal capture listener
+		 * internal capture listener
 		 * @private
 		 * @param {Object} event
 		 * @param {String} phase
@@ -273,7 +272,7 @@
 		},
 
 		/**
-		 * @description triggers a framework event on an object
+		 * triggers a framework event on an object
 		 * @param {Object} object
 		 * @param {String} type
 		 * @param {Boolean|undefined} bubbles
@@ -312,7 +311,7 @@
 		},
 
 		/**
-		 * @description add a DOM event listener
+		 * add a DOM event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -338,7 +337,7 @@
 		},
 
 		/**
-		 * @description remove a DOM event listener
+		 * remove a DOM event listener
 		 * @param {Object} target
 		 * @param {String} type
 		 * @param {Function} handler
@@ -363,7 +362,7 @@
 		},
 
 		/**
-		 * @description gets the dom target
+		 * gets the dom target
 		 * @param {Object} event
 		 * @param {Object} target
 		 * @return {Object}
@@ -398,7 +397,7 @@
 		},
 
 		/**
-		 * @description returns key string for key events
+		 * returns key string for key events
 		 * @param {Event} e
 		 * @return {String}
 		 */
@@ -414,7 +413,7 @@
 		},
 
 		/**
-		 * @description returns x,y coordinates relative to document
+		 * returns x,y coordinates relative to document
 		 * @param {Event} e
 		 * @return {Object}
 		 */
@@ -434,7 +433,7 @@
 		},
 
 		/**
-		 * @description returns x,y coordinates relative to currentTarget
+		 * returns x,y coordinates relative to currentTarget
 		 * @param {Event} e
 		 * @return {Object}
 		 */
@@ -445,7 +444,7 @@
 		},
 
 		/**
-		 * @description returns actual event phase to use
+		 * returns actual event phase to use
 		 * @param {Object} target
 		 * @param {Boolean|undefined} useCapture
 		 * @return {String}
@@ -455,7 +454,7 @@
 		},
 
 		/**
-		 * @description prevent default event action
+		 * prevent default event action
 		 * @param {Event} e
 		 * @return {Boolean}
 		 */
@@ -485,7 +484,7 @@
 		// Classes
 		//==================================================================
 		/**
-		 * @description LolqEvent class used with internal events
+		 * LolqEvent class used with internal events
 		 * @class
 		 * @param {Object} event
 		 * @param {Object} target
@@ -498,20 +497,20 @@
 		// Selection Methods
 		//==================================================================
 		/**
-		 * @description get module's selectors
+		 * get module's selectors
 		 * @public
 		 * @return {Object}
 		 */
 		getSelectorMethods: function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 
 				/**
-				 * @description adds a framework event listener
+				 * adds a framework event listener
 				 * @param {String} type
 				 * @param {Function} handler
 				 * @param {Boolean|undefined} useCapture
@@ -527,7 +526,7 @@
 				},
 
 				/**
-				 * @description removes a framework event listener
+				 * removes a framework event listener
 				 * @param {String} type
 				 * @param {Function} handler
 				 * @param {Boolean|undefined} useCapture
@@ -541,7 +540,7 @@
 				},
 
 				/**
-				 * @description removes all listeners associated with handler
+				 * removes all listeners associated with handler
 				 * @param {Function} handler
 				 * @param {Array|undefined} types event types to remove for handler, undefined removes all
 				 * @param {String|undefined} phase
@@ -555,7 +554,7 @@
 				},
 
 				/**
-				 * @description triggers an framework event on an object
+				 * triggers an framework event on an object
 				 * @param {String} type
 				 * @param {Boolean|undefined} bubbles
 				 * @param {Boolean|undefined} cancelable
@@ -581,57 +580,57 @@
 	event.LolaEvent.prototype = {
 
 		/**
-		 * @description reference to original event
+		 * reference to original event
 		 * @type {Event}
 		 */
 		originalEvent: null,
 
 		/**
-		 * @description flag for propagation stopped
+		 * flag for propagation stopped
 		 * @type {Boolean}
 		 * @private
 		 */
 		propagationStopped: false,
 
 		/**
-		 * @description flag for immediate propagation stopped
+		 * flag for immediate propagation stopped
 		 * @type {Boolean}
 		 * @private
 		 */
 		immediatePropagationStopped: false,
 
 		/**
-		 * @description event's target
+		 * event's target
 		 * @type {Object}
 		 */
 		target: null,
 
 		/**
-		 * @description event's currentTarget
+		 * event's currentTarget
 		 * @type {Object}
 		 */
 		currentTarget: null,
 
 		/**
-		 * @description global x position (Mouse/Touch Events)
+		 * global x position (Mouse/Touch Events)
 		 * @type {Number}
 		 */
 		globalX: null,
 
 		/**
-		 * @description global y position (Mouse/Touch Events)
+		 * global y position (Mouse/Touch Events)
 		 * @type {Number}
 		 */
 		globalY: null,
 
 		/**
-		 * @description key code for Key Events
+		 * key code for Key Events
 		 * @type {int}
 		 */
 		key: null,
 
 		/**
-		 * @description class initializer
+		 * class initializer
 		 * @param {Event} event
 		 * @param {Object} target
 		 */
@@ -656,14 +655,14 @@
 		},
 
 		/**
-		 * @description prevents an events default behavior
+		 * prevents an events default behavior
 		 */
 		preventDefault: function(){
 			this.originalEvent.preventDefault();
 		},
 
 		/**
-		 * @description stops event propagation
+		 * stops event propagation
 		 */
 		stopPropagation: function(){
 			this.originalEvent.stopPropagation();
@@ -671,7 +670,7 @@
 		},
 
 		/**
-		 * @description stops immediate event propagation
+		 * stops immediate event propagation
 		 */
 		stopImmediatePropagation: function(){
 			this.originalEvent.stopImmediatePropagation();
@@ -686,7 +685,7 @@
 	//==================================================================
 
 	/**
-	 * @description delayed hover intent event hook
+	 * delayed hover intent event hook
 	 * @event hover
 	 */
 	event.hooks['hover'] = {
@@ -743,7 +742,7 @@
 	};
 
 	/**
-	 * @description mouse enter state event
+	 * mouse enter state event
 	 * @event mouseenterstate
 	 */
 	event.hooks['mouseenterstate'] = {
@@ -809,13 +808,13 @@
 	};
 
 	/**
-	 * @description mouse leave event
+	 * mouse leave event
 	 * @event mouseleave
 	 */
 	event.hooks['mouseleave'] = event.hooks['mouseenterstate'];
 
 	/**
-	 * @description mouse enter event
+	 * mouse enter event
 	 * @event mouseleave
 	 */
 	event.hooks['mouseenter'] = event.hooks['mouseenterstate'];

@@ -1,14 +1,14 @@
 (function(window){
 	/**
 	 * @namespace lola
-	 * @description framework root object
+	 * framework root object
 	 * @customOne this is custom 1
 	 * @customTwo this is custom 2
 	 */
 	var lola = {
 //		/**
 //		 * @class
-//		 * @description this is class one
+//		 * this is class one
 //		 */
 //		ClassOne: function(){
 //			return this.init();
@@ -16,14 +16,14 @@
 //
 //		/**
 //		 * @class
-//		 * @description this is class two
+//		 * this is class two
 //		 */
 //		ClassTwo: function(){
 //			return this.init();
 //		},
 //
 //		/**
-//		 * @description this is method one
+//		 * this is method one
 //		 * @param {String} param1
 //		 * @param {String} param2
 //		 * @return {String}
@@ -33,7 +33,7 @@
 //		},
 //
 //		/**
-//		 * @description this is method two
+//		 * this is method two
 //		 * @param {String} param1
 //		 * @param {String} param2
 //		 * @return {String}
@@ -43,21 +43,21 @@
 //		},
 
 		/**
-		 * @description selector
+		 * selector
 		 */
 		selector: {
 			/**
-			 * @description  a
+			 *  a
 			 */
 			a: "A",
 
 			/**
-			 * @description  b
+			 *  b
 			 */
 			b: "B",
 
 			/**
-			 * @description  c
+			 *  c
 			 */
 			c: "C"
 		}
@@ -72,7 +72,7 @@
 //		},
 //
 //		/**
-//		 * @description method 1A
+//		 * method 1A
 //		 * @return {int}
 //		 */
 //		method1A: function(){
@@ -90,7 +90,7 @@
 //		},
 //
 //		/**
-//		 * @description method 2A
+//		 * method 2A
 //		 * @return {int}
 //		 */
 //		method2A: function(){
@@ -100,29 +100,29 @@
 
 	/**
 	 * @memberof lola
-	 * @description Array Module
+	 * Array Module
 	 */
 	var array = {
 
 		getMethods:function() {
 
 			/**
-			 * @description module's selector methods
+			 * module's selector methods
 			 * @type {Object}
 			 */
 			var methods = {
 				/**
-				 * @description  d
+				 *  d
 				 */
 				d: "D",
 
 				/**
-				 * @description  e
+				 *  e
 				 */
 				e: "E",
 
 				/**
-				 * @description f
+				 * f
 				 */
 				f: "F"
 			};

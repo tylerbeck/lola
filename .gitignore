@@ -1,7 +1,8 @@
-lola.iml
+*.iml
 framework/src/*
 .idea/*
 webroot/bin
+webroot/examples
 webroot/docs
 webroot/lola
 

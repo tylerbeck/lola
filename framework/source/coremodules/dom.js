@@ -336,7 +336,7 @@
 				 * @param {String} newParent
 				 * @return {lola.Selector|Array}
 				 */
-				parent: function( newParent ) {
+                        parent: function( newParent ) {
 					if ( newParent != undefined ) {
 						this.forEach(function(item){
 							$(newParent).appendChild( item );

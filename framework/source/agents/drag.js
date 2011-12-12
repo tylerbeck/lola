@@ -90,7 +90,7 @@
 		/**
 		 * get module's dependencies
 		 * @public
-		 * @return {Array}
+		 * @return {Array}s
 		 * @default []
 		 */
 		getDependencies: function() {

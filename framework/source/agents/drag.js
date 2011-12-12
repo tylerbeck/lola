@@ -50,7 +50,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug('lola.drag::preinitialize');
+			lola.debug('lola.agent.drag::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do agent preinitialization
@@ -67,7 +67,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug('lola.drag::initialize');
+			lola.debug('lola.agent.drag::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -108,8 +108,7 @@
 
                 //not a client yet
                 this.clients[ client.id ] = client;
-                var data = {};
-                $client.putData( data, this.getNamespace() );
+                $client.putData( {}, this.getNamespace() );
 
                 //add listeners
                 $client.addListener( 'mousedown', this.startDrag, true, 0, this );
@@ -123,9 +122,8 @@
          */
         drop: function( client ) {
             var $client = $(client);
-            var data = $client.getData( this.getNamespace(), true );
             if (this.clients[ client.id ] ) {
-                $client.removeData( this.name );
+                $client.removeData( this.getNamespace() );
 
                 //remove listeners
 

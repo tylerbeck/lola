@@ -27,7 +27,7 @@
 		 * @return {void}
 		 */
 		preinitialize: function() {
-			lola.debug('lola.AGENT::preinitialize');
+			lola.debug('lola.agent.AGENT::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do agent preinitialization
@@ -44,7 +44,7 @@
 		 * @return {void}
 		 */
 		initialize: function() {
-			lola.debug('lola.AGENT::initialize');
+			lola.debug('lola.agent.AGENT::initialize');
 			//this framework is dependent on lola framework
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
@@ -100,9 +100,8 @@
          */
         drop: function( client ) {
             var $client = $(client);
-            var data = $client.getData( this.getNamespace(), true );
             if (this.clients[ client.id ] ) {
-                $client.removeData( this.name );
+                $client.removeData( this.getNamespace() );
 
                 //remove listeners
 

@@ -5,24 +5,6 @@
 	<script src="bin/lola.js"></script>
     <script src="lola/agents/drag.js"></script>
 	<script>
-		var grid = function(x,y,width,height,majorSpacing,color,lineWidth,background){
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.spacing = spacing;
-            this.color = color;
-            this.lineWidth = lineWidth;
-            this.background = background;
-            return this;
-        };
-        grid.prototype = {
-            draw: function( x, y, w, h, s, c, t, bg){
-                var g = lola.graphics;
-
-            }
-        }
-
 			ctx: null,
 
 			setContext: function( target, context ){
@@ -79,18 +61,7 @@
 			yAxis: function( x, y, h, c, t, l ) {
 				var g = this.ctx;
 				g.strokeStyle = c;
-				g.lineWidth = t;
-				g.beginPath();
-				g.moveTo( x, y );
-				g.lineTo( x, h+y );
-				g.stroke();
-				g.closePath();
-
-				if (l) {
-					g.textAlign = "center";
-					g.fillText( l, x, y+h+18 );
-				}
-			},
+s			},
 
 			circle: function(x,y,r,c){
 				var g = this.ctx;

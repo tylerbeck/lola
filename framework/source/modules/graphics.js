@@ -187,10 +187,10 @@
 
         /**
          * copies properties of styleObject into style cache with given name
-         * @param {Object} styleObj
          * @param {String} name
+         * @param {Object} styleObj
          */
-        registerStyle: function( styleObj, name ) {
+        registerStyle: function( name, styleObj ) {
             var obj = {};
             lola.util.copyPrimitives( styleObj, obj );
             this.styles2d[ name ] = obj;
@@ -216,10 +216,23 @@
             lola.util.copyPrimitives( styles, ctx );
         },
 
-        draw: function( object ){
+        /**
+         * draws drawable objects in current context
+         * @param {Object|Array} objects
+         */
+        draw: function( object, flags ){
             if ( object.draw && typeof object.draw === "function" ){
-                object.draw( this.ctx );
+                object.draw( lola.graphics.ctx, flags );
             }
+        },
+
+        /**
+         * clears a context
+         * @param ctx
+         */
+        clear: function( ctx ){
+            ctx = this.resolveContext( ctx );
+            ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         },
 
 
@@ -242,10 +255,11 @@
          * Spline class
          * @class
          * @param {Array|undefined} points array of spline points
+         * @param {uint} flags
          */
-		Spline: function( points, closed ){
+		Spline: function( points, flags ){
 			this.points = points?points:[];
-            this.closed = closed===true;
+            this.flags = flags == undefined ? 0 : flags;
 			return this;
 		},
 
@@ -334,18 +348,22 @@
 		}
 	};
 
+    graphics.Spline.CLOSED = 0x1;
+    graphics.Spline.FILL = 0x2;
+    graphics.Spline.STROKE = 0x4;
 	graphics.Spline.prototype = {
         /**
          * array of {lola.graphics.SplinePoint}
          * @type {Array}
+         * @private
          */
 		points: [],
 
         /**
-         * flag wether Spline should be rendered closed
+         * spline flags
          * @type {Boolean}
          */
-        closed: false,
+        flags: 0x0,
 
         /**
          * adds a point at the specified index.
@@ -392,7 +410,8 @@
          * @param {Boolean} close draw a closed spline
          * @param {Object|String|undefined} ctx
          */
-        draw: function( ctx ){
+        draw: function( ctx, flags ){
+            flags = flags == undefined ? this.flags : flags;
             var sl = this.points.length;
             //console.log('drawSpline: '+sl);
             if (sl > 1) {
@@ -403,6 +422,7 @@
                     pts.push( item.getAnchor() );
                     pts.push( item.getControl2() );
                 });
+                ctx.beginPath();
                 ctx.moveTo( pts[1].x,pts[1].y );
                 var pl = pts.length;
                 for (var i=2; i<pl-3; i+=3){
@@ -413,19 +433,27 @@
                     );
                 }
 
-                if (this.closed){
+                if (flags & graphics.Spline.CLOSED){
                     ctx.bezierCurveTo(
                         pts[pl-1].x,pts[pl-1].y,
                         pts[0].x,pts[0].y,
                         pts[1].x,pts[1].y
                     );
                 }
+
+                if (flags & graphics.Spline.FILL){
+                    ctx.fill();
+                }
+
+                if (flags & graphics.Spline.STROKE){
+                    ctx.stroke();
+                }
+
             }
             else{
                 throw new Error('not enough spline points');
             }
         }
-
 
 	};
 

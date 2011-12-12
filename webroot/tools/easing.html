@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Easing Tool</title>
+    <script src="../bin/lola.js"></script>
+    <script>
+        (function( lola ) {
+            var $ = lola;
+            var page = {
+                clients: {},
+                preinitialize: function() {
+                    lola.debug('lola.page::preinitialize');
+                    if ( !lola ) throw new Error( 'lola not defined!' );
+
+                    //do agent preinitialization
+
+
+
+                    //remove initialization method
+                    delete lola.agent.page.preinitialize;
+                },
+
+                initialize: function() {
+                    lola.debug('lola.agent.page::initialize');
+                    //this framework is dependent on lola framework
+                    if ( !lola ) throw new Error( 'lola not defined!' );
+
+                    //do agent initialization
+                    $("body").assignAgent( this.getNamespace() );
+
+
+                    //remove initialization method
+                    delete lola.agent.page.initialize;
+                },
+
+                getNamespace: function() {
+                    return "page";
+                },
+
+                getDependencies: function() {
+                    return [];
+                },
+
+                sign: function( client ) {
+                    var $client = $(client);
+                    $client.identify();
+                    if (this.clients[ client.id ] == null) {
+
+                        //not a client yet
+                        this.clients[ client.id ] = client;
+                        var start = new lola.graphics.SplinePoint(50,300,0,0,100,0);
+                        var end = new lola.graphics.SplinePoint(450,50,100,0,100,0);
+                        var spline = new lola.graphics.Spline([start,end], false);
+                        $client.putData( {spline:spline}, this.getNamespace() );
+
+                        //do setup
+                        $('canvas').register2dContext();
+                        this.drawGrid(400,400);
+
+                        //add listeners
+
+
+                    }
+                },
+
+                drop: function( client ) {
+                    var $client = $(client);
+                    if (this.clients[ client.id ] ) {
+                        $client.removeData( this.getNamespace() );
+
+                        //remove listeners
+
+                        delete this.clients[ client.id ];
+                    }
+                },
+
+                drawGrid: function(w,h){
+                    var g = lola.graphics;
+                    g.setContext('grid');
+
+                    //background
+                    g.applyStyle( { fillStyle: "#FFFFFF",strokeStyle: "#CCCCCC"});
+                    g.strokeRect( 50,50,w,h );
+                    g.fillRect( 50,50,w,h );
+
+                    //minor grid
+                    g.applyStyle( {strokeStyle: "#F0F0F0"});
+                    g.draw( new lola.chart.Grid(50,50,w,h,10, lola.chart.Grid.HORIZONTAL ));
+
+                    //major grid
+                    g.applyStyle( {strokeStyle: "#EEEEEE" });
+                    g.draw( new lola.chart.Grid(50,50,w,h,50, lola.chart.Grid.HORIZONTAL ));
+                    g.draw( new lola.chart.Grid(50,50,w,h,w/10, lola.chart.Grid.VERTICAL ));
+
+                    //axis
+                    g.applyStyle( {strokeStyle: "#CCCCCC" });
+                    g.draw( new lola.chart.Axis(50,50,w,"max",{x:-8,y:2}) );
+                    g.draw( new lola.chart.Axis(50,50+h/4,w,"end",{x:-8,y:2}) );
+                    g.draw( new lola.chart.Axis(50,50+3*h/4,w,"start",{x:-8,y:2}) );
+                    g.draw( new lola.chart.Axis(50,50+h,w,"min",{x:-8,y:2}) );
+                    g.draw( new lola.chart.Axis(50,50,h,"0",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
+                    g.draw( new lola.chart.Axis(50+w,50,h,"1",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
+                    
+                }
+
+
+
+            };
+
+            //register module
+            lola.agent.registerAgent( page );
+
+        })( lola );
+    </script>
+    <style>
+        * { padding: 0; margin: 0; }
+        p { margin: 10px 0; }
+        input{ vertical-align: middle; }
+        html{ background-color: rgb(245,245,245); }
+
+        #grid{
+            padding: 0;
+            margin: 20px;
+        }
+
+    </style>
+</head>
+<body>
+<canvas id="grid" width="851" height="500"></canvas>
+</body>
+</html>

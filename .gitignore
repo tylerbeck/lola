@@ -7,3 +7,4 @@ webroot/examples
 webroot/docs
 webroot/lola
 examples/examples.iml
+tmp/*

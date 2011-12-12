@@ -6077,6 +6077,215 @@ window.Sizzle = Sizzle;
 
 })( lola );
 
+(function (lola) {
+    var $ = lola;
+    /**
+     * @description Chart Module
+     * @implements {lola.Module}
+     * @memberof lola
+     */
+    var chart = {
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * @description preinitializes module
+         * @private
+         * @return {void}
+         */
+        preinitialize:function () {
+            lola.debug('lola.chart::preinitialize');
+            if (!lola) throw new Error('lola not defined!');
+
+            //do module preinitialization
+
+
+            //remove initialization method
+            delete lola.chart.preinitialize;
+        },
+
+        /**
+         * @description initializes module
+         * @public
+         * @return {void}
+         */
+        initialize:function () {
+            lola.debug('lola.chart::initialize');
+            //this framework is dependent on lola framework
+            if (!lola) throw new Error('lola not defined!');
+
+            //do module initialization
+
+
+            //remove initialization method
+            delete lola.chart.initialize;
+        },
+
+        /**
+         * @description get module's namespace
+         * @public
+         * @return {String}
+         * @default dom
+         */
+        getNamespace:function () {
+            return "chart";
+        },
+
+        /**
+         * @description get module's dependencies
+         * @public
+         * @return {Array}
+         * @default []
+         */
+        getDependencies:function () {
+            return ['graphics'];
+        },
+
+        //==================================================================
+        // Classes
+        //==================================================================
+        Grid: function(x,y,width,height,spacing,flags){
+            return this.init(x,y,width,height,spacing,flags);
+        },
+
+        Axis: function(x,y,size,label,labelOffset,flags ){
+            return this.init(x,y,size,label,labelOffset,flags);
+        },
+
+
+        //==================================================================
+        // Selection Methods
+        //==================================================================
+        /**
+         * @description get module's selectors
+         * @public
+         * @return {Object}
+         */
+        getSelectorMethods:function () {
+
+            /**
+             * @description module's selector methods
+             * @type {Object}
+             */
+            var methods = {
+
+            };
+
+            return methods;
+
+        }
+    };
+
+    //==================================================================
+    // Class Prototypes
+    //==================================================================
+    chart.Grid.HORIZONTAL = 0x1;
+    chart.Grid.VERTICAL = 0x2;
+    chart.Grid.prototype = {
+        x:0,
+        y:0,
+        width:100,
+        height:100,
+        spacing:10,
+        flags:3,
+        init: function(x,y,width,height,spacing,flags){
+            this.x = x || 0;
+            this.y = y || 0;
+            this.width = width || 100;
+            this.height = height || 100;
+            this.spacing = spacing || 10;
+            this.flags = (flags==undefined)?3:flags;
+
+            return this;
+        },
+
+        draw: function( ctx, flags ){
+            flags = flags == undefined ? this.flags : flags;
+
+            var i;
+            //vertical
+            if (flags & lola.chart.Grid.VERTICAL){
+                for (i=this.x+this.spacing; i<=this.width+this.x; i+=this.spacing){
+                        ctx.beginPath();
+                        ctx.moveTo(i,this.y);
+                        ctx.lineTo(i,this.y+this.height);
+                        ctx.stroke();
+                        ctx.closePath();
+                }
+            }
+            //horizontal
+            if (flags & lola.chart.Grid.HORIZONTAL){
+                for (i=this.y+this.spacing; i<=this.height+this.y; i+=this.spacing){
+                    ctx.beginPath();
+                    ctx.moveTo(this.x,i);
+                    ctx.lineTo(this.x+this.width,i);
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+        }
+    };
+
+    chart.Axis.VERTICAL = 0x1;
+    chart.Axis.prototype = {
+        x:0,
+        y:0,
+        size: 100,
+        label: undefined,
+        labelOffset: {x:0,y:0},
+        flags: 0x2,
+        init: function(x,y,size,label,labelOffset,flags){
+            this.x = x || 0;
+            this.y = y || 0;
+            this.size = size || 100;
+            this.label = label;
+            if( labelOffset ) this.labelOffset = labelOffset;
+            this.flags = (flags==undefined)?0x0:flags;
+            return this;
+        },
+
+        draw: function( ctx, flags ){
+            flags = flags == undefined ? this.flags : flags;
+            ctx.beginPath();
+            ctx.moveTo( this.x, this.y );
+            if (flags & lola.chart.Axis.VERTICAL){
+                //vertical axis
+                ctx.lineTo( this.x, this.y+this.size );
+            }
+            else {
+                //horizontal axis
+                ctx.lineTo( this.x+this.size, this.y );
+            }
+            ctx.stroke();
+            ctx.closePath();
+
+            if (this.label) {
+                if (flags & lola.chart.Axis.VERTICAL) {
+                    //label at bottom
+                    ctx.textAlign = "center";
+                    ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.size + this.labelOffset.y );
+                }
+                else {
+                    ctx.textAlign = "right";
+                    ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.labelOffset.y );
+                }
+            }
+        }
+    };
+
+
+
+    //register module
+    lola.registerModule(chart);
+
+})(lola);
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -6727,10 +6936,10 @@ window.Sizzle = Sizzle;
 
         /**
          * copies properties of styleObject into style cache with given name
-         * @param {Object} styleObj
          * @param {String} name
+         * @param {Object} styleObj
          */
-        registerStyle: function( styleObj, name ) {
+        registerStyle: function( name, styleObj ) {
             var obj = {};
             lola.util.copyPrimitives( styleObj, obj );
             this.styles2d[ name ] = obj;
@@ -6756,12 +6965,23 @@ window.Sizzle = Sizzle;
             lola.util.copyPrimitives( styles, ctx );
         },
 
-        draw: function( object ){
-            console.log('draw: '+object);
+        /**
+         * draws drawable objects in current context
+         * @param {Object|Array} objects
+         */
+        draw: function( object, flags ){
             if ( object.draw && typeof object.draw === "function" ){
-                console.log('   drawing');
-                object.draw( this.ctx );
+                object.draw( lola.graphics.ctx, flags );
             }
+        },
+
+        /**
+         * clears a context
+         * @param ctx
+         */
+        clear: function( ctx ){
+            ctx = this.resolveContext( ctx );
+            ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         },
 
 
@@ -6784,10 +7004,11 @@ window.Sizzle = Sizzle;
          * Spline class
          * @class
          * @param {Array|undefined} points array of spline points
+         * @param {uint} flags
          */
-		Spline: function( points, closed ){
+		Spline: function( points, flags ){
 			this.points = points?points:[];
-            this.closed = closed===true;
+            this.flags = flags == undefined ? 0 : flags;
 			return this;
 		},
 
@@ -6876,18 +7097,22 @@ window.Sizzle = Sizzle;
 		}
 	};
 
+    graphics.Spline.CLOSED = 0x1;
+    graphics.Spline.FILL = 0x2;
+    graphics.Spline.STROKE = 0x4;
 	graphics.Spline.prototype = {
         /**
          * array of {lola.graphics.SplinePoint}
          * @type {Array}
+         * @private
          */
 		points: [],
 
         /**
-         * flag wether Spline should be rendered closed
+         * spline flags
          * @type {Boolean}
          */
-        closed: false,
+        flags: 0x0,
 
         /**
          * adds a point at the specified index.
@@ -6934,7 +7159,8 @@ window.Sizzle = Sizzle;
          * @param {Boolean} close draw a closed spline
          * @param {Object|String|undefined} ctx
          */
-        draw: function( ctx ){
+        draw: function( ctx, flags ){
+            flags = flags == undefined ? this.flags : flags;
             var sl = this.points.length;
             //console.log('drawSpline: '+sl);
             if (sl > 1) {
@@ -6945,6 +7171,7 @@ window.Sizzle = Sizzle;
                     pts.push( item.getAnchor() );
                     pts.push( item.getControl2() );
                 });
+                ctx.beginPath();
                 ctx.moveTo( pts[1].x,pts[1].y );
                 var pl = pts.length;
                 for (var i=2; i<pl-3; i+=3){
@@ -6955,19 +7182,27 @@ window.Sizzle = Sizzle;
                     );
                 }
 
-                if (this.closed){
+                if (flags & graphics.Spline.CLOSED){
                     ctx.bezierCurveTo(
                         pts[pl-1].x,pts[pl-1].y,
                         pts[0].x,pts[0].y,
                         pts[1].x,pts[1].y
                     );
                 }
+
+                if (flags & graphics.Spline.FILL){
+                    ctx.fill();
+                }
+
+                if (flags & graphics.Spline.STROKE){
+                    ctx.stroke();
+                }
+
             }
             else{
                 throw new Error('not enough spline points');
             }
         }
-
 
 	};
 

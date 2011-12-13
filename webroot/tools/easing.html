@@ -3,11 +3,13 @@
 <head>
     <title>Easing Tool</title>
     <script src="../bin/lola.js"></script>
+    <script src="../lola/agents/drag.js"></script>
     <script>
         (function( lola ) {
             var $ = lola;
             var page = {
                 clients: {},
+                spline: null,
                 preinitialize: function() {
                     lola.debug('lola.page::preinitialize');
                     if ( !lola ) throw new Error( 'lola not defined!' );
@@ -25,6 +27,24 @@
                     //this framework is dependent on lola framework
                     if ( !lola ) throw new Error( 'lola not defined!' );
 
+                    //set up styles
+                    var g = lola.graphics;
+                    g.registerStyle( 'gridBg', { fillStyle: "#FFFFFF",strokeStyle: "#CCCCCC"} );
+                    g.registerStyle( 'mnrGrid', {strokeStyle: "#F0F0F0"} );
+                    g.registerStyle( 'mjrGrid', {strokeStyle: "#EEEEEE"} );
+                    g.registerStyle( 'axis', {strokeStyle: "#CCCCCC"} );
+                    g.registerStyle( 'endPt', {strokeStyle: "#666666", fillStyle:"#990000"} );
+                    g.registerStyle( 'middlePt', {strokeStyle: "#666666", fillStyle:"#009900"} );
+                    g.registerStyle( 'ctrlPt', {strokeStyle: "#666666", fillStyle:"#000099"} );
+
+                    g.registerRoutine( 'point', function( ctx ){
+                        ctx.beginPath();
+                        ctx.arc(6,6,6,0,2*Math.PI,false);
+                        ctx.fill();
+                        ctx.stroke();
+                        ctx.closePath();
+                    } );
+
                     //do agent initialization
                     $("body").assignAgent( this.getNamespace() );
 
@@ -38,24 +58,25 @@
                 },
 
                 getDependencies: function() {
-                    return [];
+                    return ['graphics','chart','math','math.point'];
                 },
 
                 sign: function( client ) {
                     var $client = $(client);
                     $client.identify();
-                    if (this.clients[ client.id ] == null) {
+                    if (this.client == null) {
 
                         //not a client yet
-                        this.clients[ client.id ] = client;
-                        var start = new lola.graphics.SplinePoint(50,300,0,0,100,0);
+                        this.client = client;
+                        var start = new lola.graphics.SplinePoint(50,450,0,0,100,0);
+                        var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
                         var end = new lola.graphics.SplinePoint(450,50,100,0,100,0);
-                        var spline = new lola.graphics.Spline([start,end], false);
-                        $client.putData( {spline:spline}, this.getNamespace() );
+                        this.spline = new lola.graphics.Spline([start, middle, end], false);
 
                         //do setup
                         $('canvas').register2dContext();
                         this.drawGrid(400,400);
+                        this.createPoints();
 
                         //add listeners
 
@@ -70,7 +91,7 @@
 
                         //remove listeners
 
-                        delete this.clients[ client.id ];
+                        this.client = null;
                     }
                 },
 
@@ -79,31 +100,126 @@
                     g.setContext('grid');
 
                     //background
-                    g.applyStyle( { fillStyle: "#FFFFFF",strokeStyle: "#CCCCCC"});
+                    g.applyStyle( 'gridBg' );
                     g.strokeRect( 50,50,w,h );
                     g.fillRect( 50,50,w,h );
 
                     //minor grid
-                    g.applyStyle( {strokeStyle: "#F0F0F0"});
+                    g.applyStyle( 'mnrGrid' );
                     g.draw( new lola.chart.Grid(50,50,w,h,10, lola.chart.Grid.HORIZONTAL ));
 
                     //major grid
-                    g.applyStyle( {strokeStyle: "#EEEEEE" });
+                    g.applyStyle( 'mjrGrid' );
                     g.draw( new lola.chart.Grid(50,50,w,h,50, lola.chart.Grid.HORIZONTAL ));
                     g.draw( new lola.chart.Grid(50,50,w,h,w/10, lola.chart.Grid.VERTICAL ));
 
                     //axis
-                    g.applyStyle( {strokeStyle: "#CCCCCC" });
+                    g.applyStyle( 'axis' );
                     g.draw( new lola.chart.Axis(50,50,w,"max",{x:-8,y:2}) );
                     g.draw( new lola.chart.Axis(50,50+h/4,w,"end",{x:-8,y:2}) );
                     g.draw( new lola.chart.Axis(50,50+3*h/4,w,"start",{x:-8,y:2}) );
                     g.draw( new lola.chart.Axis(50,50+h,w,"min",{x:-8,y:2}) );
                     g.draw( new lola.chart.Axis(50,50,h,"0",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
                     g.draw( new lola.chart.Axis(50+w,50,h,"1",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
-                    
+                },
+
+                createPoints: function(){
+                    $('#pointHolder').html("");
+                    //reset points
+                    var $pointHolder = $('#pointHolder').html("");
+                    var points = this.spline.getPoints();
+                    var spl = points.length;
+                    var last = points.length-1;
+                    for (var i=0; i<spl; i++ ){
+                        this.createPointUI( i, points[i], (last == i) );
+                    }
+                },
+
+                createPointUI: function( index, point, last ) {
+                    var $pointHolder = $('#pointHolder');
+                    console.log( index, point );
+                    var g = lola.graphics;
+
+                    //create canvases
+                    var c1 = document.createElement('canvas');
+                    var c2 = document.createElement('canvas');
+                    var c3 = document.createElement('canvas');
+                    c1.width = 12;
+                    c2.width = 12;
+                    c3.width = 12;
+                    c1.height = 12;
+                    c2.height = 12;
+                    c3.height = 12;
+
+                    g.setContext( c2.getContext('2d') );
+                    g.applyStyle( (index == 0 || last)?'endPt':'middlePt' );
+                    g.executeRoutine( 'point' );
+                    var c2p = lola.math.point.add( point.getAnchor(), -6 );
+                    $(c2).identify().
+                            addClass('point').
+                            style('top',c2p.y+'px').
+                            style('left',c2p.x+'px');
+
+                    if (index > 0 && !last ){
+                        //moveable point
+                        $(c2).assignAgent('drag').
+                                addClass('draggable').
+                                putData({index:index, type:'anchor'},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+
+                    }
+                    $pointHolder.appendChild( c2 );
+
+                    if ( index > 0) {
+                        g.setContext( c1.getContext('2d') );
+                        g.applyStyle( 'ctrlPt' );
+                        g.executeRoutine( 'point' );
+                        var c1p = lola.math.point.add( point.getControl1(), -6 );
+                        $(c1).identify().
+                                assignAgent('drag').
+                                addClass('point').
+                                addClass('draggable').
+                                style('top',c1p.y+'px').
+                                style('left',c1p.x+'px').
+                                putData({index:index, type:'entry'},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+                        $pointHolder.appendChild( c1 );
+                    }
+
+                    if ( !last) {
+                        g.setContext( c3.getContext('2d') );
+                        g.applyStyle( 'ctrlPt' );
+                        g.executeRoutine( 'point' );
+                        var c3p = lola.math.point.add( point.getControl2(), -6);
+                        $(c3).identify().
+                                assignAgent('drag').
+                                addClass('point').
+                                addClass('draggable').
+                                style('top',c3p.y+'px').
+                                style('left',c3p.x+'px').
+                                putData({index:index, type:'exit'},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+                        $pointHolder.appendChild( c3 );
+                    }
+
+
+                },
+
+                handlePointDragStart: function(event){
+                    var data = $(event.currentTarget).getData('page');
+                    console.log("handlePointDragStart: "+ data.index +" - "+ data.type );
+                    var xMin=50, xMax=450, yMin=50, yMax=450;
+
+                    lola.agent.drag.setBounds(xMin, xMax, yMin, yMax);
+                },
+
+
+                handlePointDragMove: function(event){
+                    //switch()
                 }
-
-
 
             };
 
@@ -118,14 +234,33 @@
         input{ vertical-align: middle; }
         html{ background-color: rgb(245,245,245); }
 
-        #grid{
-            padding: 0;
-            margin: 20px;
+        #grid, #curves, #pointHolder
+        {
+            position:absolute;
+            top: 0;
+            left: 0;
+       }
+
+        #pointHolder {
+            width: 851px;
+            height: 500px;
+        }
+
+        .draggable {
+            cursor: move;
+        }
+
+        .point {
+            position: absolute;
         }
 
     </style>
 </head>
 <body>
 <canvas id="grid" width="851" height="500"></canvas>
+<canvas id="curves" width="851" height="500"></canvas>
+<div id="pointHolder">
+
+</div>
 </body>
 </html>

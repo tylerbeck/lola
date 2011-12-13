@@ -3865,7 +3865,7 @@ window.Sizzle = Sizzle;
 				 * @param {String} newParent
 				 * @return {lola.Selector|Array}
 				 */
-				parent: function( newParent ) {
+                        parent: function( newParent ) {
 					if ( newParent != undefined ) {
 						this.forEach(function(item){
 							$(newParent).appendChild( item );
@@ -6783,6 +6783,12 @@ window.Sizzle = Sizzle;
          */
         styles2d: {},
 
+        /**
+         * routine map
+         * @private
+         */
+        routines: {},
+
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -6951,6 +6957,33 @@ window.Sizzle = Sizzle;
          */
         removeStyle: function(  name ) {
             delete this.styles2d[ name ];
+        },
+
+        /**
+         * registers a repeatable drawing routine
+         * @param {String} name
+         * @param {Function} fnc function that accepts ctx to draw
+         */
+        registerRoutine: function( name, fnc ) {
+            this.routines[ name ] = fnc;
+        },
+
+        /**
+         * removes routine with specified name
+         * @param {String} name
+         */
+        removeRoutine: function(  name ) {
+            delete this.routines[ name ];
+        },
+
+        /**
+         * execute a drawing routine
+         * @param {String} name
+         */
+        executeRoutine: function( name ) {
+            if (typeof this.routines[name] == "function" ){
+                this.routines[name]( this.ctx );
+            }
         },
 
         /**
@@ -7150,9 +7183,16 @@ window.Sizzle = Sizzle;
          * gets the splinePoint at the specified index.
          * @param {uint} index
          */
-		getPoint: function( index ){
-			return this.points[ index ];
-		},
+        getPoint: function( index ){
+            return this.points[ index ];
+        },
+
+        /**
+         * gets all splinePoints.
+         */
+        getPoints: function(){
+            return this.points;
+        },
 
         /**
          * draws spline

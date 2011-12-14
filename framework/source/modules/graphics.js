@@ -376,8 +376,8 @@
          */
 		toVector: function(){
 			var a = Math.atan2( this.y, this.x );
-			var v = Math.sqrt( this.x*this.x + this.y+this.y );
-			return new lola.graphics.vector(v,a);
+			var v = Math.sqrt( this.x*this.x + this.y*this.y );
+			return new lola.graphics.Vector(v,a);
 		}
 	};
 
@@ -538,10 +538,11 @@
          * @param {Number} entryAngle
          * @param {Number|undefined} exitAngle
          */
-		setAngle: function( entryAngle, exitAngle) {
-			this.entry.angle = entryAngle;
-			this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
-		},
+        setAngle: function( entryAngle, exitAngle) {
+            this.entry.angle = entryAngle;
+            this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+        },
+
 
         /**
          * gets the spline point's anchor

@@ -112,7 +112,7 @@
 					}
 
 					var phase = lola.event.phaseString( target, useCapture );
-					priority = priority || 0xFFFFFF;
+					priority = priority || event.PRIORITY_NORMAL;
 					scope = scope || target;
 
 					//assign handler a uid so it can be easily referenced
@@ -819,6 +819,11 @@
 	 */
 	event.hooks['mouseenter'] = event.hooks['mouseenterstate'];
 
+    event.PRIORITY_BEFORE = 1;
+    event.PRIORITY_FIRST = 0x400000;
+    event.PRIORITY_NORMAL = 0x800000;
+    event.PRIORITY_LAST= 0xC00000;
+    event.PRIORITY_AFTER = 0xFFFFFF;
 
 	//register module
 	lola.registerModule( event );

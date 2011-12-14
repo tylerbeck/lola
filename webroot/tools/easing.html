@@ -36,6 +36,8 @@
                     g.registerStyle( 'endPt', {strokeStyle: "#666666", fillStyle:"#990000"} );
                     g.registerStyle( 'middlePt', {strokeStyle: "#666666", fillStyle:"#009900"} );
                     g.registerStyle( 'ctrlPt', {strokeStyle: "#666666", fillStyle:"#000099"} );
+                    g.registerStyle( 'spline', {strokeStyle: "#666666", lineWidth:3} );
+                    g.registerStyle( 'ctrl', {strokeStyle: "#AAAAAA", lineWidth:1} );
 
                     g.registerRoutine( 'point', function( ctx ){
                         ctx.beginPath();
@@ -77,7 +79,7 @@
                         $('canvas').register2dContext();
                         this.drawGrid(400,400);
                         this.createPoints();
-
+                        this.drawCurves();
                         //add listeners
 
 
@@ -106,7 +108,7 @@
 
                     //minor grid
                     g.applyStyle( 'mnrGrid' );
-                    g.draw( new lola.chart.Grid(50,50,w,h,10, lola.chart.Grid.HORIZONTAL ));
+                    g.draw( new lola.chart.Grid(50,50,w,h,10, lola.chart.Grid.HORIZONTAL | lola.chart.Grid.VERTICAL ));
 
                     //major grid
                     g.applyStyle( 'mjrGrid' );
@@ -137,7 +139,6 @@
 
                 createPointUI: function( index, point, last ) {
                     var $pointHolder = $('#pointHolder');
-                    console.log( index, point );
                     var g = lola.graphics;
 
                     //create canvases
@@ -164,9 +165,10 @@
                         //moveable point
                         $(c2).assignAgent('drag').
                                 addClass('draggable').
-                                putData({index:index, type:'anchor'},'page').
-                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
-                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+                                putData({index:index, type:'anchor', entry:c1, anchor:c2, exit:c3},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragend', this.handlePointDragEnd, false, lola.event.PRIORITY_LAST, this );
 
                     }
                     $pointHolder.appendChild( c2 );
@@ -182,9 +184,10 @@
                                 addClass('draggable').
                                 style('top',c1p.y+'px').
                                 style('left',c1p.x+'px').
-                                putData({index:index, type:'entry'},'page').
-                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
-                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+                                putData({index:index, type:'entry', entry:c1, anchor:c2, exit:c3},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragend', this.handlePointDragEnd, false, lola.event.PRIORITY_LAST, this );
                         $pointHolder.appendChild( c1 );
                     }
 
@@ -199,9 +202,10 @@
                                 addClass('draggable').
                                 style('top',c3p.y+'px').
                                 style('left',c3p.x+'px').
-                                putData({index:index, type:'exit'},'page').
-                                addListener( 'dragstart', this.handlePointDragStart, false, 0, this ).
-                                addListener( 'dragmove', this.handlePointDragMove, false, 0, this );
+                                putData({index:index, type:'exit', entry:c1, anchor:c2, exit:c3},'page').
+                                addListener( 'dragstart', this.handlePointDragStart, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragmove', this.handlePointDragMove, false, lola.event.PRIORITY_FIRST, this ).
+                                addListener( 'dragend', this.handlePointDragEnd, false, lola.event.PRIORITY_LAST, this );
                         $pointHolder.appendChild( c3 );
                     }
 
@@ -209,16 +213,138 @@
                 },
 
                 handlePointDragStart: function(event){
+
+
                     var data = $(event.currentTarget).getData('page');
-                    console.log("handlePointDragStart: "+ data.index +" - "+ data.type );
-                    var xMin=50, xMax=450, yMin=50, yMax=450;
+                    var xMin=50, xMax=450, yMin=44, yMax=444;
+                    var exit = {x:50,y:0};
+                    var entry = {x:450,y:0};
+                    var anchor = this.spline.getPoint(data.index).getAnchor();
+                    if (data.index > 0)
+                        exit = this.spline.getPoint(data.index-1).getControl2();
+                    if (data.index < this.spline.getPoints().length - 1 )
+                        entry = this.spline.getPoint(data.index+1).getControl1();
+
+                    switch( data.type ){
+                        case "entry":
+                            xMax = anchor.x;
+                            xMin = exit.x;
+                            break;
+
+                        case "anchor":
+                            xMax = entry.x;
+                            xMin = exit.x;
+                            break;
+
+                        case "exit":
+                            xMax = entry.x;
+                            xMin = anchor.x;
+                            break;
+                    }
+                    xMax -= 6;
+                    xMin -= 6;
 
                     lola.agent.drag.setBounds(xMin, xMax, yMin, yMax);
                 },
 
 
                 handlePointDragMove: function(event){
-                    //switch()
+                    var data = $(event.currentTarget).getData('page');
+                    var point = this.spline.getPoint(data.index);
+                    var $c1 = $(data.entry);
+                    var $c2 = $(data.anchor);
+                    var $c3 = $(data.exit);
+                    var bounds = lola.agent.drag.getBounds();
+                    var prev, next, pnt, vct, entry, exit, anchor = point.getAnchor();
+
+                    if (data.index > 0){
+                        prev = this.spline.getPoint( data.index - 1 );
+                    }
+                    if (data.index < this.spline.getPoints().length-1 ){
+                        next = this.spline.getPoint( data.index + 1 );
+                    }
+
+                    switch (data.type){
+                        case "anchor":
+                            anchor.x = parseInt( $c2.style("left").replace(/px/g,""))+6;
+                            anchor.y = parseInt( $c2.style("top").replace(/px/g,""))+6;
+                            break;
+                        case "entry":
+                            pnt = new lola.graphics.Point( parseInt( $c1.style("left").replace(/px/g,""))+6,
+                                    parseInt( $c1.style("top").replace(/px/g,""))+6 );
+                            vct = lola.math.point.subtract( anchor, pnt ).toVector();
+                            point.setAngle( vct.angle );
+                            point.entry.velocity = vct.velocity;
+                            break;
+                        case "exit":
+                            pnt = new lola.graphics.Point( parseInt( $c3.style("left").replace(/px/g,""))+6,
+                                    parseInt( $c3.style("top").replace(/px/g,""))+6 );
+                            vct = lola.math.point.subtract( pnt, anchor ).toVector();
+                            point.setAngle( vct.angle );
+                            point.exit.velocity = vct.velocity;
+                            break;
+                    }
+
+
+                    entry = point.getControl1();
+                    exit = point.getControl2();
+                    var xMin = prev ? prev.getControl2().x : bounds.xMin;
+                    var xMax = next ? next.getControl1().x : bounds.xMax;
+                    if (entry.x < xMin ){
+                        point.entry.velocity =  (point.anchor.x - xMin) / Math.cos(point.entry.angle);
+                        entry = point.getControl1();
+                    }
+
+                    if (exit.x > xMax ){
+                        point.exit.velocity =  (xMax - point.anchor.x) / Math.cos(point.exit.angle);
+                        exit = point.getControl2();
+                    }
+
+                    if (entry.y < bounds.yMin+6){
+                        point.entry.velocity =  (point.anchor.y - bounds.yMin) / Math.sin(point.entry.angle);
+                        entry = point.getControl1();
+                    }
+                    else if( entry.y > bounds.yMax-6 ){
+                        point.entry.velocity =  (bounds.yMax - point.anchor.y) / Math.sin(point.entry.angle);
+                        entry = point.getControl1();
+                    }
+
+                    if (exit.y < bounds.yMin+6){
+                        point.exit.velocity =  (point.anchor.y - bounds.yMin) / Math.sin(point.exit.angle);
+                        exit = point.getControl2();
+                    }
+                    else if( exit.y > bounds.yMax-6 ){
+                        point.exit.velocity =  (bounds.yMax - point.anchor.y) / Math.sin(point.exit.angle);
+                        exit = point.getControl2();
+                    }
+
+                    $c1.style("left", entry.x-6+"px").style("top", entry.y-6+"px");
+                    $c2.style("left", anchor.x-6+"px").style("top", anchor.y-6+"px");
+                    $c3.style("left", exit.x-6+"px").style("top", exit.y-6+"px");
+
+
+                    this.drawCurves();
+
+                },
+
+                handlePointDragEnd: function(event){
+                    var data = $(event.currentTarget).getData('page');
+                    $('#pointHolder').appendChild(event.currentTarget);
+
+                    console.log('handlePointDragEnd: '+data.type);
+                    if (data.type == "anchor")
+                        $(event.currentTarget).style('zIndex',20);
+                    else
+                        $(event.currentTarget).style('zIndex',25);
+
+                },
+
+                drawCurves: function(){
+                    var g = lola.graphics;
+                    g.setContext('curves');
+                    g.clear();
+                    g.applyStyle('spline');
+                    g.draw( this.spline, g.Spline.STROKE );
                 }
 
             };

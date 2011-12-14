@@ -111,7 +111,7 @@
                 $client.putData( {}, this.getNamespace() );
 
                 //add listeners
-                $client.addListener( 'mousedown', this.startDrag, true, 0, this );
+                $client.addListener( 'mousedown', this.startDrag, true, undefined, this );
 
             }
         },
@@ -139,6 +139,14 @@
                 yMax:yMax
             };
         },
+        getBounds: function() {
+            return {
+                xMin:this.bounds.xMin,
+                xMax:this.bounds.xMax,
+                yMin:this.bounds.yMin,
+                yMax:this.bounds.yMax
+            };
+        },
 
         resetBounds: function( xMin, xMax, yMin, yMax) {
             this.bounds = null;
@@ -159,32 +167,32 @@
             $target.style('cursor', 'none' );
 
 
-            $(document).addListener('mousemove', this.doDrag, true, 0, this );
-            $(document).addListener('mouseup', this.endDrag, true, 0, this );
+            $(document).addListener('mousemove', this.doDrag, true, undefined, this );
+            $(document).addListener('mouseup', this.endDrag, true, undefined, this );
         },
 
         doDrag: function( event ){
             var $target = $(this.target);
 
             if (!this.dragging) {
-                $target.trigger( "dragstart", false, false );
                 this.dragging = true;
                 $target.style('position', 'absolute');
                 $('body').appendChild(this.target);
+                $target.trigger( "dragstart", false, false );
             }
 
-            var newX, newY;
+            var newX = event.globalX + this.offset.x;
+            var newY = event.globalY + this.offset.y;
+
             if (this.bounds) {
-                newX = lola.math.normalizeRange( this.bounds.xMin, event.globalX, this.bounds.xMax );
-                newY = lola.math.normalizeRange( this.bounds.yMin, event.globalY, this.bounds.yMax );
+                newX = lola.math.normalizeRange( this.bounds.xMin, newX, this.bounds.xMax );
+                newY = lola.math.normalizeRange( this.bounds.yMin, newY, this.bounds.yMax );
             }
             else {
                 newX = event.globalX;
                 newY = event.globalY;
             }
 
-            newX += this.offset.x;
-            newY += this.offset.y;
             $target.style('left',newX+'px');
             $target.style('top',newY+'px');
 
@@ -194,13 +202,13 @@
         endDrag: function( event ){
             var $target = $(this.target);
             var data = $target.getData(this.getNamespace(), true );
-            $target.trigger( "dragend", false, false );
             $target.style('cursor', data.cursor );
             $target.style('zIndex', data.zIndex );
             this.dragging = false;
             this.target = null;
             $(document).removeListener('mousemove', this.doDrag, true );
             $(document).removeListener('mouseup', this.endDrag, true );
+            $target.trigger( "dragend", false, false );
 
         }
 

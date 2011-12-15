@@ -36,7 +36,8 @@
                     g.registerStyle( 'endPt', {strokeStyle: "#666666", fillStyle:"#990000"} );
                     g.registerStyle( 'middlePt', {strokeStyle: "#666666", fillStyle:"#009900"} );
                     g.registerStyle( 'ctrlPt', {strokeStyle: "#666666", fillStyle:"#000099"} );
-                    g.registerStyle( 'spline', {strokeStyle: "#666666", lineWidth:3} );
+                    g.registerStyle( 'fit', {fillStyle: "#666666"} );
+                    g.registerStyle( 'spline', {strokeStyle: "#FFAAAA", lineWidth:7} );
                     g.registerStyle( 'ctrl', {strokeStyle: "#AAAAAA", lineWidth:1} );
 
                     g.registerRoutine( 'point', function( ctx ){
@@ -71,10 +72,10 @@
                         //not a client yet
                         this.client = client;
                         var start = new lola.graphics.SplinePoint(50,350,0,0,100,0);
-                        //var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
+                        var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
                         var end = new lola.graphics.SplinePoint(450,150,100,0,100,0);
-                        //this.spline = new lola.graphics.Spline([start,middle, end], false);
-                        this.spline = new lola.graphics.Spline([start, end], false);
+                        this.spline = new lola.graphics.Spline([start,middle, end], false);
+                        //this.spline = new lola.graphics.Spline([start, end], false);
 
                         //do setup
                         $('canvas').register2dContext();
@@ -352,83 +353,154 @@
                     g.draw( this.spline, g.Spline.STROKE );
                 },
 
-                updateFunctions: function(){
-                    //normalize points
-                    var normX = [];
-                    var normY = [];
-
+                normalizeSplinePoints: function(){
+                    var norm = [];
                     var pts = this.spline.getPoints();
                     var spl = pts.length;
                     for (var i=0; i<spl; i++ ){
                         var p1 = pts[i].getControl1();
                         var p2 = pts[i].getAnchor();
                         var p3 = pts[i].getControl2();
-                        normX.push( (p1.x - 50)/400 );
-                        normY.push( 1-(p1.y - 150)/200 );
-                        normX.push( (p2.x - 50)/400 );
-                        normY.push( 1-(p2.y - 150)/200 );
-                        normX.push( (p3.x - 50)/400 );
-                        normY.push( 1-(p3.y - 150)/200 );
+                        norm.push( {x:(p1.x - 50)/400, y:1-(p1.y - 150)/200} );
+                        norm.push( {x:(p2.x - 50)/400, y:1-(p2.y - 150)/200} );
+                        norm.push( {x:(p3.x - 50)/400, y:1-(p3.y - 150)/200} );
                     }
 
-                    var sect = normX.length /  3 - 1;
-                    var sections = [];
-                    var fnc =   "function ( t, v, c, d ) {\n"+
-                            "       t /= d;\n"+
-                            "       var it;\n";
-
-                    for (var s=0; s<sect; s++) {
-                        var pn = s*3;
-                        var time = normX[pn+4];
-                        var st = normX[pn+1];
-                        sections.push(
-                                "if (t<="+time+"){\n"+
-                                "       t = (t-"+st+")/"+(time-st)+";\n"+
-                                "       it = 1-t;\n"+
-                                //add curve equation for this section
-                                "       return v+c*(("+normY[pn+1]+"*it*it*it) + \n"+
-                                "              ("+normY[pn+2]+"*3*it*it*t) + \n"+
-                                "              ("+normY[pn+3]+"*3*it*t*t) + \n"+
-                                "              ("+normY[pn+4]+"*t*t*t*t)) ; \n"+
-
-                                "   }\n" );
-                    }
-                    fnc += "   "+sections.join("   else ");
-                    fnc +=      "}\n";
-                    lola.evaluate("lola.agent.page.testFn = "+fnc);
-                    $("#easing").html( fnc );
+                    return norm;
                 },
-                testFn: null,
-                testStart: null,
-                testDuration: 2000,
-                testFrom: 350,
-                testDelta: 150,
-                testCallback: function(){
-                    if (!lola.agent.page.testStart)
-                        lola.agent.page.testStart = (new Date()).getTime();
-                    var now = (new Date()).getTime();
-                    var elapsed = now - lola.agent.page.testStart;
-                    if (elapsed > lola.agent.page.testDuration)
-                        elapsed = lola.agent.page.testDuration;
-                    var val = lola.agent.page.testFn( elapsed, lola.agent.page.testFrom, -200, lola.agent.page.testDuration );
-                    var val2 = elapsed / 2000 * 400 + 49;
-                    console.log(val);
-                    $('#test').style('height', val+"px").style('left',val2+"px");
 
-                    if (elapsed < lola.agent.page.testDuration)
-                        setTimeout( lola.agent.page.testCallback, 30 );
-                    else
-                        lola.agent.page.testStart = null;
+                getSplineXFunction: function(){
+                    var pts = this.normalizeSplinePoints();
+                    var sections = [];
+                    var sCount = pts.length/3 - 1;
+
+                    for (var s=0; s<sCount; s++){
+                        var pn = s*3;
+                        var timeMax = pts[pn+4].x;
+                        var timeMin = pts[pn+1].x;
+                        var section =   "if (t<=\n"+timeMax+"){\n"+
+                                "t=(t-"+timeMin+")/"+(timeMax-timeMin)+";"+
+                                "it = 1-t;"+
+                                "return     ("+pts[pn+1].x+"*it*it*it)+"+
+                                "           ("+pts[pn+2].x+"*3*it*it*t)+"+
+                                "           ("+pts[pn+3].x+"*3*it*t*t)+"+
+                                "           ("+pts[pn+4].x+"*t*t*t)"+
+                                "}";
+                        sections.push( section );
+                    }
+
+                    return "function( t ){ "+sections.join("else ")+"};";
+                },
+
+                getSplineSamplingFunction: function(){
+                    var pts = this.normalizeSplinePoints();
+                    var sections = [];
+                    var sCount = pts.length/3 - 1;
+
+                    for (var s=0; s<sCount; s++){
+                        var pn = s*3;
+                        var timeMax = pts[pn+4].x;
+                        var timeMin = pts[pn+1].x;
+                        var section =   "if (t<=\n"+timeMax+"){\n"+
+                                            "t=(t-"+timeMin+")/"+(timeMax-timeMin)+";"+
+                                            "it = 1-t;"+
+                                            "return  pm.add("+
+                                                "pm.multiply({x:"+pts[pn+1].x+",y:"+pts[pn+1].y+"}, it*it*it),"+
+                                                "pm.multiply({x:"+pts[pn+2].x+",y:"+pts[pn+2].y+"}, 3*it*it*t),"+
+                                                "pm.multiply({x:"+pts[pn+3].x+",y:"+pts[pn+3].y+"}, 3*it*t*t),"+
+                                                "pm.multiply({x:"+pts[pn+4].x+",y:"+pts[pn+4].y+"}, t*t*t)"+
+                                            ")"+
+                                        "}";
+                        sections.push( section );
+                    }
+                    var pm = "function(p){var r={x:p.x,y:p.y},len=arguments.length;for(var i=1;i<len;i++){var arg=arguments[i];if(typeof arg=='number'){r.xOPP=arg;r.yOPP=arg;}else {r.xOPP=arg.x;r.yOPP=arg.y;}}return r;}";
+                    var apm = pm.replace(/OPP/g,"+");
+                    var mpm = pm.replace(/OPP/g,"*");
+                    var tFn = "function( t ){ "+sections.join("else ")+"};";
+                    return "function(){"+
+                                "var pm = {add:"+apm+",multiply:"+mpm+"};"+
+                                "var sampleFn = "+tFn+";"+
+                                "var samples = [];"+
+                                "var size = "+sections.length+"000;"+
+                                "var current = size;"+
+                                "while (current){"+
+                                    "var smp = sampleFn( current/size );"+
+                                    "samples.push({x:smp.x,y:smp.y});"+
+                                    "current--;"+
+                                "}" +
+                                "samples.push({x:0,y:0});"+
+                                "return samples;"+
+                            "}";
+                },
+
+                testFn: null,
+                updateFunctions: function(){
+                    var sampleFn = this.getSplineSamplingFunction();
+                    var proto = "{"+
+                                    "sampleFn: "+sampleFn+","+
+                                    "samples: null,"+
+                                    "exec: function( t, v, c, d ) {"+
+                                        "var sampleFn = "+sampleFn+";"+
+                                        "if (this.samples == null) this.samples = sampleFn();"+
+                                        "var slen = this.samples.length;"+
+                                        "var i = 0;"+
+                                        "var f = (slen/4)|0;"+
+                                        "t /= d;"+
+                                        "while ( t <= this.samples[i].x && i < slen ){" +
+                                            "i += f;"+
+                                            "if (i >= slen) i = slen-1;"+
+                                            "if ( t >= this.samples[i].x ){"+
+                                                "i -= f;"+
+                                                "f = (f >= 2) ? f/2|0 : 1;"+
+                                                "if (t <= this.samples[i].x && t >= this.samples[i+1].x){"+
+                                                    "var s1 = this.samples[i+1];"+
+                                                    "var s2 = this.samples[i];"+
+                                                    "var p = (t-s1.x)/(s2.x-s1.x);"+
+                                                    "return v+c*(s1.y + p*(s2.y-s1.y));"+
+                                                "}"+
+                                            "}"+
+                                        "}"+
+                                    "}"+
+                                 "}";
+                    var cls = "var CustomEase = function(){ return this; };"+"CustomEase.prototype = "+proto+";";
+                    $("#easing").html(cls);
+                    lola.evaluate(cls);
+
+                    var g = lola.graphics;
+                    g.setContext('fit');
+                    g.applyStyle('fit');
+                    g.clear('fit');
+
+                    lola.evaluate( "lola.agent.page.testFn = "+this.getSplineXFunction()+";");
+
+                    /*for (var x = 0; x<400; x+=4){
+                        var ease = new CustomEase();
+                        var y = lola.agent.page.testFn(x/400) * -200 + 350;
+                        g.beginPath();
+                        g.arc(x+50,y,2,0,2*Math.PI,false);
+                        g.fill();
+                        g.closePath();
+                    }*/
+
+                    for (var x = 0; x<400; x+=4){
+                        var ease = new CustomEase();
+                        var y = ease.exec( x, 350, -200, 400 );
+                        g.beginPath();
+                        g.arc(x+50,y,2,0,2*Math.PI,false);
+                        g.fill();
+                        g.closePath();
+                    }
+
+
 
                 },
                 test: function(){
-                    if (lola.agent.page.testFn){
                         console.log('TEST');
-                        setTimeout( lola.agent.page.testCallback, 1000 );
-                        $('#test').style('height', "350px");
-               }
+                        var ease = new CustomEase();
+                        var testVal =  $('#time').attr('value');
+                        var parts = testVal.split('/');
+                        console.log( ease.exec( parts[0], 0, 1, parts[1] ) );
                 }
-
             };
 
             //register module
@@ -442,7 +514,7 @@
         input{ vertical-align: middle; }
         html{ background-color: rgb(245,245,245); }
 
-        #grid, #curves, #pointHolder,#test
+        #grid, #curves, #pointHolder,#fit
         {
             position:absolute;
             top: 0;
@@ -450,27 +522,21 @@
         }
 
         #test {
-            width: 3px;
-            height: 0;
-            background-color: red;
+            margin-top: 500px;
         }
 
         #easing {
             position:absolute;
             top: 50px;
             left: 500px;
-            width: 350px;
+            width: 400px;
+            height: 400px;
+
         }
 
         #pointHolder {
             width: 500px;
             height: 500px;
-        }
-
-        #testBtn {
-            position:absolute;
-            top: 500px;
-            left: 10px;
         }
 
         .draggable {
@@ -485,13 +551,17 @@
     </style>
 </head>
 <body>
-    <pre id="easing"></pre>
-    <canvas id="grid" width="851" height="500"></canvas>
-    <canvas id="curves" width="851" height="500"></canvas>
+    <textarea id="easing"></textarea>
+    <canvas id="grid" width="510" height="500"></canvas>
+    <canvas id="curves" width="510" height="500"></canvas>
+    <canvas id="fit" width="510" height="500"></canvas>
     <div id="pointHolder"></div>
-    <div id="test"></div>
+    <!--<div id="test">
+        <input id="time" type="text" value="500/2000"/>
+        <input id="testBtn" type="button" value="test"/>
+    </div>-->
 
-    <input id="testBtn" type="button" value="test"/>
+
 
 <body>
 </html>

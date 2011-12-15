@@ -384,6 +384,7 @@
     graphics.Spline.CLOSED = 0x1;
     graphics.Spline.FILL = 0x2;
     graphics.Spline.STROKE = 0x4;
+    graphics.Spline.CONTROLS =0x8;
 	graphics.Spline.prototype = {
         /**
          * array of {lola.graphics.SplinePoint}
@@ -462,9 +463,43 @@
                     pts.push( item.getAnchor() );
                     pts.push( item.getControl2() );
                 });
+                var pl = pts.length;
+
+
+                if (flags & graphics.Spline.CONTROLS){
+
+                    ctx.beginPath();
+                    ctx.moveTo(pts[1].x, pts[1].y);
+                    ctx.lineTo(pts[2].x, pts[2].y);
+                    ctx.stroke();
+                    ctx.closePath();
+
+                    for (var n=3; n<pl-3; n+=3){
+                        var n2 = n+1;
+                        var n3 = n+2;
+                        ctx.beginPath();
+                        ctx.moveTo(pts[n].x, pts[n].y);
+                        ctx.lineTo(pts[n2].x, pts[n2].y);
+                        ctx.stroke();
+                        ctx.closePath();
+
+                        ctx.beginPath();
+                        ctx.moveTo(pts[n2].x, pts[n2].y);
+                        ctx.lineTo(pts[n3].x, pts[n3].y);
+                        ctx.stroke();
+                        ctx.closePath();
+                   }
+
+                    ctx.beginPath();
+                    ctx.moveTo(pts[n].x, pts[n].y);
+                    ctx.lineTo(pts[n+1].x, pts[n+1].y);
+                    ctx.stroke();
+                    ctx.closePath();
+
+                }
+
                 ctx.beginPath();
                 ctx.moveTo( pts[1].x,pts[1].y );
-                var pl = pts.length;
                 for (var i=2; i<pl-3; i+=3){
                     ctx.bezierCurveTo(
                         pts[i].x,pts[i].y,
@@ -488,6 +523,8 @@
                 if (flags & graphics.Spline.STROKE){
                     ctx.stroke();
                 }
+
+                ctx.closePath();
 
             }
             else{

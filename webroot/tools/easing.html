@@ -70,18 +70,21 @@
 
                         //not a client yet
                         this.client = client;
-                        var start = new lola.graphics.SplinePoint(50,450,0,0,100,0);
-                        var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
-                        var end = new lola.graphics.SplinePoint(450,50,100,0,100,0);
-                        this.spline = new lola.graphics.Spline([start, middle, end], false);
+                        var start = new lola.graphics.SplinePoint(50,350,0,0,100,0);
+                        //var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
+                        var end = new lola.graphics.SplinePoint(450,150,100,0,100,0);
+                        //this.spline = new lola.graphics.Spline([start,middle, end], false);
+                        this.spline = new lola.graphics.Spline([start, end], false);
 
                         //do setup
                         $('canvas').register2dContext();
                         this.drawGrid(400,400);
                         this.createPoints();
                         this.drawCurves();
-                        //add listeners
+                        this.updateFunctions();
 
+                        //add listeners
+                        $("#testBtn").addListener('click',this.test);
 
                     }
                 },
@@ -213,31 +216,29 @@
                 },
 
                 handlePointDragStart: function(event){
-
-
                     var data = $(event.currentTarget).getData('page');
                     var xMin=50, xMax=450, yMin=44, yMax=444;
-                    var exit = {x:50,y:0};
-                    var entry = {x:450,y:0};
+                    var next = {x:50,y:0};
+                    var prev = {x:450,y:0};
                     var anchor = this.spline.getPoint(data.index).getAnchor();
                     if (data.index > 0)
-                        exit = this.spline.getPoint(data.index-1).getControl2();
+                        prev = this.spline.getPoint(data.index-1).getAnchor();
                     if (data.index < this.spline.getPoints().length - 1 )
-                        entry = this.spline.getPoint(data.index+1).getControl1();
+                        next = this.spline.getPoint(data.index+1).getAnchor();
 
                     switch( data.type ){
                         case "entry":
                             xMax = anchor.x;
-                            xMin = exit.x;
+                            xMin = prev.x;
                             break;
 
                         case "anchor":
-                            xMax = entry.x;
-                            xMin = exit.x;
+                            xMax = next.x;
+                            xMin = prev.x;
                             break;
 
                         case "exit":
-                            xMax = entry.x;
+                            xMax = next.x;
                             xMin = anchor.x;
                             break;
                     }
@@ -288,8 +289,9 @@
 
                     entry = point.getControl1();
                     exit = point.getControl2();
-                    var xMin = prev ? prev.getControl2().x : bounds.xMin;
-                    var xMax = next ? next.getControl1().x : bounds.xMax;
+                    var xMin = prev ? prev.getAnchor().x : bounds.xMin;
+                    var xMax = next ? next.getAnchor().x : bounds.xMax;
+
                     if (entry.x < xMin ){
                         point.entry.velocity =  (point.anchor.x - xMin) / Math.cos(point.entry.angle);
                         entry = point.getControl1();
@@ -301,20 +303,20 @@
                     }
 
                     if (entry.y < bounds.yMin+6){
-                        point.entry.velocity =  (point.anchor.y - bounds.yMin) / Math.sin(point.entry.angle);
+                        point.entry.velocity = Math.abs((point.anchor.y - bounds.yMin - 6) / Math.sin(point.entry.angle));
                         entry = point.getControl1();
                     }
-                    else if( entry.y > bounds.yMax-6 ){
-                        point.entry.velocity =  (bounds.yMax - point.anchor.y) / Math.sin(point.entry.angle);
+                    else if( entry.y > bounds.yMax+6){
+                        point.entry.velocity = Math.abs((bounds.yMax - point.anchor.y + 6) / Math.sin(point.entry.angle));
                         entry = point.getControl1();
                     }
 
                     if (exit.y < bounds.yMin+6){
-                        point.exit.velocity =  (point.anchor.y - bounds.yMin) / Math.sin(point.exit.angle);
+                        point.exit.velocity = Math.abs((point.anchor.y - bounds.yMin - 6) / Math.sin(point.exit.angle));
                         exit = point.getControl2();
                     }
-                    else if( exit.y > bounds.yMax-6 ){
-                        point.exit.velocity =  (bounds.yMax - point.anchor.y) / Math.sin(point.exit.angle);
+                    else if( exit.y > bounds.yMax+6){
+                        point.exit.velocity = Math.abs((bounds.yMax - point.anchor.y + 6) / Math.sin(point.exit.angle));
                         exit = point.getControl2();
                     }
 
@@ -330,12 +332,12 @@
                 handlePointDragEnd: function(event){
                     var data = $(event.currentTarget).getData('page');
                     $('#pointHolder').appendChild(event.currentTarget);
-
-                    console.log('handlePointDragEnd: '+data.type);
                     if (data.type == "anchor")
                         $(event.currentTarget).style('zIndex',20);
                     else
                         $(event.currentTarget).style('zIndex',25);
+
+                    this.updateFunctions();
 
                 },
 
@@ -343,8 +345,88 @@
                     var g = lola.graphics;
                     g.setContext('curves');
                     g.clear();
+                    g.applyStyle('ctrl');
+                    g.draw( this.spline, g.Spline.CONTROLS );
+
                     g.applyStyle('spline');
                     g.draw( this.spline, g.Spline.STROKE );
+                },
+
+                updateFunctions: function(){
+                    //normalize points
+                    var normX = [];
+                    var normY = [];
+
+                    var pts = this.spline.getPoints();
+                    var spl = pts.length;
+                    for (var i=0; i<spl; i++ ){
+                        var p1 = pts[i].getControl1();
+                        var p2 = pts[i].getAnchor();
+                        var p3 = pts[i].getControl2();
+                        normX.push( (p1.x - 50)/400 );
+                        normY.push( 1-(p1.y - 150)/200 );
+                        normX.push( (p2.x - 50)/400 );
+                        normY.push( 1-(p2.y - 150)/200 );
+                        normX.push( (p3.x - 50)/400 );
+                        normY.push( 1-(p3.y - 150)/200 );
+                    }
+
+                    var sect = normX.length /  3 - 1;
+                    var sections = [];
+                    var fnc =   "function ( t, v, c, d ) {\n"+
+                            "       t /= d;\n"+
+                            "       var it;\n";
+
+                    for (var s=0; s<sect; s++) {
+                        var pn = s*3;
+                        var time = normX[pn+4];
+                        var st = normX[pn+1];
+                        sections.push(
+                                "if (t<="+time+"){\n"+
+                                "       t = (t-"+st+")/"+(time-st)+";\n"+
+                                "       it = 1-t;\n"+
+                                //add curve equation for this section
+                                "       return v+c*(("+normY[pn+1]+"*it*it*it) + \n"+
+                                "              ("+normY[pn+2]+"*3*it*it*t) + \n"+
+                                "              ("+normY[pn+3]+"*3*it*t*t) + \n"+
+                                "              ("+normY[pn+4]+"*t*t*t*t)) ; \n"+
+
+                                "   }\n" );
+                    }
+                    fnc += "   "+sections.join("   else ");
+                    fnc +=      "}\n";
+                    lola.evaluate("lola.agent.page.testFn = "+fnc);
+                    $("#easing").html( fnc );
+                },
+                testFn: null,
+                testStart: null,
+                testDuration: 2000,
+                testFrom: 350,
+                testDelta: 150,
+                testCallback: function(){
+                    if (!lola.agent.page.testStart)
+                        lola.agent.page.testStart = (new Date()).getTime();
+                    var now = (new Date()).getTime();
+                    var elapsed = now - lola.agent.page.testStart;
+                    if (elapsed > lola.agent.page.testDuration)
+                        elapsed = lola.agent.page.testDuration;
+                    var val = lola.agent.page.testFn( elapsed, lola.agent.page.testFrom, -200, lola.agent.page.testDuration );
+                    var val2 = elapsed / 2000 * 400 + 49;
+                    console.log(val);
+                    $('#test').style('height', val+"px").style('left',val2+"px");
+
+                    if (elapsed < lola.agent.page.testDuration)
+                        setTimeout( lola.agent.page.testCallback, 30 );
+                    else
+                        lola.agent.page.testStart = null;
+
+                },
+                test: function(){
+                    if (lola.agent.page.testFn){
+                        console.log('TEST');
+                        setTimeout( lola.agent.page.testCallback, 1000 );
+                        $('#test').style('height', "350px");
+               }
                 }
 
             };
@@ -360,20 +442,40 @@
         input{ vertical-align: middle; }
         html{ background-color: rgb(245,245,245); }
 
-        #grid, #curves, #pointHolder
+        #grid, #curves, #pointHolder,#test
         {
             position:absolute;
             top: 0;
             left: 0;
-       }
+        }
+
+        #test {
+            width: 3px;
+            height: 0;
+            background-color: red;
+        }
+
+        #easing {
+            position:absolute;
+            top: 50px;
+            left: 500px;
+            width: 350px;
+        }
 
         #pointHolder {
-            width: 851px;
+            width: 500px;
             height: 500px;
+        }
+
+        #testBtn {
+            position:absolute;
+            top: 500px;
+            left: 10px;
         }
 
         .draggable {
             cursor: move;
+            z-index: 20;
         }
 
         .point {
@@ -383,10 +485,13 @@
     </style>
 </head>
 <body>
-<canvas id="grid" width="851" height="500"></canvas>
-<canvas id="curves" width="851" height="500"></canvas>
-<div id="pointHolder">
+    <pre id="easing"></pre>
+    <canvas id="grid" width="851" height="500"></canvas>
+    <canvas id="curves" width="851" height="500"></canvas>
+    <div id="pointHolder"></div>
+    <div id="test"></div>
 
-</div>
-</body>
+    <input id="testBtn" type="button" value="test"/>
+
+<body>
 </html>

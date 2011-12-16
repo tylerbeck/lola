@@ -85,7 +85,7 @@
                         this.updateFunctions();
 
                         //add listeners
-                        $("#testBtn").addListener('click',this.test);
+                        $("#box").addListener('click',this.test);
 
                     }
                 },
@@ -439,9 +439,8 @@
                     var proto = "{"+
                                     "sampleFn: "+sampleFn+","+
                                     "samples: null,"+
-                                    "exec: function( t, v, c, d ) {"+
-                                        "var sampleFn = "+sampleFn+";"+
-                                        "if (this.samples == null) this.samples = sampleFn();"+
+                                    "exececute: function( t, v, c, d ) {"+
+                                        "if (this.samples == null) this.samples = this.sampleFn();"+
                                         "var slen = this.samples.length;"+
                                         "var i = 0;"+
                                         "var f = (slen/4)|0;"+
@@ -473,18 +472,9 @@
 
                     lola.evaluate( "lola.agent.page.testFn = "+this.getSplineXFunction()+";");
 
-                    /*for (var x = 0; x<400; x+=4){
-                        var ease = new CustomEase();
-                        var y = lola.agent.page.testFn(x/400) * -200 + 350;
-                        g.beginPath();
-                        g.arc(x+50,y,2,0,2*Math.PI,false);
-                        g.fill();
-                        g.closePath();
-                    }*/
-
+                    var ease = new CustomEase();
                     for (var x = 0; x<400; x+=4){
-                        var ease = new CustomEase();
-                        var y = ease.exec( x, 350, -200, 400 );
+                        var y = ease.exececute( x, 350, -200, 400 );
                         g.beginPath();
                         g.arc(x+50,y,2,0,2*Math.PI,false);
                         g.fill();
@@ -494,12 +484,35 @@
 
 
                 },
+                testStart: -1,
+                testDuration: 2000,
+                testStartVal: 100,
+                testDeltaVal: 700,
                 test: function(){
-                        console.log('TEST');
-                        var ease = new CustomEase();
-                        var testVal =  $('#time').attr('value');
-                        var parts = testVal.split('/');
-                        console.log( ease.exec( parts[0], 0, 1, parts[1] ) );
+                    console.log('TEST');
+                    var ease = new CustomEase();
+                    lola.agent.page.testStart = lola.now();
+                    lola.agent.page.testStartVal = parseInt($("#box").style('marginLeft').replace(/px/g,""));
+                    if (lola.agent.page.testStartVal == 100){
+                        lola.agent.page.testDeltaVal = 700;
+                    }
+                    else{
+                        lola.agent.page.testDeltaVal = 100 - lola.agent.page.testStartVal;
+                    }
+                    var intervalFn = function(){
+                        var now = lola.now();
+                        var elapsed = lola.now() - lola.agent.page.testStart;
+                        if (elapsed > lola.agent.page.testDuration )
+                            elapsed = lola.agent.page.testDuration;
+                        var val = ease.exececute(elapsed, lola.agent.page.testStartVal, lola.agent.page.testDeltaVal, lola.agent.page.testDuration );
+                        $("#box").style('marginLeft',val+"px");
+
+                        if (elapsed < lola.agent.page.testDuration )
+                            setTimeout( intervalFn, 15 );
+                    };
+
+                    intervalFn();
+
                 }
             };
 
@@ -523,6 +536,13 @@
 
         #test {
             margin-top: 500px;
+        }
+
+        #box {
+            width:50px;
+            height:50px;
+            margin-left: 100px;
+            background-color: red;
         }
 
         #easing {
@@ -556,10 +576,9 @@
     <canvas id="curves" width="510" height="500"></canvas>
     <canvas id="fit" width="510" height="500"></canvas>
     <div id="pointHolder"></div>
-    <!--<div id="test">
-        <input id="time" type="text" value="500/2000"/>
-        <input id="testBtn" type="button" value="test"/>
-    </div>-->
+    <div id="test">
+        <div id="box"></div>
+    </div>
 
 
 

@@ -404,11 +404,11 @@
                         var section =   "if (t<=\n"+timeMax+"){\n"+
                                             "t=(t-"+timeMin+")/"+(timeMax-timeMin)+";"+
                                             "it = 1-t;"+
-                                            "return  pm.add("+
-                                                "pm.multiply({x:"+pts[pn+1].x+",y:"+pts[pn+1].y+"}, it*it*it),"+
-                                                "pm.multiply({x:"+pts[pn+2].x+",y:"+pts[pn+2].y+"}, 3*it*it*t),"+
-                                                "pm.multiply({x:"+pts[pn+3].x+",y:"+pts[pn+3].y+"}, 3*it*t*t),"+
-                                                "pm.multiply({x:"+pts[pn+4].x+",y:"+pts[pn+4].y+"}, t*t*t)"+
+                                            "return  pm.a("+
+                                                "pm.m({x:"+pts[pn+1].x+",y:"+pts[pn+1].y+"}, it*it*it),"+
+                                                "pm.m({x:"+pts[pn+2].x+",y:"+pts[pn+2].y+"}, 3*it*it*t),"+
+                                                "pm.m({x:"+pts[pn+3].x+",y:"+pts[pn+3].y+"}, 3*it*t*t),"+
+                                                "pm.m({x:"+pts[pn+4].x+",y:"+pts[pn+4].y+"}, t*t*t)"+
                                             ")"+
                                         "}";
                         sections.push( section );
@@ -418,18 +418,18 @@
                     var mpm = pm.replace(/OPP/g,"*");
                     var tFn = "function( t ){ "+sections.join("else ")+"};";
                     return "function(){"+
-                                "var pm = {add:"+apm+",multiply:"+mpm+"};"+
-                                "var sampleFn = "+tFn+";"+
-                                "var samples = [];"+
-                                "var size = "+sections.length+"000;"+
-                                "var current = size;"+
-                                "while (current){"+
-                                    "var smp = sampleFn( current/size );"+
-                                    "samples.push({x:smp.x,y:smp.y});"+
-                                    "current--;"+
+                                "var pm = {a:"+apm+",m:"+mpm+"};"+
+                                "var sfn = "+tFn+";"+
+                                "var s = [];"+
+                                "var z = "+sections.length+"000;"+
+                                "var c = z;"+
+                                "while (c){"+
+                                    "var smp = sfn( c/z );"+
+                                    "s.push({x:smp.x,y:smp.y});"+
+                                    "c--;"+
                                 "}" +
-                                "samples.push({x:0,y:0});"+
-                                "return samples;"+
+                                "s.push({x:0,y:0});"+
+                                "return s;"+
                             "}";
                 },
 
@@ -437,23 +437,23 @@
                 updateFunctions: function(){
                     var sampleFn = this.getSplineSamplingFunction();
                     var proto = "{"+
-                                    "sampleFn: "+sampleFn+","+
-                                    "samples: null,"+
-                                    "exececute: function( t, v, c, d ) {"+
-                                        "if (this.samples == null) this.samples = this.sampleFn();"+
-                                        "var slen = this.samples.length;"+
+                                    "sfn: "+sampleFn+","+
+                                    "s: null,"+
+                                    "ease: function( t, v, c, d ) {"+
+                                        "if (this.s == null) this.s = this.sfn();"+
+                                        "var sl = this.s.length;"+
                                         "var i = 0;"+
-                                        "var f = (slen/4)|0;"+
+                                        "var f = (sl/4)|0;"+
                                         "t /= d;"+
-                                        "while ( t <= this.samples[i].x && i < slen ){" +
+                                        "while ( t <= this.s[i].x && i < sl ){" +
                                             "i += f;"+
-                                            "if (i >= slen) i = slen-1;"+
-                                            "if ( t >= this.samples[i].x ){"+
+                                            "if (i >= sl) i = sl-1;"+
+                                            "if ( t >= this.s[i].x ){"+
                                                 "i -= f;"+
                                                 "f = (f >= 2) ? f/2|0 : 1;"+
-                                                "if (t <= this.samples[i].x && t >= this.samples[i+1].x){"+
-                                                    "var s1 = this.samples[i+1];"+
-                                                    "var s2 = this.samples[i];"+
+                                                "if (t <= this.s[i].x && t >= this.s[i+1].x){"+
+                                                    "var s1 = this.s[i+1];"+
+                                                    "var s2 = this.s[i];"+
                                                     "var p = (t-s1.x)/(s2.x-s1.x);"+
                                                     "return v+c*(s1.y + p*(s2.y-s1.y));"+
                                                 "}"+
@@ -472,9 +472,9 @@
 
                     lola.evaluate( "lola.agent.page.testFn = "+this.getSplineXFunction()+";");
 
-                    var ease = new CustomEase();
+                    var custom = new CustomEase();
                     for (var x = 0; x<400; x+=4){
-                        var y = ease.exececute( x, 350, -200, 400 );
+                        var y = custom.ease( x, 350, -200, 400 );
                         g.beginPath();
                         g.arc(x+50,y,2,0,2*Math.PI,false);
                         g.fill();
@@ -488,9 +488,11 @@
                 testDuration: 2000,
                 testStartVal: 100,
                 testDeltaVal: 700,
+                testCount: 0,
                 test: function(){
                     console.log('TEST');
-                    var ease = new CustomEase();
+                    var custom = new CustomEase();
+                    lola.agent.page.testCount = 0;
                     lola.agent.page.testStart = lola.now();
                     lola.agent.page.testStartVal = parseInt($("#box").style('marginLeft').replace(/px/g,""));
                     if (lola.agent.page.testStartVal == 100){
@@ -504,11 +506,11 @@
                         var elapsed = lola.now() - lola.agent.page.testStart;
                         if (elapsed > lola.agent.page.testDuration )
                             elapsed = lola.agent.page.testDuration;
-                        var val = ease.exececute(elapsed, lola.agent.page.testStartVal, lola.agent.page.testDeltaVal, lola.agent.page.testDuration );
+                        var val = custom.ease(elapsed, lola.agent.page.testStartVal, lola.agent.page.testDeltaVal, lola.agent.page.testDuration );
                         $("#box").style('marginLeft',val+"px");
-
+                        lola.agent.page.testCount++;
                         if (elapsed < lola.agent.page.testDuration )
-                            setTimeout( intervalFn, 15 );
+                            setTimeout( intervalFn, 20 );
                     };
 
                     intervalFn();

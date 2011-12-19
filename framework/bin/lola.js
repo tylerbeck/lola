@@ -9534,7 +9534,7 @@ window.Sizzle = Sizzle;
          */
         active: false,
 
-
+        getFrameType: 0,
         //==================================================================
 		// Methods
 		//==================================================================
@@ -9547,12 +9547,23 @@ window.Sizzle = Sizzle;
 			lola.debug('lola.tween::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
+            //get optimized animation timer function
+            if ( window.requestAnimationFrame )
+                lola.tween.getFrameType = 1;
+            if ( window.mozRequestAnimationFrame )
+                lola.tween.getFrameType = 2;
+            else if ( window.webkitRequestAnimationFrame )
+                lola.tween.getFrameType = 3;
+            else if ( window.oRequestAnimationFrame )
+                lola.tween.getFrameType = 4;
+
+
 			//do module preinitialization
-            if ( window.requestAnimationFrame ) {
+            /*if ( window.requestAnimationFrame ) {
                 lola.tween.requestTick = function(){ lola.window.requestAnimationFrame( lola.tween.tick ); };
                 lola.tween.requestFrame = function( callback ){ lola.window.requestAnimationFrame( callback ); };
             }
-            if ( window.mozRequestAnimationFrame ){
+            else if ( window.mozRequestAnimationFrame ){
                 lola.tween.requestTick = function(){ lola.window.mozRequestAnimationFrame( lola.tween.tick ); };
                 lola.tween.requestFrame = function( callback ){ lola.window.mozRequestAnimationFrame( callback ); };
             }
@@ -9563,7 +9574,7 @@ window.Sizzle = Sizzle;
             else if ( window.oRequestAnimationFrame ){
                 lola.tween.requestTick = function(){ lola.window.oRequestAnimationFrame( lola.tween.tick ); };
                 lola.tween.requestFrame = function( callback ){ lola.window.oRequestAnimationFrame( callback ); };
-            }
+            }*/
 
 			//remove initialization method
 			delete lola.tween.preinitialize;
@@ -9603,15 +9614,27 @@ window.Sizzle = Sizzle;
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ['css','event','easing'];
 		},
+
+        /**
+         * start ticking
+         * @private
+         */
+        startTicking: function(){
+            console.log("startTicking");
+            if (!lola.tween.active){
+                lola.tween.active = true;
+                lola.tween.requestTick();
+            }
+        },
 
         /**
          * set callback for animation frame
          * @private
          */
         requestTick: function(){
-            setTimeout( function(){ lola.tween.tick.call(lola.tween); }, 20 );
+            lola.tween.requestFrame( lola.tween.tick );
         },
 
         /**
@@ -9619,49 +9642,91 @@ window.Sizzle = Sizzle;
          * @param {Function} callback
          */
         requestFrame: function(callback){
-            setTimeout( callback, 20 );
+            switch ( lola.tween.getFrameType ) {
+                case 1:
+                    lola.window.requestAnimationFrame( callback );
+                    break;
+                case 2:
+                    lola.window.mozRequestAnimationFrame( callback );
+                    break;
+                case 3:
+                    lola.window.webkitRequestAnimationFrame( callback );
+                    break;
+                case 4:
+                    lola.window.oRequestAnimationFrame( callback );
+                    break;
+                default:
+                    setTimeout( callback, 20 );
+                    break;
+            }
         },
 
+        /**
+         * registers a tween with the framework
+         * @param {lola.tween.Tween} tween
+         * @return {uint} tween identifier
+         */
         registerTween: function( tween ){
             var tid = this.freeTweenIds.length > 0 ? this.freeTweenIds.pop() : this.tweenUid++;
             this.tweens[tid] = tween;
             return tid;
         },
 
+        /**
+         * starts the referenced tween
+         * @param {uint} id
+         */
         start: function( id ){
             if (this.tweens[ id ]){
                 this.tweens[id].start();
-                if (!this.active){
-                    this.active = true;
-                    this.requestTick();
-                }
+                lola.event.trigger(this.tweens[id],'tweenstart',false,false);
             }
         },
 
+        /**
+         * stops the referenced tween
+         * @param {uint} id
+         */
         stop: function( id ){
             if (this.tweens[ id ]){
                 this.tweens[id].stop();
+                lola.event.trigger(this.tweens[id],'tweenstop',false,false);
             }
+
         },
 
+        /**
+         * pauses the referenced tween
+         * @param {uint} id
+         */
         pause: function( id ){
             if (this.tweens[ id ]){
                 this.tweens[id].pause();
-            }
-        },
-        resume: function( id ){
-            if (this.tweens[ id ]){
-                this.tweens[id].resume();
-                if (!this.active){
-                    this.active = true;
-                    this.requestTick();
-                }
+                lola.event.trigger(this.tweens[id],'tweenpause',false,false);
             }
         },
 
-        addTarget: function( tweenId, objects, properties, overwrite ){
+        /**
+         * resumes the referenced tween
+         * @param {uint} id
+         */
+        resume: function( id ){
+            if (this.tweens[ id ]){
+                this.tweens[id].resume();
+                lola.event.trigger(this.tweens[id],'tweenresume',false,false);
+            }
+        },
+
+        /**
+         * adds targets to referenced tween
+         * @param {uint} tweenId
+         * @param {Object|Array} objects
+         * @param {Object} properties
+         * @param {Boolean} collisions
+         */
+        addTarget: function( tweenId, objects, properties, collisions ){
             if (this.tweens[ tweenId ]){
-                overwrite = overwrite != false;
+                collisions = collisions === true;
                 if (lola.type.get(objects) != 'array')
                     objects = [objects];
 
@@ -9672,9 +9737,41 @@ window.Sizzle = Sizzle;
                     if (!this.targets[id])
                         this.targets[id] = {};
                     for (var p in properties){
-                        if (overwrite || this.targets[id][p] == null ){
-                            this.targets[id][p] = this.getTweenObject( tweenId, obj, p, properties[p] );
+                        if (p == "style"){
+                            for (var s in properties[p] ){
+                                if (collisions || this.targets[id]['style:'+s] == null ){
+                                    if (!properties[p][s].from && !obj.style[s]){
+                                        //try to get "from" value
+                                        var f = lola.css.style( obj, s );
+                                        if (typeof properties[p][s] == "object" ){
+                                            properties[p][s].from = f;
+                                        }
+                                        else {
+                                            var t = String(properties[p][s]);
+                                            properties[p][s] = {from:f,to:t};
+                                        }
+                                    }
+                                    if (!this.targets[id]['style:'+s])
+                                        this.targets[id]['style:'+s] = [];
+                                    if (collisions)
+                                        this.targets[id]['style:'+s].push( this.getTweenObject( tweenId, obj.style, s, properties[p][s] ));
+                                    else
+                                        this.targets[id]['style:'+s] = [this.getTweenObject( tweenId, obj.style, s, properties[p][s] )];
+
+                                }
+                            }
                         }
+                        else {
+
+                            if (!this.targets[id][p])
+                                this.targets[id][p] = [];
+                            if (collisions)
+                                this.targets[id][p].push( this.getTweenObject( tweenId, obj, p, properties[p] ));
+                            else
+                                this.targets[id][p] = [this.getTweenObject( tweenId, obj, p, properties[p] )];
+
+                        }
+
                     }
                 }
             }
@@ -9683,8 +9780,16 @@ window.Sizzle = Sizzle;
             }
         },
 
+        /**
+         * gets a TweenObject for specified target and property
+         * @param {uint} tweenId
+         * @param {Object} target
+         * @param {String} property
+         * @param {*} value
+         * @private
+         */
         getTweenObject: function( tweenId, target, property, value ){
-            console.log("getTweenObject", tweenId, target, property, value );
+            //console.log("getTweenObject", tweenId, target, property, value );
             //get initial value
             var from,to,delta;
             if ( value.from ) {
@@ -9759,53 +9864,81 @@ window.Sizzle = Sizzle;
             return new tween.TweenObject( tweenId, target, property, from, delta, proxy );
         },
 
+        /**
+         * executes a frame tick for tweening engine
+         * @private
+         */
         tick: function(){
            //iterate through tweens and check for active state
             //if active, run position calculation on tweens
             var activityCheck = false;
             var now = lola.now();
-            var t = this.tweens;
-            for (var k in t){
-                if (t[k].active){
+            //console.log('tick: '+now);
+            var twn = lola.tween.tweens;
+
+            for (var k in twn){
+                if (twn[k].active){
                     activityCheck = true;
-                    if ( !t[k].complete )
-                        t[k].calculate( now );
+                    if ( !twn[k].complete )
+                        twn[k].calculate( now );
                     else{
-                        delete t[k];
+                        //catch complete on next tick
+                        lola.event.trigger(twn[k],'tweencomplete',false,false);
+                        delete twn[k];
                         lola.tween.freeTweenIds.push( parseInt(k) );
                     }
                 }
-
             }
 
             //apply tween position to targets
-            for (var t in this.targets){
-                var c = 0;
-                for ( var p in this.targets[t] )
-                {
-                    c++;
-                    var to = this.targets[t][p];
-                    if (this.tweens[to.tweenId].active) {
-                        to.apply( this.tweens[to.tweenId].value );
-                        if ( this.tweens[to.tweenId].complete )
-                            delete this.targets[t][p];
+            var trg = lola.tween.targets;
+            for (var t in trg){
+                //console.log(t);
+                var c1 = 0;
+                for ( var p in trg[t] ){
+                    //console.log("    ",p);
+                    var tmp = [];
+                    var to;
+                    while (to = trg[t][p].shift()){
+                        //console.log("        ",to);
+                        //console.log("        ",twn[to.tweenId])
+                        if (to && twn[to.tweenId] && twn[to.tweenId].active){
+                            to.apply( twn[to.tweenId].value );
+                            tmp.push( to );
+                        }
+                    }
+                    trg[t][p] = tmp;
+
+                    if ( trg[t][p].length == 0){
+                        delete trg[t][p];
+                    }
+                    else{
+                        c1++;
                     }
                 }
-                if (c == 0)
-                    delete this.targets[t];
+                if (c1 == 0)
+                    delete trg[t];
 
             }
 
             if (activityCheck){
-                this.requestTick();
-                this.active = true;
+                lola.tween.requestTick();
             }
             else {
-                this.active = false;
+                lola.tween.active = false;
             }
 
         },
-
+        /**
+         * sets a property after tween is complete,
+         * used for non-tweenable properties
+         * @private
+         * @param target
+         * @param property
+         * @param from
+         * @param delta
+         * @param progress
+         */
         setAfterProxy: function( target, property, from, delta, progress ) {
             if ( progress >= 1  )
                 target[property] = delta;
@@ -9898,13 +10031,22 @@ window.Sizzle = Sizzle;
 			 * @type {Object}
 			 */
 			var methods = {
-                tweenStyle: function( properties, duration, delay, easing, overwrite ){
+                tweenStyle: function( properties, duration, delay, easing, collisions ){
                     var targets = [];
                     this.forEach( function(item){
-                       targets.push( item.style );
+                        targets.push( item.style );
                     });
                     var tweenId = lola.tween.registerTween( new tween.Tween( duration, easing, delay ) );
-                    lola.tween.addTarget( tweenId, targets, properties, overwrite );
+                    lola.tween.addTarget( tweenId, targets, properties, collisions );
+                    lola.tween.start(tweenId);
+                },
+                tween: function( properties, duration, delay, easing, collisions ){
+                    var targets = [];
+                    this.forEach( function(item){
+                        targets.push( item );
+                    });
+                    var tweenId = lola.tween.registerTween( new tween.Tween( duration, easing, delay ) );
+                    lola.tween.addTarget( tweenId, targets, properties, collisions );
                     lola.tween.start(tweenId);
                 }
 			};
@@ -9942,19 +10084,17 @@ window.Sizzle = Sizzle;
             if (elapsed >= this.duration){
                 elapsed = this.duration;
                 this.complete = true;
+                this.active = true;
             }
 
             this.value = elapsed ? this.easing( elapsed, 0, 1, this.duration ) : 0;
         },
 
         start: function(){
-            console.log('Tween.start');
+            //console.log('Tween.start');
             this.active = true;
             this.startTime = lola.now();
-            if (!lola.tween.active) {
-                lola.tween.requestTick();
-            }
-
+            lola.tween.startTicking();
         },
         stop: function(){
             this.active = false;
@@ -9967,9 +10107,7 @@ window.Sizzle = Sizzle;
         resume: function(){
             this.active = false;
             this.startTime += lola.now() - this.pauseTime;
-            if (!lola.tween.active) {
-                lola.tween.requestTick();
-            }
+            lola.tween.startTicking();
         }
 
 
@@ -9993,7 +10131,7 @@ window.Sizzle = Sizzle;
         },
 
         apply: function( value ){
-            console.log('tween.apply',value);
+            //console.log('apply: '+value);
             if (this.proxy){
                 this.proxy( this.target, this.property, this.initialValue, this.deltaValue, value );
             }

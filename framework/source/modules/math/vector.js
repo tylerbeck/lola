@@ -1,7 +1,15 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Vector Math
+ *  Description: Vector Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * Vector Module
+	 * Vector Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */

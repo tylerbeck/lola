@@ -1,7 +1,15 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Math
+ *  Description: Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * math Module
+	 * Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */

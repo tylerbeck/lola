@@ -1,3 +1,11 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: MODULE
+ *  Description: MODULE module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**

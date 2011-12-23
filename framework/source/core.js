@@ -1,3 +1,11 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Core
+ *  Description: Core module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 ( function( window ) {
 	/**
 	 * @namespace lola
@@ -456,12 +464,24 @@
 		 */
 		initialize: function( selector, context ) {
 			if ( typeof selector === "string" ){
-				if (Sizzle != null) {
+				if (window['Sizzle']) {
 					this.elements = Sizzle( selector, context );
 				}
 				else {
+                    try {
+                        var nodeList = document.querySelectorAll( selector );
+                        var nl = nodeList.length;
+                        this.elements = [];
+                        for (var i=0; i<nl; i++){
+                            this.elements.push( nodeList.item(i) );
+                        }
+                    }
+                    catch (e){
+                        console.log('Exception:');
+                        console.log( selector );
+                    }
 					//TODO: write lightweight selector to use if Sizzle not loaded
-					throw new Error( "Sizzle not found" );
+					//throw new Error( "Sizzle not found" );
 				}
 			}
 			else if ( Array.isArray( selector ) ) {

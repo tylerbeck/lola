@@ -1,7 +1,15 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Time Value of Money
+ *  Description: Time Value of Money Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * Math Time Value of Money Module
+	 * Time Value of Money Math
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */

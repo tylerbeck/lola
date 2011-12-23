@@ -1,3 +1,11 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: DOM
+ *  Description: DOM module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -189,30 +197,32 @@
 					}
 					else {
 						this.forEach( function( item ) {
-							for ( var child in item.childNodes ) {
-								lola.safeDelete( child );
-							}
-							switch ( lola.type.get( content ) ) {
-								case 'null':
-								case 'undefined':
-									item.innerHTML = "";
-									break;
-								case 'string':
-									item.innerHTML = content;
-									break;
-								case 'array':
-									item.innerHTML = "";
-									for ( var c in content ) {
-										item.appendChild( c );
-									}
-									break;
-								default:
-									console.info( item );
-									console.info( content );
-									item.innerHTML = "";
-									item.appendChild( content );
-									break;
-							}
+                            if (item.hasOwnProperty('childNodes')){
+                                var cnl = item.childNodes.length;
+                                for ( var i=0; i<cnl; i++ ) {
+                                    var child = item.childNodes.item(i);
+                                    lola.safeDelete( child );
+                                }
+                                switch ( lola.type.get( content ) ) {
+                                    case 'null':
+                                    case 'undefined':
+                                        item.innerHTML = "";
+                                        break;
+                                    case 'string':
+                                        item.innerHTML = content;
+                                        break;
+                                    case 'array':
+                                        item.innerHTML = "";
+                                        for ( var c in content ) {
+                                            item.appendChild( c );
+                                        }
+                                        break;
+                                    default:
+                                        item.innerHTML = "";
+                                        item.appendChild( content );
+                                        break;
+                                }
+                            }
 						} );
 						return this;
 					}

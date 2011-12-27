@@ -71,11 +71,11 @@
 
                         //not a client yet
                         this.client = client;
-                        var start = new lola.graphics.SplinePoint(50,350,0,0,100,0);
-                        var middle = new lola.graphics.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
-                        var end = new lola.graphics.SplinePoint(450,150,100,0,100,0);
-                        this.spline = new lola.graphics.Spline([start,middle, end], false);
-                        //this.spline = new lola.graphics.Spline([start, end], false);
+                        var start = new lola.geometry.SplinePoint(50,350,0,0,100,0);
+                        var middle = new lola.geometry.SplinePoint(250,250,100,-Math.PI/4,100,undefined);
+                        var end = new lola.geometry.SplinePoint(450,150,100,0,100,0);
+                        this.spline = new lola.geometry.Spline([start,middle, end], false);
+                        //this.spline = new lola.geometry.Spline([start, end], false);
 
                         //do setup
                         $('canvas').register2dContext();
@@ -272,14 +272,14 @@
                             anchor.y = parseInt( $c2.style("top").replace(/px/g,""))+6;
                             break;
                         case "entry":
-                            pnt = new lola.graphics.Point( parseInt( $c1.style("left").replace(/px/g,""))+6,
+                            pnt = new lola.geometry.Point( parseInt( $c1.style("left").replace(/px/g,""))+6,
                                     parseInt( $c1.style("top").replace(/px/g,""))+6 );
                             vct = lola.math.point.subtract( anchor, pnt ).toVector();
                             point.setAngle( vct.angle );
                             point.entry.velocity = vct.velocity;
                             break;
                         case "exit":
-                            pnt = new lola.graphics.Point( parseInt( $c3.style("left").replace(/px/g,""))+6,
+                            pnt = new lola.geometry.Point( parseInt( $c3.style("left").replace(/px/g,""))+6,
                                     parseInt( $c3.style("top").replace(/px/g,""))+6 );
                             vct = lola.math.point.subtract( pnt, anchor ).toVector();
                             point.setAngle( vct.angle );
@@ -344,13 +344,14 @@
 
                 drawCurves: function(){
                     var g = lola.graphics;
+                    var geo = lola.geometry;
                     g.setContext('curves');
                     g.clear();
                     g.applyStyle('ctrl');
-                    g.draw( this.spline, g.Spline.CONTROLS );
+                    g.draw( this.spline, geo.Spline.CONTROLS );
 
                     g.applyStyle('spline');
-                    g.draw( this.spline, g.Spline.STROKE );
+                    g.draw( this.spline, geo.Spline.STROKE );
                 },
 
                 normalizeSplinePoints: function(){

@@ -94,7 +94,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ['event','data','graphics'];
+			return ['event','data','graphics','geometry'];
 		},
 
         /**
@@ -154,12 +154,12 @@
 
         startDrag: function( event ) {
             this.target = event.currentTarget;
-            this.offset = new lola.graphics.Point(-event.localX,-event.localY);
+            this.offset = new lola.geometry.Point(-event.localX,-event.localY);
             this.dragging = false;
 
             var $target = $(event.currentTarget);
             var data = $target.getData(this.getNamespace(), true );
-            data.position = new lola.graphics.Point(event.globalX, event.globalY);
+            data.position = new lola.geometry.Point(event.globalX, event.globalY);
             data.parent = $target.parent();
             data.zIndex = $target.style('zIndex');
             data.cursor = $target.style('cursor');

@@ -76,11 +76,11 @@
 
 		/**
 		 * adds arguments to p1
-		 * @param {lola.graphics.Point} p1
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @return {lola.geometry.Point}
 		 */
 		add: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -99,11 +99,11 @@
 
 		/**
 		 * subtract args from p1
-		 * @param {lola.graphics.Point} p1
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @return {lola.geometry.Point}
 		 */
 		subtract: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -121,12 +121,12 @@
 
 		/**
 		 * multiply p1 by args
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point|Number} p2
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point|Number} p2
+		 * @return {lola.geometry.Point}
 		 */
 		multiply: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -144,12 +144,12 @@
 
 		/**
 		 * divide p1 by args
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point|Number} p2
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point|Number} p2
+		 * @return {lola.geometry.Point}
 		 */
 		divide: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -167,18 +167,18 @@
 
 		/**
 		 * raise p to the po
-		 * @param {lola.graphics.Point} p
-		 * @param {lola.graphics.Point} po
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p
+		 * @param {lola.geometry.Point} po
+		 * @return {lola.geometry.Point}
 		 */
 		pow: function( p, po ){
-			return new lola.graphics.Point( Math.pow( p.x, po ), Math.pow( p.y, po ) );
+			return new lola.geometry.Point( Math.pow( p.x, po ), Math.pow( p.y, po ) );
 		},
 
 		/**
 		 * calculates the absolute distance between p1 and p2
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point} p2
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point} p2
 		 * @return {Number}
 		 */
 		distance: function( p1, p2 ) {
@@ -187,12 +187,12 @@
 
 		/**
 		 * offsets a point at the specified angle by the specified distance
-		 * @param {lola.graphics.Point} p
+		 * @param {lola.geometry.Point} p
 		 * @param {Number} angle angle in radians
 		 * @param {Number} distance
 		 */
 		offsetPoint: function( p, angle, distance ){
-			var offset = new lola.graphics.Point( p.x, p.y );
+			var offset = new lola.geometry.Point( p.x, p.y );
 			offset.x += Math.cos( angle ) * distance;
 			offset.y += Math.sin( angle ) * distance;
 			return offset;

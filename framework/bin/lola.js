@@ -1,3 +1,11 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Core
+ *  Description: Core module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 ( function( window ) {
 	/**
 	 * @namespace lola
@@ -1072,6 +1080,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: CSS
+ *  Description: CSS module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -1768,6 +1784,14 @@
 	lola.registerModule( css );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Data
+ *  Description: Data module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -2101,6 +2125,14 @@
 	lola.registerModule( data );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: DOM
+ *  Description: DOM module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -2486,6 +2518,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Event
+ *  Description: Event module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -3317,10 +3357,18 @@
 	lola.registerModule( event );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Math
+ *  Description: Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * math Module
+	 * Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
@@ -3501,6 +3549,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Regular Expression
+ *  Description: Regular Expression module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -3620,6 +3676,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: String
+ *  Description: String module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -3795,6 +3859,14 @@
 	lola.registerModule( string );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Support
+ *  Description: Support module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -3997,6 +4069,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Type
+ *  Description: Type module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -4270,6 +4350,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Utility
+ *  Description: Utility module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -4408,6 +4496,14 @@
 	lola.registerModule( util );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Agent
+ *  Description: Agent module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -4658,6 +4754,14 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Chart
+ *  Description: Chart module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function (lola) {
     var $ = lola;
     /**
@@ -4867,6 +4971,14 @@
     lola.registerModule(chart);
 
 })(lola);
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Command
+ *  Description: Command module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -5195,6 +5307,14 @@
 	lola.registerModule( cmd );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Easing
+ *  Description: Easing module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -5207,8 +5327,9 @@
 		//==================================================================
 		// Attributes
 		//==================================================================
+        methods: {},
 
-
+        defaultResolution: 1000,
 
 		//==================================================================
 		// Methods
@@ -5223,7 +5344,6 @@
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
-
 
 			//remove initialization method
 			delete lola.easing.preinitialize;
@@ -5240,6 +5360,11 @@
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
+            this.registerSimpleEasing("ease", 0.25, 0.1, 0.25, 1.0);
+            this.registerSimpleEasing("linear", 0.0, 0.0, 1.0, 1.0);
+            this.registerSimpleEasing("ease-in", 0.42, 0, 1.0, 1.0);
+            this.registerSimpleEasing("ease-out", 0, 0, 0.58, 1.0);
+            this.registerSimpleEasing("ease-in-out", 0.42, 0, 0.58, 1.0);
 
 
 			//remove initialization method
@@ -5262,7 +5387,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ["math.point","graphics"];
+			return ["math.point","geometry"];
 		},
 
 
@@ -5270,10 +5395,10 @@
 		 * calculates a point on a cubic bezier curve given time and an array of points.
 		 * @private
 		 * @param {Number} t time 0 <= t <= 1
-		 * @param {lola.graphics.Point} p0 anchor 1
-		 * @param {lola.graphics.Point} p1 control 1
-		 * @param {lola.graphics.Point} p2 control 2
-		 * @param {lola.graphics.Point} p3 anchor 2
+		 * @param {lola.graphics.Point|Object} p0 anchor 1
+		 * @param {lola.graphics.Point|Object} p1 control 1
+		 * @param {lola.graphics.Point|Object} p2 control 2
+		 * @param {lola.graphics.Point|Object} p3 anchor 2
 		 * @return {lola.graphics.Point}
 		 */
 		cubicBezier: function( t, p0, p1, p2, p3 ) {
@@ -5286,6 +5411,123 @@
 			);
 
 		},
+
+        /**
+         * samples a splines points for use in time based easing
+         * @private
+         * @param {lola.geometry.spline} spline
+         * @param {uint} resolution per spline section
+         */
+        sampleSpline: function( spline, resolution ) {
+            var points = spline.getPoints();
+            var sectionCount = points.length - 1;
+            var samples = [];
+            if (sectionCount > 0) {
+                resolution *= sectionCount;
+                var splits = [];
+                for (var i = 1; i<= sectionCount; i++ ){
+                    splits.push( points[i].getAnchor().x );
+                }
+                //console.log(splits);
+                var lastSplit = 0;
+                var splitIndex = 0;
+                var currentSplit = splits[0];
+                for (var s = 0; s<= resolution; s++) {
+                    //console.log(s);
+                    var t = s/resolution;
+                    if (t <= currentSplit){
+                        t = (t-lastSplit)/(currentSplit-lastSplit);
+                        //console.log(t);
+                        var sample = this.cubicBezier(
+                            t,
+                            points[splitIndex].getAnchor(),
+                            points[splitIndex].getControl2(),
+                            points[splitIndex+1].getControl1(),
+                            points[splitIndex+1].getAnchor()
+                        );
+                        samples.push( sample );
+                    }
+                    else{
+                        splitIndex++;
+                        lastSplit = currentSplit;
+                        currentSplit = splits[ splitIndex ];
+                        s--;
+                    }
+                }
+            }
+            return samples;
+        },
+
+        /**
+         * registers the an easing method using the given parameters
+         * @param id
+         * @param spline
+         * @param resolution
+         * @param overwrite
+         */
+        register: function( id, spline, resolution, overwrite  ){
+            resolution = 10;//resolution?resolution:easing.defaultResolution;
+            overwrite = overwrite === true;
+
+            var first = spline.getPoint(0).getAnchor();
+            var last = spline.getPoint( (spline.getPoints().length - 1) ).getAnchor();
+            if ( first.x == 0 && first.y == 0 && last.x == 1 && last.y == 1 ){
+                //Todo: make sure spline can be fit to cartesian function
+                var s = easing.sampleSpline( spline, 1000 ).join(',');
+                var fnStr = "function( t,v,c,d ){"+
+                    "var s = ["+s+"];"+
+                    "var l = s.length;"+
+                    "var f =(l/4)|0;"+
+                    "var i = 0;"+
+                    "t /= d;"+
+                    "while ( t<=s[i].x && i < l ){"+
+                        "i+=f;"+
+                        "if ( i >= l) i = l-1;"+
+                        "if ( t >= s[i].x ){"+
+                            "i-=f;"+
+                            "f = (f>=2)?f/2|0:1;"+
+                            "if (t<=s[i].x && t>=s[i+1].x){"+
+                                "var s1 = s[i+1];"+
+                                "var s2 = s[i];"+
+                                "var p = (t-s1.x)/(s2.x-s1.x);"+
+                                "return v+c*(s1.y+p*(s2.y-s1.y));"+
+                            "}"+
+                        "}"+
+                    "}"+
+                    "return v+c;"+
+                "};";
+                //console.log(fnStr);
+                if ( !easing.methods[ id ] || overwrite ){
+                    lola.evaluate("lola.easing.methods[ \""+id+"\" ] = "+fnStr);
+                }else{
+                    throw new Error("easing id already taken");
+                }
+
+
+            }else{
+                throw new Error("invalid easing spline");
+            }
+        },
+
+        /**
+         * registers a single section cubic-bezier easing method
+         * @param id
+         * @param p1x
+         * @param p1y
+         * @param p2x
+         * @param p2y
+         */
+        registerSimpleEasing: function(id,p1x,p1y,p2x,p2y){
+            var geo = lola.geometry;
+            var spline = new geo.Spline();
+            var c1 = new geo.Point( p1x, p1y );
+            var c2 = new geo.Point( p2x, p2y );
+            var v1 = c1.toVector();
+            var v2 = c2.toVector();
+            spline.addPoint( new geo.SplinePoint( 0, 0, 0, 0, v1.velocity, v1.angle ) );
+            spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 1, 1 ) );
+            easing.register( id, spline );
+        },
 
 
 
@@ -5328,6 +5570,505 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Geometry Module
+ *  Description: Geometry module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * math.geom Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var geometry = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+
+
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug( 'lola.geometry::preinitialize' );
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+			//remove initialization method
+			delete lola.geometry.preinitialize;
+		},
+
+		/**
+		 * initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug( 'lola.math.geom::initialize' );
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+
+			//remove initialization method
+			delete lola.geometry.initialize;
+		},
+
+		/**
+		 * get module's namespace
+		 * @public
+		 * @return {String}
+		 */
+		getNamespace: function() {
+			return "geometry";
+		},
+
+		/**
+		 * get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return ['math'];
+		},
+
+        /**
+         * translates and / or scales a spline based on the specified bounding points
+         * @param {lola.geometry.Spline} spline
+         * @param {lola.geometry.Point} oldMin
+         * @param {lola.geometry.Point} oldMax
+         * @param {lola.geometry.Point} newMin
+         * @param {lola.geometry.Point} newMax
+         * @param {Boolean|undefined} flipX
+         * @param {Boolean|undefined} flipY
+         */
+        normalizeSpline: function( spline, oldMin, oldMax, newMin, newMax, flipX, flipY ){
+
+            flipX = flipX === true;
+            flipY = flipY === true;
+
+            var pm = lola.math.point;
+            var norm = new lola.geometry.Spline();
+            var spts = spline.getPoints();
+            var l = spts.length;
+
+            var oldSize = new lola.geometry.Point();
+            oldSize.x = oldMax.x - oldMin.x;
+            oldSize.y = oldMax.y - oldMin.y;
+
+            var newSize =  new lola.geometry.Point();
+            newSize.x = newMax.x - newMin.x;
+            newSize.y = newMax.y - newMin.y;
+
+            var normalizePoint = function( pt ){
+                pt = pm.divide( pm.subtract( pt, oldMin ), oldSize);
+                if (flipX) pt.x = 1-pt.x;
+                if (flipY) pt.y = 1-pt.y;
+                return pm.multiply( pt, newSize );
+            };
+
+            for (var i=0; i<l; i++ ){
+                var cv1 = normalizePoint( spts[i].getControl1() ).toVector();
+                var anch = normalizePoint( spts[i].getAnchor() );
+                var cv2 = normalizePoint( spts[i].getControl2() ).toVector();
+                var np = new lola.geometry.SplinePoint( anch.x, anch.y, cv1.angle, cv1.velocity, cv2.angle );
+                norm.addPoint( np );
+            }
+
+            return norm;
+        },
+
+		//==================================================================
+		// Classes
+		//==================================================================
+        /**
+         * Point class
+         * @class
+         * @param {Number|undefined} x x coordinate
+         * @param {Number|undefined} y y coordinate
+         */
+        Point: function ( x, y ) {
+            this.x = x;
+            this.y = y;
+            return this;
+        },
+
+        /**
+         * Spline class
+         * @class
+         * @param {Array|undefined} points array of spline points
+         * @param {uint} flags
+         */
+        Spline: function( points, flags ){
+            this.points = points?points:[];
+            this.flags = flags == undefined ? 0 : flags;
+            return this;
+        },
+
+        /**
+         * SplinePoint class
+         * @class
+         * @param anchorX
+         * @param anchorY
+         * @param entryStrength
+         * @param entryAngle
+         * @param exitStrength
+         * @param exitAngle
+         */
+        SplinePoint: function( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle ) {
+            return this.init( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle );
+        },
+
+        /**
+         * Vector class
+         * @class
+         * @param velocity
+         * @param angle
+         */
+        Vector: function ( velocity, angle ){
+            this.velocity = velocity;
+            this.angle = angle;
+            return this;
+        },
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+    geometry.Point.prototype = {
+        /**
+         * x coordinate
+         * @type {Number}
+         */
+        x: undefined,
+
+        /**
+         * y coordinate
+         * @type {Number}
+         */
+        y: undefined,
+
+        /**
+         * converts point to vector
+         * @return {lola.math.geom.Vector}
+         */
+        toVector: function(){
+            var a = Math.atan2( this.y, this.x );
+            var v = Math.sqrt( this.x*this.x + this.y*this.y );
+            return new lola.geometry.Vector(v,a);
+        },
+
+        /**
+         * converts point to object notation
+         * @return {String}
+         */
+        toString: function(){
+            return "{x:"+this.x+",y:"+this.y+"}";
+        }
+    };
+
+    geometry.Spline.CLOSED = 0x1;
+    geometry.Spline.FILL = 0x2;
+    geometry.Spline.STROKE = 0x4;
+    geometry.Spline.CONTROLS =0x8;
+    geometry.Spline.prototype = {
+        /**
+         * array of {lola.geometry.SplinePoint}
+         * @type {Array}
+         * @private
+         */
+        points: [],
+
+        /**
+         * spline flags
+         * @type {Boolean}
+         */
+        flags: 0x0,
+
+        /**
+         * adds a point at the specified index.
+         * if index is not passed, point will be added at last position
+         * @param {lola.geometry.SplinePoint} splinePoint
+         * @param {uint|undefined} index
+         */
+        addPoint: function( splinePoint, index ){
+            if ( index == undefined )
+                index = this.points.length;
+
+            this.points.splice(index,0,splinePoint);
+        },
+
+        /**
+         * removes the point at the specified index.
+         * @param {uint} index
+         */
+        removePoint: function( index ){
+            if ( index != undefined )
+                this.points.splice(index,1,undefined);
+        },
+
+        /**
+         * updates/replaces a point at the specified index.
+         * @param {lola.geometry.SplinePoint} splinePoint
+         * @param {uint} index
+         */
+        updatePoint: function( splinePoint, index ){
+            if ( index != undefined )
+                this.points.splice(index,1,splinePoint);
+        },
+
+        /**
+         * gets the splinePoint at the specified index.
+         * @param {uint} index
+         */
+        getPoint: function( index ){
+            return this.points[ index ];
+        },
+
+        /**
+         * gets all splinePoints.
+         */
+        getPoints: function(){
+            return this.points;
+        },
+
+        /**
+         * draws spline
+         * @param {Boolean} close draw a closed spline
+         * @param {Object|String|undefined} ctx
+         */
+        draw: function( ctx, flags ){
+            flags = flags == undefined ? this.flags : flags;
+            var sl = this.points.length;
+            //console.log('drawSpline: '+sl);
+            if (sl > 1) {
+                var pts = [];
+                //console.log(pts);
+                this.points.forEach( function(item){
+                    pts.push( item.getControl1() );
+                    pts.push( item.getAnchor() );
+                    pts.push( item.getControl2() );
+                });
+                var pl = pts.length;
+
+
+                if (flags & geometry.Spline.CONTROLS){
+
+                    ctx.beginPath();
+                    ctx.moveTo(pts[1].x, pts[1].y);
+                    ctx.lineTo(pts[2].x, pts[2].y);
+                    ctx.stroke();
+                    ctx.closePath();
+
+                    for (var n=3; n<pl-3; n+=3){
+                        var n2 = n+1;
+                        var n3 = n+2;
+                        ctx.beginPath();
+                        ctx.moveTo(pts[n].x, pts[n].y);
+                        ctx.lineTo(pts[n2].x, pts[n2].y);
+                        ctx.stroke();
+                        ctx.closePath();
+
+                        ctx.beginPath();
+                        ctx.moveTo(pts[n2].x, pts[n2].y);
+                        ctx.lineTo(pts[n3].x, pts[n3].y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+
+                    ctx.beginPath();
+                    ctx.moveTo(pts[n].x, pts[n].y);
+                    ctx.lineTo(pts[n+1].x, pts[n+1].y);
+                    ctx.stroke();
+                    ctx.closePath();
+
+                }
+
+                ctx.beginPath();
+                ctx.moveTo( pts[1].x,pts[1].y );
+                for (var i=2; i<pl-3; i+=3){
+                    ctx.bezierCurveTo(
+                        pts[i].x,pts[i].y,
+                        pts[i+1].x,pts[i+1].y,
+                        pts[i+2].x,pts[i+2].y
+                    );
+                }
+
+                if (flags & geometry.Spline.CLOSED){
+                    ctx.bezierCurveTo(
+                        pts[pl-1].x,pts[pl-1].y,
+                        pts[0].x,pts[0].y,
+                        pts[1].x,pts[1].y
+                    );
+                }
+
+                if (flags & geometry.Spline.FILL){
+                    ctx.fill();
+                }
+
+                if (flags & geometry.Spline.STROKE){
+                    ctx.stroke();
+                }
+
+                ctx.closePath();
+
+            }
+            else{
+                throw new Error('not enough spline points');
+            }
+        }
+
+    };
+
+    geometry.SplinePoint.prototype = {
+
+        /**
+         * splinepoint anchor point
+         * @type {lola.geometry.Point|undefined}
+         */
+        anchor: undefined,
+
+        /**
+         * splinepoint entry vector
+         * @type {lola.geometry.Vector|undefined}
+         */
+        entry: undefined,
+
+        /**
+         * splinepoint exit vector
+         * @type {lola.geometry.Vector|undefined}
+         */
+        exit: undefined,
+
+        /**
+         * initialization function
+         * @param ax
+         * @param ay
+         * @param es
+         * @param ea
+         * @param xs
+         * @param xa
+         */
+        init: function (ax, ay, es, ea, xs, xa){
+            this.anchor = new lola.geometry.Point( ax, ay );
+            this.entry = new lola.geometry.Vector( es, ea );
+            this.exit = new lola.geometry.Vector( xs, xa==undefined?ea:xa );
+        },
+
+        /**
+         * sets the SplinePont's entry and exit angles
+         * if exitAngle is omitted the same angle is set for both
+         * @param {Number} entryAngle
+         * @param {Number|undefined} exitAngle
+         */
+        setAngle: function( entryAngle, exitAngle) {
+            this.entry.angle = entryAngle;
+            this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+        },
+
+
+        /**
+         * gets the spline point's anchor
+         * @return {lola.geometry.Point}
+         */
+        getAnchor: function(){
+            return this.anchor;
+        },
+
+        /**
+         * gets the spline point's entry control point
+         * @return {lola.geometry.Point}
+         */
+        getControl1: function(){
+            return lola.math.point.subtract( this.anchor, this.entry.toPoint());
+        },
+
+        /**
+         * gets the spline point's exit control point
+         * @return {lola.geometry.Point}
+         */
+        getControl2: function(){
+            return lola.math.point.add( this.anchor, this.exit.toPoint() );
+        }
+
+    };
+
+    geometry.Vector.prototype = {
+        /**
+         * velocity or length of the vector
+         * @type {Number}
+         */
+        velocity: undefined,
+
+        /**
+         * angle of vector (horizontal pointing right is 0 radians)
+         * @type {Number}
+         */
+        angle: undefined,
+
+        /**
+         * converts a vector to a (0,0) based point
+         * @return {lola.geometry.Point}
+         */
+        toPoint: function() {
+            return new lola.geometry.Point(
+                Math.cos(this.angle)*this.velocity,
+                Math.sin(this.angle)*this.velocity
+            )
+        }
+    };
+
+
+	//register module
+	lola.registerModule( geometry );
+
+})( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Graphics
+ *  Description: Graphics module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -5602,57 +6343,6 @@
 		//==================================================================
 		// Classes
 		//==================================================================
-        /**
-         * Point class
-         * @class
-         * @param {Number|undefined} x x coordinate
-         * @param {Number|undefined} y y coordinate
-         */
-		Point: function ( x, y ) {
-			this.x = x;
-			this.y = y;
-			return this;
-		},
-
-        /**
-         * Spline class
-         * @class
-         * @param {Array|undefined} points array of spline points
-         * @param {uint} flags
-         */
-		Spline: function( points, flags ){
-			this.points = points?points:[];
-            this.flags = flags == undefined ? 0 : flags;
-			return this;
-		},
-
-        /**
-         * SplinePoint class
-         * @class
-         * @param anchorX
-         * @param anchorY
-         * @param entryStrength
-         * @param entryAngle
-         * @param exitStrength
-         * @param exitAngle
-         */
-		SplinePoint: function( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle ) {
-			return this.init( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle );
-		},
-
-        /**
-         * Vector class
-         * @class
-         * @param velocity
-         * @param angle
-         */
-		Vector: function ( velocity, angle ){
-			this.velocity = velocity;
-			this.angle = angle;
-			return this;
-		},
-
-
 
 
 		//==================================================================
@@ -5687,285 +6377,19 @@
 	//==================================================================
 	// Class Prototypes
 	//==================================================================
-	graphics.Point.prototype = {
-        /**
-         * x coordinate
-         * @type {Number}
-         */
-		x: undefined,
-
-        /**
-         * y coordinate
-         * @type {Number}
-         */
-		y: undefined,
-
-        /**
-         * converts point to vector
-         * @return {lola.graphics.Vector}
-         */
-		toVector: function(){
-			var a = Math.atan2( this.y, this.x );
-			var v = Math.sqrt( this.x*this.x + this.y*this.y );
-			return new lola.graphics.Vector(v,a);
-		}
-	};
-
-    graphics.Spline.CLOSED = 0x1;
-    graphics.Spline.FILL = 0x2;
-    graphics.Spline.STROKE = 0x4;
-    graphics.Spline.CONTROLS =0x8;
-	graphics.Spline.prototype = {
-        /**
-         * array of {lola.graphics.SplinePoint}
-         * @type {Array}
-         * @private
-         */
-		points: [],
-
-        /**
-         * spline flags
-         * @type {Boolean}
-         */
-        flags: 0x0,
-
-        /**
-         * adds a point at the specified index.
-         * if index is not passed, point will be added at last position
-         * @param {lola.graphics.SplinePoint} splinePoint
-         * @param {uint|undefined} index
-         */
-		addPoint: function( splinePoint, index ){
-			if ( index == undefined )
-				index = this.points.length;
-
-			this.points.splice(index,0,splinePoint);
-		},
-
-        /**
-         * removes the point at the specified index.
-         * @param {uint} index
-         */
-		removePoint: function( index ){
-			if ( index != undefined )
-				this.points.splice(index,1,undefined);
-		},
-
-        /**
-         * updates/replaces a point at the specified index.
-         * @param {lola.graphics.SplinePoint} splinePoint
-         * @param {uint} index
-         */
-		updatePoint: function( splinePoint, index ){
-			if ( index != undefined )
-			this.points.splice(index,1,splinePoint);
-		},
-
-        /**
-         * gets the splinePoint at the specified index.
-         * @param {uint} index
-         */
-        getPoint: function( index ){
-            return this.points[ index ];
-        },
-
-        /**
-         * gets all splinePoints.
-         */
-        getPoints: function(){
-            return this.points;
-        },
-
-        /**
-         * draws spline
-         * @param {Boolean} close draw a closed spline
-         * @param {Object|String|undefined} ctx
-         */
-        draw: function( ctx, flags ){
-            flags = flags == undefined ? this.flags : flags;
-            var sl = this.points.length;
-            //console.log('drawSpline: '+sl);
-            if (sl > 1) {
-                var pts = [];
-                //console.log(pts);
-                this.points.forEach( function(item){
-                    pts.push( item.getControl1() );
-                    pts.push( item.getAnchor() );
-                    pts.push( item.getControl2() );
-                });
-                var pl = pts.length;
-
-
-                if (flags & graphics.Spline.CONTROLS){
-
-                    ctx.beginPath();
-                    ctx.moveTo(pts[1].x, pts[1].y);
-                    ctx.lineTo(pts[2].x, pts[2].y);
-                    ctx.stroke();
-                    ctx.closePath();
-
-                    for (var n=3; n<pl-3; n+=3){
-                        var n2 = n+1;
-                        var n3 = n+2;
-                        ctx.beginPath();
-                        ctx.moveTo(pts[n].x, pts[n].y);
-                        ctx.lineTo(pts[n2].x, pts[n2].y);
-                        ctx.stroke();
-                        ctx.closePath();
-
-                        ctx.beginPath();
-                        ctx.moveTo(pts[n2].x, pts[n2].y);
-                        ctx.lineTo(pts[n3].x, pts[n3].y);
-                        ctx.stroke();
-                        ctx.closePath();
-                   }
-
-                    ctx.beginPath();
-                    ctx.moveTo(pts[n].x, pts[n].y);
-                    ctx.lineTo(pts[n+1].x, pts[n+1].y);
-                    ctx.stroke();
-                    ctx.closePath();
-
-                }
-
-                ctx.beginPath();
-                ctx.moveTo( pts[1].x,pts[1].y );
-                for (var i=2; i<pl-3; i+=3){
-                    ctx.bezierCurveTo(
-                        pts[i].x,pts[i].y,
-                        pts[i+1].x,pts[i+1].y,
-                        pts[i+2].x,pts[i+2].y
-                    );
-                }
-
-                if (flags & graphics.Spline.CLOSED){
-                    ctx.bezierCurveTo(
-                        pts[pl-1].x,pts[pl-1].y,
-                        pts[0].x,pts[0].y,
-                        pts[1].x,pts[1].y
-                    );
-                }
-
-                if (flags & graphics.Spline.FILL){
-                    ctx.fill();
-                }
-
-                if (flags & graphics.Spline.STROKE){
-                    ctx.stroke();
-                }
-
-                ctx.closePath();
-
-            }
-            else{
-                throw new Error('not enough spline points');
-            }
-        }
-
-	};
-
-	graphics.SplinePoint.prototype = {
-
-        /**
-         * splinepoint anchor point
-         * @type {lola.graphics.Point|undefined}
-         */
-		anchor: undefined,
-
-        /**
-         * splinepoint entry vector
-         * @type {lola.graphics.Vector|undefined}
-         */
-		entry: undefined,
-
-        /**
-         * splinepoint exit vector
-         * @type {lola.graphics.Vector|undefined}
-         */
-		exit: undefined,
-
-        /**
-         * initialization function
-         * @param ax
-         * @param ay
-         * @param es
-         * @param ea
-         * @param xs
-         * @param xa
-         */
-		init: function (ax, ay, es, ea, xs, xa){
-			this.anchor = new lola.graphics.Point( ax, ay );
-			this.entry = new lola.graphics.Vector( es, ea );
-			this.exit = new lola.graphics.Vector( xs, xa==undefined?ea:xa );
-		},
-
-        /**
-         * sets the SplinePont's entry and exit angles
-         * if exitAngle is omitted the same angle is set for both
-         * @param {Number} entryAngle
-         * @param {Number|undefined} exitAngle
-         */
-        setAngle: function( entryAngle, exitAngle) {
-            this.entry.angle = entryAngle;
-            this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
-        },
-
-
-        /**
-         * gets the spline point's anchor
-         * @return {lola.graphics.Point}
-         */
-		getAnchor: function(){
-			return this.anchor;
-		},
-
-        /**
-         * gets the spline point's entry control point
-         * @return {lola.graphics.Point}
-         */
-		getControl1: function(){
-			return lola.math.point.subtract( this.anchor, this.entry.toPoint());
-		},
-
-        /**
-         * gets the spline point's exit control point
-         * @return {lola.graphics.Point}
-         */
-		getControl2: function(){
-			return lola.math.point.add( this.anchor, this.exit.toPoint() );
-		}
-
-	};
-
-	graphics.Vector.prototype = {
-        /**
-         * velocity or length of the vector
-         * @type {Number}
-         */
-		velocity: undefined,
-
-        /**
-         * angle of vector (horizontal pointing right is 0 radians)
-         * @type {Number}
-         */
-		angle: undefined,
-
-        /**
-         * converts a vector to a (0,0) based point
-         * @return {lola.graphics.Point}
-         */
-		toPoint: function() {
-			return new lola.graphics.Point(
-					Math.cos(this.angle)*this.velocity,
-					Math.sin(this.angle)*this.velocity
-			)
-		}
-	};
 
 	//register module
 	lola.registerModule( graphics );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: HTTP
+ *  Description: HTTP module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -6626,6 +7050,14 @@
 	lola.registerModule( http );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: JSON
+ *  Description: JSON module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -7054,6 +7486,14 @@
 	lola.registerModule( json );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Color Math
+ *  Description: Color Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -7444,115 +7884,14 @@
 
 })( lola );
 
-(function( lola ) {
-	var $ = lola;
-	/**
-	 * math.geom Module
-	 * @implements {lola.Module}
-	 * @memberof lola.math
-	 */
-	var geom = {
-
-		//==================================================================
-		// Attributes
-		//==================================================================
-
-
-
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.math.geom::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.math.geom.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.math.geom::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.math.geom.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "math.geom";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return ['math'];
-		},
-
-
-
-		//==================================================================
-		// Classes
-		//==================================================================
-
-
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
-
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-			};
-
-			return methods;
-
-		}
-	};
-
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
-
-
-	//register module
-	lola.registerModule( geom );
-
-})( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Point Math
+ *  Description: Point Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -7623,11 +7962,11 @@
 
 		/**
 		 * adds arguments to p1
-		 * @param {lola.graphics.Point} p1
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @return {lola.geometry.Point}
 		 */
 		add: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -7646,11 +7985,11 @@
 
 		/**
 		 * subtract args from p1
-		 * @param {lola.graphics.Point} p1
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @return {lola.geometry.Point}
 		 */
 		subtract: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -7668,12 +8007,12 @@
 
 		/**
 		 * multiply p1 by args
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point|Number} p2
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point|Number} p2
+		 * @return {lola.geometry.Point}
 		 */
 		multiply: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -7691,12 +8030,12 @@
 
 		/**
 		 * divide p1 by args
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point|Number} p2
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point|Number} p2
+		 * @return {lola.geometry.Point}
 		 */
 		divide: function( p1 ){
-			var r = new lola.graphics.Point(p1.x,p1.y);
+			var r = new lola.geometry.Point(p1.x,p1.y);
 			var len =  arguments.length;
 			for (var i=1; i<len; i++) {
 				var arg = arguments[i];
@@ -7714,18 +8053,18 @@
 
 		/**
 		 * raise p to the po
-		 * @param {lola.graphics.Point} p
-		 * @param {lola.graphics.Point} po
-		 * @return {lola.graphics.Point}
+		 * @param {lola.geometry.Point} p
+		 * @param {lola.geometry.Point} po
+		 * @return {lola.geometry.Point}
 		 */
 		pow: function( p, po ){
-			return new lola.graphics.Point( Math.pow( p.x, po ), Math.pow( p.y, po ) );
+			return new lola.geometry.Point( Math.pow( p.x, po ), Math.pow( p.y, po ) );
 		},
 
 		/**
 		 * calculates the absolute distance between p1 and p2
-		 * @param {lola.graphics.Point} p1
-		 * @param {lola.graphics.Point} p2
+		 * @param {lola.geometry.Point} p1
+		 * @param {lola.geometry.Point} p2
 		 * @return {Number}
 		 */
 		distance: function( p1, p2 ) {
@@ -7734,12 +8073,12 @@
 
 		/**
 		 * offsets a point at the specified angle by the specified distance
-		 * @param {lola.graphics.Point} p
+		 * @param {lola.geometry.Point} p
 		 * @param {Number} angle angle in radians
 		 * @param {Number} distance
 		 */
 		offsetPoint: function( p, angle, distance ){
-			var offset = new lola.graphics.Point( p.x, p.y );
+			var offset = new lola.geometry.Point( p.x, p.y );
 			offset.x += Math.cos( angle ) * distance;
 			offset.y += Math.sin( angle ) * distance;
 			return offset;
@@ -7783,10 +8122,18 @@
 	lola.registerModule( point );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Time Value of Money
+ *  Description: Time Value of Money Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * Math Time Value of Money Module
+	 * Time Value of Money Math
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -7950,10 +8297,18 @@
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Vector Math
+ *  Description: Vector Math module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
-	 * Vector Module
+	 * Vector Math Module
 	 * @implements {lola.Module}
 	 * @memberof lola.math
 	 */
@@ -8059,6 +8414,14 @@
 	lola.registerModule( vector );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Tween
+ *  Description: Tween module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
@@ -8131,6 +8494,7 @@
 
 
 			//do module preinitialization
+            //NOTE: This doesn't work in all browsers
             /*if ( window.requestAnimationFrame ) {
                 lola.tween.requestTick = function(){ lola.window.requestAnimationFrame( lola.tween.tick ); };
                 lola.tween.requestFrame = function( callback ){ lola.window.requestAnimationFrame( callback ); };

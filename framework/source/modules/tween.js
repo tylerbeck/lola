@@ -78,6 +78,7 @@
 
 
 			//do module preinitialization
+            //NOTE: This doesn't work in all browsers
             /*if ( window.requestAnimationFrame ) {
                 lola.tween.requestTick = function(){ lola.window.requestAnimationFrame( lola.tween.tick ); };
                 lola.tween.requestFrame = function( callback ){ lola.window.requestAnimationFrame( callback ); };

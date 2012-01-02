@@ -95,27 +95,29 @@
             var norm = new lola.geometry.Spline();
             var spts = spline.getPoints();
             var l = spts.length;
-
-            var oldSize = new lola.geometry.Point();
-            oldSize.x = oldMax.x - oldMin.x;
-            oldSize.y = oldMax.y - oldMin.y;
-
-            var newSize =  new lola.geometry.Point();
-            newSize.x = newMax.x - newMin.x;
-            newSize.y = newMax.y - newMin.y;
+            var oldSize = pm.subtract( oldMax, oldMin );
+            var newSize = pm.subtract( newMax, newMin );
 
             var normalizePoint = function( pt ){
-                pt = pm.divide( pm.subtract( pt, oldMin ), oldSize);
+                pt = pm.divide( pm.subtract( pt, oldMin ), oldSize );
                 if (flipX) pt.x = 1-pt.x;
                 if (flipY) pt.y = 1-pt.y;
                 return pm.multiply( pt, newSize );
             };
 
             for (var i=0; i<l; i++ ){
-                var cv1 = normalizePoint( spts[i].getControl1() ).toVector();
-                var anch = normalizePoint( spts[i].getAnchor() );
-                var cv2 = normalizePoint( spts[i].getControl2() ).toVector();
-                var np = new lola.geometry.SplinePoint( anch.x, anch.y, cv1.angle, cv1.velocity, cv2.angle );
+                //get points
+                var cp1 = spts[i].getControl1();
+                var anch = spts[i].getAnchor();
+                var cp2 = spts[i].getControl2();
+
+                //normalize points
+                var nanch = normalizePoint( anch );
+                var ncv1 = pm.subtract( nanch, normalizePoint( cp1 ) ).toVector();
+                var ncv2 = pm.subtract( normalizePoint( cp2 ), nanch ).toVector();
+
+
+                var np = new lola.geometry.SplinePoint( nanch.x, nanch.y, ncv1.velocity, ncv1.angle, ncv2.velocity, ncv2.angle );
                 norm.addPoint( np );
             }
 

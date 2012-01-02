@@ -22,6 +22,8 @@
 
         defaultResolution: 1000,
 
+        defaultEase: "ease",
+
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -51,11 +53,12 @@
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
-            this.registerSimpleEasing("ease", 0.25, 0.1, 0.25, 1.0);
-            this.registerSimpleEasing("linear", 0.0, 0.0, 1.0, 1.0);
-            this.registerSimpleEasing("ease-in", 0.42, 0, 1.0, 1.0);
-            this.registerSimpleEasing("ease-out", 0, 0, 0.58, 1.0);
-            this.registerSimpleEasing("ease-in-out", 0.42, 0, 0.58, 1.0);
+            this.registerSimpleEasing("none", 0, 0, 1, 1);
+            this.registerSimpleEasing("ease", .25, .1, .25, 1);
+            this.registerSimpleEasing("linear", 0, 0, 1, 1);
+            this.registerSimpleEasing("ease-in", .42, 0, 1, 1);
+            this.registerSimpleEasing("ease-out", 0, 0, .58, 1);
+            this.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
 
 			//remove initialization method
@@ -164,36 +167,41 @@
             var last = spline.getPoint( (spline.getPoints().length - 1) ).getAnchor();
             if ( first.x == 0 && first.y == 0 && last.x == 1 && last.y == 1 ){
                 //Todo: make sure spline can be fit to cartesian function
-                var s = easing.sampleSpline( spline, 1000 ).join(',');
-                var fnStr = "function( t,v,c,d ){"+
-                    "var s = ["+s+"];"+
-                    "var l = s.length;"+
-                    "var f =(l/4)|0;"+
-                    "var i = 0;"+
-                    "t /= d;"+
-                    "while ( t<=s[i].x && i < l ){"+
-                        "i+=f;"+
-                        "if ( i >= l) i = l-1;"+
-                        "if ( t >= s[i].x ){"+
-                            "i-=f;"+
-                            "f = (f>=2)?f/2|0:1;"+
-                            "if (t<=s[i].x && t>=s[i+1].x){"+
-                                "var s1 = s[i+1];"+
-                                "var s2 = s[i];"+
-                                "var p = (t-s1.x)/(s2.x-s1.x);"+
-                                "return v+c*(s1.y+p*(s2.y-s1.y));"+
-                            "}"+
-                        "}"+
-                    "}"+
-                    "return v+c;"+
-                "};";
-                //console.log(fnStr);
+
+                var Ease = function(){
+                    return this;
+                };
+
+                var samples = easing.sampleSpline( spline, 1000 );
+
+                Ease.prototype = {
+                    samples: samples,
+                    sampleCount: samples.length,
+                    lastIndex: 1,
+                    exec: function( t,v,c,d ){
+                        t/=d;
+                        var s = this.samples;
+                        var i = this.lastIndex;
+                        var l = this.sampleCount;
+                        //TODO: use a more efficient time search algorithm
+                        while( t>s[i].x && i < l ){
+                            i++;
+                            if ( t <= s[i].x ){
+                                var low = s[i-1];
+                                var high = s[i];
+                                var p = (t - low.x) / (high.x - low.x);
+                                this.lastIndex = i;
+                                return v+c*(low.y+p*(high.y-low.y));
+                            }
+                        }
+                    }
+                };
+
                 if ( !easing.methods[ id ] || overwrite ){
-                    lola.evaluate("lola.easing.methods[ \""+id+"\" ] = "+fnStr);
+                    lola.easing.methods[ id ] = Ease;
                 }else{
                     throw new Error("easing id already taken");
                 }
-
 
             }else{
                 throw new Error("invalid easing spline");
@@ -220,6 +228,30 @@
             easing.register( id, spline );
         },
 
+        /**
+         * gets a regsitered easing function
+         * @param {String} id
+         */
+        get: function( id ){
+            //console.log("lola.easing.get: "+id);
+            if (this.methods[ id ]){
+                return new this.methods[ id ]();
+            }
+            else {
+                console.warn('easing method "'+id+'" not found.');
+                return new this.methods[ this.defaultEase ]();
+            }
+        },
+
+        /**
+         * sets the default easing method
+         * @param {String} ids
+         */
+        setDefaultEase: function( id ){
+            if (this.methods[ id ]){
+                this.defaultEase = id;
+            }
+        },
 
 
 		//==================================================================

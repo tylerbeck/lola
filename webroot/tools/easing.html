@@ -370,6 +370,19 @@
                     return norm;
                 },
 
+                getRawPoints: function( spline ){
+                    var raw = [];
+                    var pts = spline.getPoints();
+                    var spl = pts.length;
+                    for (var i=0; i<spl; i++ ){
+                        raw.push( pts[i].getControl1() );
+                        raw.push( pts[i].getAnchor() );
+                        raw.push( pts[i].getControl2() );
+                    }
+
+                    return raw;
+                },
+
                 getSplineXFunction: function(){
                     var pts = this.normalizeSplinePoints();
                     var sections = [];
@@ -394,7 +407,16 @@
                 },
 
                 getSplineSamplingFunction: function(){
-                    var pts = this.normalizeSplinePoints();
+                    var normSpline =  lola.geometry.normalizeSpline( this.spline,
+                                                                    {x:50,y:150},
+                                                                    {x:450, y:350},
+                                                                    {x:0,y:0},
+                                                                    {x:1, y:1},
+                                                                    false, true );
+
+                    lola.easing.register( 'custom', normSpline, 1000, true );
+
+                    var pts = this.getRawPoints( normSpline );
                     var sections = [];
                     var sCount = pts.length/3 - 1;
 
@@ -490,8 +512,27 @@
                 testStartVal: 100,
                 testDeltaVal: 700,
                 testCount: 0,
-                test: function(){
-                    console.log('TEST');
+                test: function(event){
+                    if (event.shiftKey){
+                        lola.agent.page.testPureJS();
+                    }
+                    else {
+                        lola.agent.page.testFrameworkEasing();
+                    }
+
+                },
+
+                testFrameworkEasing: function(){
+                    console.log('TEST FRAMEWORK');
+                    var fromVal = parseInt($("#box").style('marginLeft').replace(/px/g,""));
+                    var toVal = (fromVal == 100) ? 800 : 100;
+                    var easing = lola.easing.get('custom');
+                    //console.log( fromVal, toVal );
+                    $('#box').tween( {style:{marginLeft:{from:fromVal+"px", to:toVal+"px"}, backgroundColor:{from:"#FF0000", to:"#0000FF"} }}, 4000, 0, easing );
+                },
+
+                testPureJS: function(){
+                    console.log('TEST JS');
                     var custom = new CustomEase();
                     lola.agent.page.testCount = 0;
                     lola.agent.page.testStart = lola.now();
@@ -515,7 +556,6 @@
                     };
 
                     intervalFn();
-
                 }
             };
 
@@ -585,5 +625,5 @@
 
 
 
-<body>
+</body>
 </html>

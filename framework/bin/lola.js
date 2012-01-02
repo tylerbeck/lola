@@ -5331,6 +5331,8 @@
 
         defaultResolution: 1000,
 
+        defaultEase: "ease",
+
 		//==================================================================
 		// Methods
 		//==================================================================
@@ -5360,11 +5362,12 @@
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module initialization
-            this.registerSimpleEasing("ease", 0.25, 0.1, 0.25, 1.0);
-            this.registerSimpleEasing("linear", 0.0, 0.0, 1.0, 1.0);
-            this.registerSimpleEasing("ease-in", 0.42, 0, 1.0, 1.0);
-            this.registerSimpleEasing("ease-out", 0, 0, 0.58, 1.0);
-            this.registerSimpleEasing("ease-in-out", 0.42, 0, 0.58, 1.0);
+            this.registerSimpleEasing("none", 0, 0, 1, 1);
+            this.registerSimpleEasing("ease", .25, .1, .25, 1);
+            this.registerSimpleEasing("linear", 0, 0, 1, 1);
+            this.registerSimpleEasing("ease-in", .42, 0, 1, 1);
+            this.registerSimpleEasing("ease-out", 0, 0, .58, 1);
+            this.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
 
 			//remove initialization method
@@ -5473,36 +5476,41 @@
             var last = spline.getPoint( (spline.getPoints().length - 1) ).getAnchor();
             if ( first.x == 0 && first.y == 0 && last.x == 1 && last.y == 1 ){
                 //Todo: make sure spline can be fit to cartesian function
-                var s = easing.sampleSpline( spline, 1000 ).join(',');
-                var fnStr = "function( t,v,c,d ){"+
-                    "var s = ["+s+"];"+
-                    "var l = s.length;"+
-                    "var f =(l/4)|0;"+
-                    "var i = 0;"+
-                    "t /= d;"+
-                    "while ( t<=s[i].x && i < l ){"+
-                        "i+=f;"+
-                        "if ( i >= l) i = l-1;"+
-                        "if ( t >= s[i].x ){"+
-                            "i-=f;"+
-                            "f = (f>=2)?f/2|0:1;"+
-                            "if (t<=s[i].x && t>=s[i+1].x){"+
-                                "var s1 = s[i+1];"+
-                                "var s2 = s[i];"+
-                                "var p = (t-s1.x)/(s2.x-s1.x);"+
-                                "return v+c*(s1.y+p*(s2.y-s1.y));"+
-                            "}"+
-                        "}"+
-                    "}"+
-                    "return v+c;"+
-                "};";
-                //console.log(fnStr);
+
+                var Ease = function(){
+                    return this;
+                };
+
+                var samples = easing.sampleSpline( spline, 1000 );
+
+                Ease.prototype = {
+                    samples: samples,
+                    sampleCount: samples.length,
+                    lastIndex: 1,
+                    exec: function( t,v,c,d ){
+                        t/=d;
+                        var s = this.samples;
+                        var i = this.lastIndex;
+                        var l = this.sampleCount;
+                        //TODO: use a more efficient time search algorithm
+                        while( t>s[i].x && i < l ){
+                            i++;
+                            if ( t <= s[i].x ){
+                                var low = s[i-1];
+                                var high = s[i];
+                                var p = (t - low.x) / (high.x - low.x);
+                                this.lastIndex = i;
+                                return v+c*(low.y+p*(high.y-low.y));
+                            }
+                        }
+                    }
+                };
+
                 if ( !easing.methods[ id ] || overwrite ){
-                    lola.evaluate("lola.easing.methods[ \""+id+"\" ] = "+fnStr);
+                    lola.easing.methods[ id ] = Ease;
                 }else{
                     throw new Error("easing id already taken");
                 }
-
 
             }else{
                 throw new Error("invalid easing spline");
@@ -5529,6 +5537,30 @@
             easing.register( id, spline );
         },
 
+        /**
+         * gets a regsitered easing function
+         * @param {String} id
+         */
+        get: function( id ){
+            //console.log("lola.easing.get: "+id);
+            if (this.methods[ id ]){
+                return new this.methods[ id ]();
+            }
+            else {
+                console.warn('easing method "'+id+'" not found.');
+                return new this.methods[ this.defaultEase ]();
+            }
+        },
+
+        /**
+         * sets the default easing method
+         * @param {String} ids
+         */
+        setDefaultEase: function( id ){
+            if (this.methods[ id ]){
+                this.defaultEase = id;
+            }
+        },
 
 
 		//==================================================================
@@ -5667,27 +5699,29 @@
             var norm = new lola.geometry.Spline();
             var spts = spline.getPoints();
             var l = spts.length;
-
-            var oldSize = new lola.geometry.Point();
-            oldSize.x = oldMax.x - oldMin.x;
-            oldSize.y = oldMax.y - oldMin.y;
-
-            var newSize =  new lola.geometry.Point();
-            newSize.x = newMax.x - newMin.x;
-            newSize.y = newMax.y - newMin.y;
+            var oldSize = pm.subtract( oldMax, oldMin );
+            var newSize = pm.subtract( newMax, newMin );
 
             var normalizePoint = function( pt ){
-                pt = pm.divide( pm.subtract( pt, oldMin ), oldSize);
+                pt = pm.divide( pm.subtract( pt, oldMin ), oldSize );
                 if (flipX) pt.x = 1-pt.x;
                 if (flipY) pt.y = 1-pt.y;
                 return pm.multiply( pt, newSize );
             };
 
             for (var i=0; i<l; i++ ){
-                var cv1 = normalizePoint( spts[i].getControl1() ).toVector();
-                var anch = normalizePoint( spts[i].getAnchor() );
-                var cv2 = normalizePoint( spts[i].getControl2() ).toVector();
-                var np = new lola.geometry.SplinePoint( anch.x, anch.y, cv1.angle, cv1.velocity, cv2.angle );
+                //get points
+                var cp1 = spts[i].getControl1();
+                var anch = spts[i].getAnchor();
+                var cp2 = spts[i].getControl2();
+
+                //normalize points
+                var nanch = normalizePoint( anch );
+                var ncv1 = pm.subtract( nanch, normalizePoint( cp1 ) ).toVector();
+                var ncv2 = pm.subtract( normalizePoint( cp2 ), nanch ).toVector();
+
+
+                var np = new lola.geometry.SplinePoint( nanch.x, nanch.y, ncv1.velocity, ncv1.angle, ncv2.velocity, ncv2.angle );
                 norm.addPoint( np );
             }
 
@@ -8558,7 +8592,6 @@
          * @private
          */
         startTicking: function(){
-            console.log("startTicking");
             if (!lola.tween.active){
                 lola.tween.active = true;
                 lola.tween.requestTick();
@@ -8737,7 +8770,7 @@
             else{
                 from = target[ property ];
             }
-            console.log('from', from);
+            //console.log('from', from);
             //we can only tween if there's a from value
             var deltaMethod = 0;
             if (from != null && from != undefined) {
@@ -8746,21 +8779,22 @@
                     to = value;
                 }
                 else if (value.to) {
+                    deltaMethod = 0;
                     to = value.to;
                 }
                 else if (value.add) {
                     deltaMethod = 1;
                     to = value.add;
                 }
-                else if (value.subtract) {
-                    deltaMethod = 2;
-                    to = value.subtract;
+                else if (value.by) {
+                    deltaMethod = 1;
+                    to = value.by;
                 }
             }
             else{
                 throw new Error('invalid tween parameters')
             }
-            console.log('to', to);
+            //console.log('to', to);
 
             //break down from and to values to tweenable values
             //and determine how to tween values
@@ -8794,7 +8828,7 @@
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            console.log('type', type);
+            //console.log('type', type);
 
 
             return new tween.TweenObject( tweenId, target, property, from, delta, proxy );
@@ -8895,16 +8929,12 @@
                     return (a && b);
                 },
                 getDelta: function( to, from, method) {
-                    switch( method ){
-                        case 1:
-                            return to;
-                            break;
-                        case 2:
-                            return 0 - to;
-                            break;
-
+                    if( method ){
+                       return to;
                     }
-                    return to - from;
+                    else{
+                        return to - from;
+                    }
                 },
                 proxy: null
             },
@@ -8919,19 +8949,52 @@
                     return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
                 },
                 getDelta: function( to, from, method) {
-                    switch( method ){
-                        case 1:
-                            return {value:to.value, units:to.units};
-                            break;
-                        case 2:
-                            return {value:0 - to.value, units:to.units};
-                            break;
-
+                    if( method ){
+                        return {value:to.value, units:to.units};
                     }
-                    return {value:to.value - from.value, units:to.units};
+                    else{
+                        return {value:to.value - from.value, units:to.units};
+                    }
                 },
                 proxy: function( target, property, from, delta, progress ) {
                     target[property] = (from.value + delta.value * progress) + delta.units;
+                }
+            },
+
+            color: {
+                match: lola.regex.isColor,
+                parse: function(val){
+                    //console.log ('color.parse: ',val);
+                    var color = new lola.css.Color( val );
+                    //console.log( '    ', color.rgbValue );
+                    return color.rgbValue;
+                },
+                canTween: function( a, b ) {
+                   //console.log ('color.canTween: ',( a && b ));
+                   return ( a && b );
+                },
+                getDelta: function( to, from, method ) {
+                    if( method ){
+                        //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
+                        return { r:to.r, g:to.g, b:to.b, a:to.a };
+                    }
+                    else{
+                        //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
+                        return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
+                    }
+                },
+
+                proxy: function( target, property, from, delta, progress ) {
+                    var r = ((from.r + delta.r * progress) * 255) | 0;
+                    var g = ((from.g + delta.g * progress) * 255) | 0;
+                    var b = ((from.b + delta.b * progress) * 255) | 0;
+                    var a = (from.a + delta.a * progress);
+                    //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
+
+                    if ( lola.support.colorAlpha )
+                        target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                    else
+                        target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
                 }
             }
 
@@ -8976,6 +9039,7 @@
                     lola.tween.addTarget( tweenId, targets, properties, collisions );
                     lola.tween.start(tweenId);
                 },
+
                 tween: function( properties, duration, delay, easing, collisions ){
                     var targets = [];
                     this.forEach( function(item){
@@ -9011,7 +9075,7 @@
             this.easing = easing;
             this.delay = delay;
             if (!easing){
-                this.easing = function(t,v,c,d){ return (t/d)*c + v;};
+                this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
             }
         },
 
@@ -9022,8 +9086,7 @@
                 this.complete = true;
                 this.active = true;
             }
-
-            this.value = elapsed ? this.easing( elapsed, 0, 1, this.duration ) : 0;
+            this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
         },
 
         start: function(){

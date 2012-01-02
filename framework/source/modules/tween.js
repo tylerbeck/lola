@@ -142,7 +142,6 @@
          * @private
          */
         startTicking: function(){
-            console.log("startTicking");
             if (!lola.tween.active){
                 lola.tween.active = true;
                 lola.tween.requestTick();
@@ -321,7 +320,7 @@
             else{
                 from = target[ property ];
             }
-            console.log('from', from);
+            //console.log('from', from);
             //we can only tween if there's a from value
             var deltaMethod = 0;
             if (from != null && from != undefined) {
@@ -330,21 +329,22 @@
                     to = value;
                 }
                 else if (value.to) {
+                    deltaMethod = 0;
                     to = value.to;
                 }
                 else if (value.add) {
                     deltaMethod = 1;
                     to = value.add;
                 }
-                else if (value.subtract) {
-                    deltaMethod = 2;
-                    to = value.subtract;
+                else if (value.by) {
+                    deltaMethod = 1;
+                    to = value.by;
                 }
             }
             else{
                 throw new Error('invalid tween parameters')
             }
-            console.log('to', to);
+            //console.log('to', to);
 
             //break down from and to values to tweenable values
             //and determine how to tween values
@@ -378,7 +378,7 @@
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            console.log('type', type);
+            //console.log('type', type);
 
 
             return new tween.TweenObject( tweenId, target, property, from, delta, proxy );
@@ -479,16 +479,12 @@
                     return (a && b);
                 },
                 getDelta: function( to, from, method) {
-                    switch( method ){
-                        case 1:
-                            return to;
-                            break;
-                        case 2:
-                            return 0 - to;
-                            break;
-
+                    if( method ){
+                       return to;
                     }
-                    return to - from;
+                    else{
+                        return to - from;
+                    }
                 },
                 proxy: null
             },
@@ -503,19 +499,52 @@
                     return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
                 },
                 getDelta: function( to, from, method) {
-                    switch( method ){
-                        case 1:
-                            return {value:to.value, units:to.units};
-                            break;
-                        case 2:
-                            return {value:0 - to.value, units:to.units};
-                            break;
-
+                    if( method ){
+                        return {value:to.value, units:to.units};
                     }
-                    return {value:to.value - from.value, units:to.units};
+                    else{
+                        return {value:to.value - from.value, units:to.units};
+                    }
                 },
                 proxy: function( target, property, from, delta, progress ) {
                     target[property] = (from.value + delta.value * progress) + delta.units;
+                }
+            },
+
+            color: {
+                match: lola.regex.isColor,
+                parse: function(val){
+                    //console.log ('color.parse: ',val);
+                    var color = new lola.css.Color( val );
+                    //console.log( '    ', color.rgbValue );
+                    return color.rgbValue;
+                },
+                canTween: function( a, b ) {
+                   //console.log ('color.canTween: ',( a && b ));
+                   return ( a && b );
+                },
+                getDelta: function( to, from, method ) {
+                    if( method ){
+                        //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
+                        return { r:to.r, g:to.g, b:to.b, a:to.a };
+                    }
+                    else{
+                        //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
+                        return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
+                    }
+                },
+
+                proxy: function( target, property, from, delta, progress ) {
+                    var r = ((from.r + delta.r * progress) * 255) | 0;
+                    var g = ((from.g + delta.g * progress) * 255) | 0;
+                    var b = ((from.b + delta.b * progress) * 255) | 0;
+                    var a = (from.a + delta.a * progress);
+                    //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
+
+                    if ( lola.support.colorAlpha )
+                        target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                    else
+                        target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
                 }
             }
 
@@ -560,6 +589,7 @@
                     lola.tween.addTarget( tweenId, targets, properties, collisions );
                     lola.tween.start(tweenId);
                 },
+
                 tween: function( properties, duration, delay, easing, collisions ){
                     var targets = [];
                     this.forEach( function(item){
@@ -595,7 +625,7 @@
             this.easing = easing;
             this.delay = delay;
             if (!easing){
-                this.easing = function(t,v,c,d){ return (t/d)*c + v;};
+                this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
             }
         },
 
@@ -606,8 +636,7 @@
                 this.complete = true;
                 this.active = true;
             }
-
-            this.value = elapsed ? this.easing( elapsed, 0, 1, this.duration ) : 0;
+            this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
         },
 
         start: function(){

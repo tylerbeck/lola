@@ -409,8 +409,8 @@
 		 */
 		upgradeObjectPrototype: function() {
 
-			if ( !Object.keys ) {
-				Object.keys = function ( object ) {
+			if ( !Object.prototype.keys ) {
+                Object.prototype.keys = function ( object ) {
 					var keys = [];
 					for ( var name in object ) {
 						if ( Object.prototype.hasOwnProperty.call( object, name ) ) {

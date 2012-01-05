@@ -34,6 +34,13 @@
 		},
 		rep: null,
 
+        /**
+         * map used for JSONp callbacks
+         * @type {Object}
+         * @private
+         */
+        handleResponse: {},
+        ruid:-1,
 
 		//==================================================================
 		// Methods
@@ -87,7 +94,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ['http'];
 		},
 
 		/**
@@ -364,11 +371,36 @@
 
 		},
 
+        get: function ( urlStr, callback ){
+            var url = new lola.URL(urlStr);
+
+            //determine how to load json
+            if (url.protocol == lola.url.protocol && url.domain == lola.url.domain ){
+                //same protocol & domain... just do async call
+                var $r = $(new lola.http.AsyncRequest(urlStr));
+                if (callback) {
+                    $r.addListener('result', function(event){
+                        var obj = lola.json.parse( event.data.responseText );
+                        callback(obj);
+                    } );
+                }
+            }
+            else {
+                //assume this is a jsonp call and the server supports it.
+                var uid = this.ruid++;
+                var delegate = function( obj ){
+                    callback(obj);
+                    delete lola.json.handleResponse[uid];
+                }
+                lola.json.handleResponse[ uid ] = delegate;
+                //lola.loadScript(urlStr,)
+            }
+        },
+
 
 		//==================================================================
 		// Classes
 		//==================================================================
-
 
 		//==================================================================
 		// Selection Methods
@@ -425,7 +457,6 @@
 	//==================================================================
 	// Class Prototypes
 	//==================================================================
-
 
 	json.upgradePrototypes();
 	delete json.upgradePrototypes;

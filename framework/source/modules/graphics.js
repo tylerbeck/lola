@@ -140,7 +140,6 @@
 			gdata.contexts2d.push( id );
 			//$(canvas).putData( gdata, this.getNamespace() );
 
-
 			this.map2d[ id ] = context;
 		},
 

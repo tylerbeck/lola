@@ -137,30 +137,14 @@
          */
         checkModules: function( modules ){
             var missing = [];
-            modules.forEach( function(item){
+
+            Object.forEach(modules, function(item){
                 if (!lola.hasPackage( lola, item ))
                     missing.push(item);
             });
 
             return missing;
         },
-
-        /**
-         * parses a url to get hash and vars
-         * @param {String} url
-         * @return {Object} vars, hash
-         */
-        parseUrl: function( url ){
-			var parts = url.split("#",2);
-			var vars = {};
-			var hash = parts[1];
-
-			var parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-				vars[key] = value;
-			});
-
-			return { vars:vars, hash:hash};
-		},
 
 		/**
 		 * creates/gets and returns the object lineage defined in chain param
@@ -303,7 +287,7 @@
 
 			//add initializer
 			if ( module.initialize && typeof module.initialize === "function" ) {
-				lola.initializers.push( function() {
+				lola.addInitializer( function() {
 					module.initialize();
 				} );
 			}
@@ -386,9 +370,14 @@
 			return check;
 		},
 
+        addInitializer: function( fn ){
+            lola.initializers.push( fn );
+        },
+
 		debug: function( msg ){
 			if (lola.debugMode) {
-				console.log(msg);
+				console.log("["+lola.now()+"]",msg);
+
 			}
 		},
 
@@ -409,17 +398,45 @@
 		 */
 		upgradeObjectPrototype: function() {
 
-			if ( !Object.keys ) {
-				Object.keys = function ( object ) {
-					var keys = [];
-					for ( var name in object ) {
-						if ( Object.prototype.hasOwnProperty.call( object, name ) ) {
-							keys.push( name );
-						}
-					}
-					return keys;
-				};
-			}
+            if ( !Object.keys ) {
+                Object.keys = function ( object ) {
+                    var keys = [];
+                    for ( var name in object ) {
+                        if ( Object.prototype.hasOwnProperty.call( object, name ) ) {
+                            keys.push( name );
+                        }
+                    }
+                    return keys;
+                };
+            }
+
+            /*if ( !Object.prototype.keys ) {
+                Object.prototype.keys = function(){
+                    return Object.keys( this );
+                }
+            }*/
+
+            if ( !Object.forEach ){
+                Object.forEach = function( obj, fun  ) {
+                    "use strict";
+
+                    if ( obj === void 0 || obj === null )
+                        throw new TypeError();
+
+                    var t = Object( obj );
+                    if ( typeof fun !== "function" )
+                        throw new TypeError();
+
+                    var thisp = arguments[2];
+                    for ( var k in t ) {
+                        if (t.hasOwnProperty(k)){
+                            fun.call( thisp, t[k], k, t );
+                        }
+                    }
+                };
+            }
+
+
 		},
 
 		//==================================================================
@@ -440,8 +457,17 @@
 		 * @interface
 		 */
 		Module: function() {
+            return this;
+		},
 
-		}
+        /**
+         * URL Class
+         * @class
+         * @param str
+         */
+        URL: function( str ){
+            return this.init( str );
+        }
 
 	};
 
@@ -469,7 +495,9 @@
 				}
 				else {
                     try {
-                        var nodeList = document.querySelectorAll( selector );
+                        if (!context)
+                            context = document;
+                        var nodeList =  context.querySelectorAll( selector );
                         var nl = nodeList.length;
                         this.elements = [];
                         for (var i=0; i<nl; i++){
@@ -477,8 +505,7 @@
                         }
                     }
                     catch (e){
-                        console.log('Exception:');
-                        console.log( selector );
+                        console.log('Exception:', selector );
                     }
 					//TODO: write lightweight selector to use if Sizzle not loaded
 					//throw new Error( "Sizzle not found" );
@@ -607,6 +634,52 @@
 
 	};
 
+    //==================================================================
+    // URL Class
+    //==================================================================
+    lola.URL.prototype = {
+        protocol: "",
+        domain:"",
+        path:"",
+        page:"",
+        vars:{},
+        hash:"",
+
+        init: function( url ){
+            this.parse( url );
+            return this;
+        },
+
+        parse: function( url ){
+            var parts = url.split("#",2);
+            this.hash = parts[1];
+
+            var vars = {};
+            parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;return "";
+            });
+            this.vars = vars;
+
+            parts = parts.split(":");
+            this.protocol = parts[0];
+
+            parts = parts[1].substr(2).split("/");
+            this.domain = parts.shift();
+            this.page = parts.pop();
+            this.path = "/"+parts.join("/")+"/";
+        },
+
+        toString: function(){
+            var v = [];
+            Object.forEach( this.vars, function( item, key ){
+                v.push( key+"="+item );
+            });
+            var vstr = (v.length)?"?"+v.join("&"):"";
+            var hstr = (this.hash == "")?"":"#"+this.hash;
+            return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+        }
+    };
+
 	//==================================================================
 	// Auto Initialization
 	//==================================================================
@@ -623,10 +696,8 @@
 	window['$'] = lola;
 	window['lola'] = lola;
 
-	var parts = lola.parseUrl( window.location.href );
-	lola.urlvars = parts.vars;
-	lola.hash = parts.hash;
-	lola.debugMode = lola.urlvars['debug'] == "true";
+	lola.url = new lola.URL( window.location.href );
+	lola.debugMode = lola.url.vars['debug'] == "true";
 
 	if ( document.readyState === "complete" ) {
 		lola.initialize( window );
@@ -803,7 +874,7 @@
 				 * @param {Function} callback function callback( item, index, array ):void
 				 */
 				forEach: function( callback ) {
-					this.elements.forEach( callback, this );
+                    this.elements.forEach( callback );
 					return this;
 				},
 
@@ -812,7 +883,7 @@
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				every: function( callback ) {
-					return this.elements.every( callback, this );
+					return this.elements.every( callback );
 				},
 
 				/**
@@ -820,7 +891,7 @@
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				some: function( callback ) {
-					return this.elements.some( callback, this );
+					return this.elements.some( callback );
 				}
 
 			};
@@ -6237,7 +6308,6 @@
 			gdata.contexts2d.push( id );
 			//$(canvas).putData( gdata, this.getNamespace() );
 
-
 			this.map2d[ id ] = context;
 		},
 
@@ -7120,6 +7190,13 @@
 		},
 		rep: null,
 
+        /**
+         * map used for JSONp callbacks
+         * @type {Object}
+         * @private
+         */
+        response: {},
+
 
 		//==================================================================
 		// Methods
@@ -7173,7 +7250,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return [];
+			return ['http'];
 		},
 
 		/**
@@ -7450,11 +7527,13 @@
 
 		},
 
+        load: function ( url ){
+
+        },
 
 		//==================================================================
 		// Classes
 		//==================================================================
-
 
 		//==================================================================
 		// Selection Methods
@@ -7511,7 +7590,6 @@
 	//==================================================================
 	// Class Prototypes
 	//==================================================================
-
 
 	json.upgradePrototypes();
 	delete json.upgradePrototypes;
@@ -8448,6 +8526,461 @@
 	lola.registerModule( vector );
 
 })( lola );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: JSON Template
+ *  Description: JSON Template module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * template Module
+	 * @implements {lola.Module}
+	 * @memberof lola
+	 */
+	var template = {
+
+		//==================================================================
+		// Attributes
+		//==================================================================
+        /**
+         * map of hooks & template hooks
+         */
+        hooks: {},
+
+		//==================================================================
+		// Methods
+		//==================================================================
+		/**
+		 * preinitializes module
+		 * @private
+		 * @return {void}
+		 */
+		preinitialize: function() {
+			lola.debug('lola.template::preinitialize');
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module preinitialization
+
+
+			//remove initialization method
+			delete lola.template.preinitialize;
+		},
+
+		/**
+		 * initializes module
+		 * @public
+		 * @return {void}
+		 */
+		initialize: function() {
+			lola.debug('lola.template::initialize');
+			//this framework is dependent on lola framework
+			if ( !lola ) throw new Error( 'lola not defined!' );
+
+			//do module initialization
+
+            //get all predefined templates
+            var start = lola.now();
+            $('script[type="text/x-lola-template"]').forEach( function( item ){
+                template.add( item.id, item.innerHTML );
+            });
+            var complete = lola.now();
+            lola.debug( "templates parsed in "+(complete-start)+" ms" );
+
+
+			//remove initialization method
+			delete lola.template.initialize;
+		},
+
+		/**
+		 * get module's namespace
+		 * @public
+		 * @return {String}
+		 */
+		getNamespace: function() {
+			return "template";
+		},
+
+		/**
+		 * get module's dependencies
+		 * @public
+		 * @return {Array}
+		 * @default []
+		 */
+		getDependencies: function() {
+			return ['json'];
+		},
+
+        /**
+         * creates and maps a template hook from the given string
+         * @param {String} id template id
+         * @param {String} str template contents
+         */
+        add: function( id, str ) {
+            if (!id || id == "getValue")
+                throw new Error("invalid template id");
+            this.hooks[ id ] = new template.TemplateHook( str );
+
+        },
+
+        /**
+         * add value hook
+         * @param {String} id
+         * @param {Function} fn function( value ):String
+         */
+        addHook: function( id, fn ){
+            if (!id || id == "getValue")
+                throw new Error("invalid hook id");
+
+            this.hooks[ id ] = new template.Hook( fn );
+        },
+
+        /**
+         * returns hook instance
+         * @param {String} id
+         * @return {lola.template.Hook}
+         */
+        getHook: function(id){
+            if ( !this.hooks[ id ] )
+                throw new Error('hook "'+id+'" not found.');
+            return this.hooks[ id ];
+        },
+
+        /**
+         * applies the named template hook to the data
+         * @param {String} name template name
+         * @param {Object} data
+         * @return {String}
+         */
+        apply: function( name, data ){
+          var str = "";
+          var tmp = lola.template.getHook( name );
+          if (tmp){
+              str = tmp.evaluate( data );
+          }
+          return str;
+        },
+
+		//==================================================================
+		// Classes
+		//==================================================================
+        /**
+         * internal tag object
+         * ENUMERATED REPLACEMENT VALUES
+         * Boolean ${property[trueValue|falseValue]}
+         * String Enum ${property[a:aValue,b:bValue,c:cValue,DEFAULT:defaultValue]}
+         * Integer Enum explicit ${property[3:threeValue,5:fiveValue,DEFAULT:defaultValue]}
+         * Integer Enum implicit ${property[zeroValue,oneValue,twoValue]}
+         *
+         * SUB-TEMPLATES / HOOKS
+         * ${property->name}
+         * ${property[...]->name}
+         * @class
+         * @param {String} str
+         */
+        Tag: function( str ) {
+            return this.init( str );
+        },
+
+        /**
+         * internal hook object
+         * @class
+         * @param {Function} fn
+         */
+        Hook: function( fn ){
+            return this.init( fn );
+        },
+
+        /**
+         * internal template object
+         * @class
+         * @param {String} str
+         */
+        TemplateHook: function( str ) {
+            return this.init( str );
+        },
+
+		//==================================================================
+		// Selection Methods
+		//==================================================================
+		/**
+		 * get module's selectors
+		 * @public
+		 * @return {Object}
+		 */
+		getSelectorMethods: function() {
+
+			/**
+			 * module's selector methods
+			 * @type {Object}
+			 */
+			var methods = {
+                /**
+                 * sets selector elements' html to the result of evaluating
+                 * the named template against the data object
+                 * @param {String} name
+                 * @param {Object} data
+                 */
+                applyTemplate: function( name, data ){
+                    this.html( lola.template.apply(name,data) );
+                }
+			};
+
+			return methods;
+
+		}
+	};
+
+	//==================================================================
+	// Class Prototypes
+	//==================================================================
+    template.Tag.prototype = {
+
+        rGetParts: /^([A-Za-z_$][A-Za-z0-9_$]*)(\[[^\]]+\])?(->[A-Za-z_$][A-Za-z0-9_$]*)?/,
+        property: "",
+        options: {},
+        hookName: "",
+
+        /**
+         * initialize Tag Object
+         * @param {String} str
+         */
+        init: function( str ){
+            if (str)
+                this.parse( str );
+
+            return this;
+        },
+
+        /**
+         * parses tag string
+         * @param {String} str
+         * @private
+         */
+        parse: function( str ){
+            var parts = str.match( this.rGetParts );
+            if (parts){
+                this.property = parts[1];
+                this.parseOptions(parts[2]);
+                this.hookName = parts[3]?parts[3].replace(/-\>/g,""):"";
+            }
+        },
+
+        /**
+         * parses raw tag options
+         * @param {String} raw
+         * @private
+         */
+        parseOptions: function(raw){
+            if (raw){
+                raw = raw.slice(1,-1).trim();
+                var opts = raw.split(',');
+                var index = 0;
+                var options = {};
+                opts.forEach( function(item){
+                    var iparts = item.split(':');
+                    if (iparts.length > 1){
+                        options[ iparts[0].trim() ]= iparts[1].trim();
+                    }
+                    else {
+                        options[ String(index) ] = iparts[0].trim();
+                    }
+                    index++;
+                });
+                this.options = options;
+            }
+            else{
+                this.options = {};
+            }
+        },
+        /**
+         * outputs tag string
+         * @return {String}
+         */
+        toString: function(){
+            var keys = Object.keys(this.options);
+            var options = this.options;
+            var opts = [];
+            this.options.forEach( function( item, key ){
+                opts.push( key +":"+ item );
+            });
+            return this.property+"["+opts.join(",")+"]"+(this.hookName==""?"":"->"+this.hookName);
+        },
+
+        /**
+         * gets evaluated value if tag
+         * @param {Object} data
+         * @param {int} index
+         */
+        evaluate: function( data, index ){
+            index = index || 0;
+            var value = data[ this.property ];
+
+            if (Object.keys(this.options).length > 0){
+                var type = lola.type.get( value );
+                switch(type){
+                    case "boolean":
+                        value = this.options[ value ? "0" : "1" ];
+                        break;
+
+                    default:
+                        value = this.options[ value ];
+                        break;
+                }
+            }
+
+            //execute hook if set
+            if (this.hookName != ""){
+                var hook = lola.template.getHook( this.hookName );
+                value = hook.evaluate( value );
+            }
+
+            return value;
+
+        }
+
+    };
+
+    template.Hook.prototype = {
+        /**
+         * hooks function
+         * @private
+         */
+        fn: null,
+
+        /**
+         * hook initializer
+         * @param {Function} fn
+         */
+        init: function( fn ){
+            if ( typeof fn === "function" ){
+                this.fn = fn;
+            }
+            else {
+                throw new Error("invalid hook.")
+            }
+            return this;
+        },
+
+        /**
+         * run hook on passed value
+         * @param {*} value
+         * @return {String}
+         */
+        evaluate: function( value ) {
+            //return value
+            return this.fn.apply( lola.window, arguments );
+        }
+    };
+
+    template.TemplateHook.prototype = {
+        /**
+         * tag regex
+         * @private
+         * @type {RegExp}
+         */
+        rTag: /\$\{([^\}]+)\}/,
+
+        /**
+         * template blocks
+         * @private
+         * @type {Array}
+         */
+        blocks: [],
+
+        /**
+         * count of blocks
+         * @private
+         * @type {int}
+         */
+        blockCount: 0,
+
+        /**
+         * template hook initializer
+         * @private
+         * @param {String} str
+         */
+        init: function( str ){
+            if (str) {
+                this.parse(str);
+            }
+
+            return this;
+        },
+
+        /**
+         * parses the passed template string
+         * @param {String} str
+         */
+        parse: function( str ){
+            var blocks = [];
+
+            //get first tag index
+            var index = str.search( this.rTag );
+
+            //loop while tags exist
+            while ( index >= 0 ){
+                var result = str.match( this.rTag );
+                var pre = str.substring( 0, index );
+                if (pre)
+                    blocks.push( pre );
+                blocks.push( new template.Tag( result[1] ) );
+                str = str.substring( index + result[0].length );
+
+                //get next tag index
+                index = str.search( this.rTag );
+            }
+
+            //add remaining chunk
+            if (str)
+                blocks.push( str );
+
+            this.blocks = blocks;
+            this.blockCount = blocks.length;
+        },
+
+        /**
+         * evaluates the passed value
+         * @param {*} value
+         * @return {String}
+         */
+        evaluate: function( value ) {
+            var built = [];
+            var count = this.blockCount;
+            var blocks = this.blocks;
+            var type = lola.type.get( value );
+            if ( type != "array" ){
+                value = [ value ];
+            }
+            value.forEach( function( item, index ){
+                var i=0;
+                while ( i < count ){
+                    var block = blocks[i];
+                    if (typeof block === "string"){
+                        //just push the string
+                        built.push( String(block) );
+                    }
+                    else{
+                        //replace tag with value
+                        built.push( block.evaluate( item, index ) );
+                    }
+                    i++;
+                }
+            });
+
+            return built.join("");
+        }
+
+    };
+
+	//register module
+	lola.registerModule( template );
+
+})( lola );
+
 /***********************************************************************
  * Lola JavaScript Framework
  *

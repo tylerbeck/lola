@@ -172,7 +172,7 @@
 		},
 
 		/**
-		 * Asynchronous HTTP Request Class
+		 * Asynchronous HTTP Request Class Alias
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -186,7 +186,7 @@
 		},
 
 		/**
-		 * Synchronous HTTP Request Class
+		 * Synchronous HTTP Request Class Alias
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method

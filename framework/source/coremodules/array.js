@@ -156,7 +156,7 @@
 				 * @param {Function} callback function callback( item, index, array ):void
 				 */
 				forEach: function( callback ) {
-					this.elements.forEach( callback, this );
+                    this.elements.forEach( callback );
 					return this;
 				},
 
@@ -165,7 +165,7 @@
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				every: function( callback ) {
-					return this.elements.every( callback, this );
+					return this.elements.every( callback );
 				},
 
 				/**
@@ -173,7 +173,7 @@
 				 * @param {Function} callback function callback( item, index, array ):Boolean
 				 */
 				some: function( callback ) {
-					return this.elements.some( callback, this );
+					return this.elements.some( callback );
 				}
 
 			};

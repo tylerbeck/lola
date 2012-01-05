@@ -137,30 +137,14 @@
          */
         checkModules: function( modules ){
             var missing = [];
-            modules.forEach( function(item){
+
+            Object.forEach(modules, function(item){
                 if (!lola.hasPackage( lola, item ))
                     missing.push(item);
             });
 
             return missing;
         },
-
-        /**
-         * parses a url to get hash and vars
-         * @param {String} url
-         * @return {Object} vars, hash
-         */
-        parseUrl: function( url ){
-			var parts = url.split("#",2);
-			var vars = {};
-			var hash = parts[1];
-
-			var parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-				vars[key] = value;
-			});
-
-			return { vars:vars, hash:hash};
-		},
 
 		/**
 		 * creates/gets and returns the object lineage defined in chain param
@@ -303,7 +287,7 @@
 
 			//add initializer
 			if ( module.initialize && typeof module.initialize === "function" ) {
-				lola.initializers.push( function() {
+				lola.addInitializer( function() {
 					module.initialize();
 				} );
 			}
@@ -386,9 +370,14 @@
 			return check;
 		},
 
+        addInitializer: function( fn ){
+            lola.initializers.push( fn );
+        },
+
 		debug: function( msg ){
 			if (lola.debugMode) {
-				console.log(msg);
+				console.log("["+lola.now()+"]",msg);
+
 			}
 		},
 
@@ -409,17 +398,45 @@
 		 */
 		upgradeObjectPrototype: function() {
 
-			if ( !Object.prototype.keys ) {
-                Object.prototype.keys = function ( object ) {
-					var keys = [];
-					for ( var name in object ) {
-						if ( Object.prototype.hasOwnProperty.call( object, name ) ) {
-							keys.push( name );
-						}
-					}
-					return keys;
-				};
-			}
+            if ( !Object.keys ) {
+                Object.keys = function ( object ) {
+                    var keys = [];
+                    for ( var name in object ) {
+                        if ( Object.prototype.hasOwnProperty.call( object, name ) ) {
+                            keys.push( name );
+                        }
+                    }
+                    return keys;
+                };
+            }
+
+            /*if ( !Object.prototype.keys ) {
+                Object.prototype.keys = function(){
+                    return Object.keys( this );
+                }
+            }*/
+
+            if ( !Object.forEach ){
+                Object.forEach = function( obj, fun  ) {
+                    "use strict";
+
+                    if ( obj === void 0 || obj === null )
+                        throw new TypeError();
+
+                    var t = Object( obj );
+                    if ( typeof fun !== "function" )
+                        throw new TypeError();
+
+                    var thisp = arguments[2];
+                    for ( var k in t ) {
+                        if (t.hasOwnProperty(k)){
+                            fun.call( thisp, t[k], k, t );
+                        }
+                    }
+                };
+            }
+
+
 		},
 
 		//==================================================================
@@ -440,8 +457,17 @@
 		 * @interface
 		 */
 		Module: function() {
+            return this;
+		},
 
-		}
+        /**
+         * URL Class
+         * @class
+         * @param str
+         */
+        URL: function( str ){
+            return this.init( str );
+        }
 
 	};
 
@@ -469,7 +495,9 @@
 				}
 				else {
                     try {
-                        var nodeList = document.querySelectorAll( selector );
+                        if (!context)
+                            context = document;
+                        var nodeList =  context.querySelectorAll( selector );
                         var nl = nodeList.length;
                         this.elements = [];
                         for (var i=0; i<nl; i++){
@@ -477,8 +505,7 @@
                         }
                     }
                     catch (e){
-                        console.log('Exception:');
-                        console.log( selector );
+                        console.log('Exception:', selector );
                     }
 					//TODO: write lightweight selector to use if Sizzle not loaded
 					//throw new Error( "Sizzle not found" );
@@ -607,6 +634,52 @@
 
 	};
 
+    //==================================================================
+    // URL Class
+    //==================================================================
+    lola.URL.prototype = {
+        protocol: "",
+        domain:"",
+        path:"",
+        page:"",
+        vars:{},
+        hash:"",
+
+        init: function( url ){
+            this.parse( url );
+            return this;
+        },
+
+        parse: function( url ){
+            var parts = url.split("#",2);
+            this.hash = parts[1];
+
+            var vars = {};
+            parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;return "";
+            });
+            this.vars = vars;
+
+            parts = parts.split(":");
+            this.protocol = parts[0];
+
+            parts = parts[1].substr(2).split("/");
+            this.domain = parts.shift();
+            this.page = parts.pop();
+            this.path = "/"+parts.join("/")+"/";
+        },
+
+        toString: function(){
+            var v = [];
+            Object.forEach( this.vars, function( item, key ){
+                v.push( key+"="+item );
+            });
+            var vstr = (v.length)?"?"+v.join("&"):"";
+            var hstr = (this.hash == "")?"":"#"+this.hash;
+            return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+        }
+    };
+
 	//==================================================================
 	// Auto Initialization
 	//==================================================================
@@ -623,10 +696,8 @@
 	window['$'] = lola;
 	window['lola'] = lola;
 
-	var parts = lola.parseUrl( window.location.href );
-	lola.urlvars = parts.vars;
-	lola.hash = parts.hash;
-	lola.debugMode = lola.urlvars['debug'] == "true";
+	lola.url = new lola.URL( window.location.href );
+	lola.debugMode = lola.url.vars['debug'] == "true";
 
 	if ( document.readyState === "complete" ) {
 		lola.initialize( window );

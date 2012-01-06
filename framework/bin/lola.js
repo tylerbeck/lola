@@ -259,7 +259,7 @@
 				lola.event.addListener(script, 'load', function(){ callback.call(); });
 
 			node.insertBefore( script, node.firstChild );
-			node.removeChild( script );
+			//node.removeChild( script );
 		},
 
 
@@ -652,7 +652,7 @@
 
         parse: function( url ){
             var parts = url.split("#",2);
-            this.hash = parts[1];
+            this.hash = (parts[1])?parts[1]:"";
 
             var vars = {};
             parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
@@ -661,12 +661,24 @@
             this.vars = vars;
 
             parts = parts.split(":");
-            this.protocol = parts[0];
+            if (parts.length == 2 ){
+                this.protocol = parts[0];
+                parts = parts[1].substr(2).split("/");
+                this.domain = parts.shift();
+            }
+            else {
+                parts = parts[0].split("/");
+            }
 
-            parts = parts[1].substr(2).split("/");
-            this.domain = parts.shift();
             this.page = parts.pop();
-            this.path = "/"+parts.join("/")+"/";
+
+            if (parts.length > 0){
+                this.path = (this.domain == "" ? "" : "/") +parts.join("/")+"/";
+            }
+            else{
+                this.path = "";
+            }
+
         },
 
         toString: function(){
@@ -676,7 +688,10 @@
             });
             var vstr = (v.length)?"?"+v.join("&"):"";
             var hstr = (this.hash == "")?"":"#"+this.hash;
-            return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+            if (this.protocol != "")
+                return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+            else
+                return this.path+this.page+vstr+hstr;
         }
     };
 
@@ -6660,7 +6675,7 @@
 		},
 
 		/**
-		 * Asynchronous HTTP Request Class
+		 * Asynchronous HTTP Request Class Alias
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -6674,7 +6689,7 @@
 		},
 
 		/**
-		 * Synchronous HTTP Request Class
+		 * Synchronous HTTP Request Class Alias
 		 * @class
 		 * @param {String} url request url
 		 * @param {String} method request method
@@ -7195,8 +7210,8 @@
          * @type {Object}
          * @private
          */
-        response: {},
-
+        handleResponse: {},
+        ruid:0,
 
 		//==================================================================
 		// Methods
@@ -7527,9 +7542,43 @@
 
 		},
 
-        load: function ( url ){
+        get: function ( urlStr, callback, jsonpParam ){
 
+            console.log('json.get: '+urlStr);
+
+            var url = new lola.URL(urlStr);
+
+            //determine how to load json
+            if (url.protocol == "____" ||
+                (false && url.protocol == lola.url.protocol && url.domain == lola.url.domain) ){
+                console.log('    same domain');
+                //same protocol & domain... just do async call
+                var r = new lola.http.AsyncRequest(urlStr);
+                if (callback) {
+                    $(r).addListener('result', function(event){
+                        console.log('    result');
+                        var obj = lola.json.parse( event.data.responseText );
+                        callback(obj);
+                    } );
+                }
+
+                r.load();
+
+            }
+            else {
+                console.log('    cross domain');
+                jsonpParam = jsonpParam ? jsonpParam : "jsonp";
+                //assume this is a jsonp call and the server supports it.
+                var uid = this.ruid++;
+                lola.json.handleResponse[uid] = function( obj ){
+                    callback(obj);
+                    delete lola.json.handleResponse[uid];
+                };
+                url.vars[jsonpParam] = "lola.json.handleResponse["+uid+"]";
+                lola.loadScript( url.toString() );
+            }
         },
+
 
 		//==================================================================
 		// Classes

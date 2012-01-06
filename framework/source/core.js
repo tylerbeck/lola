@@ -259,7 +259,7 @@
 				lola.event.addListener(script, 'load', function(){ callback.call(); });
 
 			node.insertBefore( script, node.firstChild );
-			node.removeChild( script );
+			//node.removeChild( script );
 		},
 
 
@@ -652,7 +652,7 @@
 
         parse: function( url ){
             var parts = url.split("#",2);
-            this.hash = parts[1];
+            this.hash = (parts[1])?parts[1]:"";
 
             var vars = {};
             parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
@@ -661,12 +661,24 @@
             this.vars = vars;
 
             parts = parts.split(":");
-            this.protocol = parts[0];
+            if (parts.length == 2 ){
+                this.protocol = parts[0];
+                parts = parts[1].substr(2).split("/");
+                this.domain = parts.shift();
+            }
+            else {
+                parts = parts[0].split("/");
+            }
 
-            parts = parts[1].substr(2).split("/");
-            this.domain = parts.shift();
             this.page = parts.pop();
-            this.path = "/"+parts.join("/")+"/";
+
+            if (parts.length > 0){
+                this.path = (this.domain == "" ? "" : "/") +parts.join("/")+"/";
+            }
+            else{
+                this.path = "";
+            }
+
         },
 
         toString: function(){
@@ -676,7 +688,10 @@
             });
             var vstr = (v.length)?"?"+v.join("&"):"";
             var hstr = (this.hash == "")?"":"#"+this.hash;
-            return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+            if (this.protocol != "")
+                return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+            else
+                return this.path+this.page+vstr+hstr;
         }
     };
 

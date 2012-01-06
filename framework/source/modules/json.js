@@ -40,7 +40,7 @@
          * @private
          */
         handleResponse: {},
-        ruid:-1,
+        ruid:0,
 
 		//==================================================================
 		// Methods
@@ -371,29 +371,40 @@
 
 		},
 
-        get: function ( urlStr, callback ){
+        get: function ( urlStr, callback, jsonpParam ){
+
+            console.log('json.get: '+urlStr);
+
             var url = new lola.URL(urlStr);
 
             //determine how to load json
-            if (url.protocol == lola.url.protocol && url.domain == lola.url.domain ){
+            if (url.protocol == "____" ||
+                (false && url.protocol == lola.url.protocol && url.domain == lola.url.domain) ){
+                console.log('    same domain');
                 //same protocol & domain... just do async call
-                var $r = $(new lola.http.AsyncRequest(urlStr));
+                var r = new lola.http.AsyncRequest(urlStr);
                 if (callback) {
-                    $r.addListener('result', function(event){
+                    $(r).addListener('result', function(event){
+                        console.log('    result');
                         var obj = lola.json.parse( event.data.responseText );
                         callback(obj);
                     } );
                 }
+
+                r.load();
+
             }
             else {
+                console.log('    cross domain');
+                jsonpParam = jsonpParam ? jsonpParam : "jsonp";
                 //assume this is a jsonp call and the server supports it.
                 var uid = this.ruid++;
-                var delegate = function( obj ){
+                lola.json.handleResponse[uid] = function( obj ){
                     callback(obj);
                     delete lola.json.handleResponse[uid];
-                }
-                lola.json.handleResponse[ uid ] = delegate;
-                //lola.loadScript(urlStr,)
+                };
+                url.vars[jsonpParam] = "lola.json.handleResponse["+uid+"]";
+                lola.loadScript( url.toString() );
             }
         },
 

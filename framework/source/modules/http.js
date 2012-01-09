@@ -436,7 +436,7 @@
 		 * @param {Object|String|undefined} params
 		 */
 		load: function( params ) {
-			this.request = this.makeRequest( this.url, params, this.method, this.headers, true, this.readyStateChange, this, this.user, this.password );
+			this.request = this.makeRequest( this.url, params, this.method, this.headers, this.async, this.readyStateChange, this, this.user, this.password );
 		},
 
 		/**
@@ -469,7 +469,7 @@
 							lola.event.trigger( this, 'result', true, true, this.request );
 						}
 						else if ( this.request.status >= 400 ) {
-							console.info( 'AsyncRequest.readyStateChange.fault: ' + this.url );
+							console.info( 'AsyncRequest.readyStateChange.fault:', this.url );
 							lola.event.trigger( this, 'fault', false, false, this.request );
 						}
 						break;
@@ -482,7 +482,7 @@
 		 * @return {String}
 		 */
 		responseText: function() {
-			if ( this.ready )
+			if ( this.ready || !this.async)
 				return this.request.responseText;
 			else
 				return false;
@@ -493,7 +493,7 @@
 		 * @return {XML}
 		 */
 		responseXML: function() {
-			if ( this.ready )
+			if ( this.ready || !this.async )
 				return this.request.responseXML;
 			else
 				return false;

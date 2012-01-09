@@ -259,7 +259,6 @@
 				lola.event.addListener(script, 'load', function(){ callback.call(); });
 
 			node.insertBefore( script, node.firstChild );
-			//node.removeChild( script );
 		},
 
 

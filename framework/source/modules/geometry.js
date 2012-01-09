@@ -18,7 +18,7 @@
 		//==================================================================
 		// Attributes
 		//==================================================================
-
+        rDropPx: /px/g,
 
 
 		//==================================================================
@@ -73,7 +73,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ['math'];
+			return ['math','regex'];
 		},
 
         /**
@@ -123,6 +123,99 @@
 
             return norm;
         },
+
+        /**
+         * returns offset of object
+         * @param {Element} elem
+         * @param {Boolean|undefined} absolute if true returns absolute position
+         */
+        getOffset: function ( elem, absolute ) {
+            if ( !absolute )
+                absolute = false;
+            var point = new geometry.Point( elem.offsetLeft, elem.offsetTop );
+            if ( absolute && elem.offsetParent ) {
+                var parent = geometry.getOffset( elem.offsetParent, true );
+               point = lola.math.point.add( point, parent );
+            }
+            return point;
+        },
+
+        /**
+         * gets position relative to root
+         * @param {Element} elem
+         */
+        absolutePosition: function( elem ){
+            return geometry.getOffset( elem, true );
+        },
+
+        /**
+         * get position relative to offsetParent
+         * @param {Element} elem
+         */
+        relativePosition: function( elem ){
+            return geometry.getOffset( elem, false );
+        },
+
+        /**
+         * gets or sets the width of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        width: function ( elem, value ) {
+            if (value){
+                //setting
+                var bl = lola.css.style(elem,"borderLeft");
+                var br = lola.css.style(elem,"borderRight");
+                var pl = lola.css.style(elem,"paddingLeft");
+                var pr = lola.css.style(elem,"paddingRight");
+                value -= bl+br+pl+pr;
+
+                return lola.css.style( elem, 'width', value);
+            }
+            else{
+                //getting
+                if ( elem.offsetWidth )
+                    return elem.offsetWidth;
+                else
+                    return elem.clientWidth;
+            }
+        },
+
+        /**
+         * gets or sets the height of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        height: function ( elem, value ) {
+            if (value){
+                //setting
+                var bl = lola.css.style(elem,"borderTop");
+                var br = lola.css.style(elem,"borderBottom");
+                var pl = lola.css.style(elem,"paddingTop");
+                var pr = lola.css.style(elem,"paddingBottom");
+                value -= bl+br+pl+pr;
+
+                return lola.css.style( elem, 'height', value);
+            }
+            else{
+                //getting
+                if ( elem.offsetHeight )
+                    return elem.offsetHeight;
+                else
+                    return elem.clientHeight;
+            }
+        },
+
+        /**
+         * calculates distance between points
+         * @param {lola.geometry.Point|Object} p1
+         * @param {lola.geometry.Point|Object} p2
+         */
+        pointDistance: function( p1, p2 ){
+            var d = lola.math.point.subtract(p2,p1);
+            return Math.sqrt( Math.pow(d.x,2) + Math.pow(d.y,2)  );
+        },
+
 
 		//==================================================================
 		// Classes

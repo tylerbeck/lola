@@ -1241,6 +1241,17 @@
 			//do module initialization
 			lola.support.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || !document.createStyleSheet ) ? true : false;
 
+            //add default hooks
+            var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
+                "border-left-width border-width bottom font-size height left line-height list-style-position "+
+                "margin margin-top margin-right margin-bottom margin-left max-height max-width min-height "+
+                "min-width outline-width padding padding-top padding-right padding-bottom padding-left right "+
+                "text-indent width";
+
+            dimensionals.split(' ').forEach( function( item ){
+                lola.css.registerStyleHook( item, lola.css.dimensionalHook );
+            });
+
 			//add default stylesheet for dynamic rules
 			this.addStyleSheet( "_default" );
 
@@ -1301,41 +1312,92 @@
 			return this.propertyCache[ property ];
 		},
 
-		/**
-		 * @descrtiption gets/sets styles on an object
-		 * @public
-		 * @param {Object} obj styleable object
-		 * @param {String} style style property
-		 * @param {*} value leave undefined to get style
-		 * @return {*}
-		 */
-		style: function( obj, style, value ) {
-			//make sure style can be set
-			if ( lola.css.canStyle( obj ) ) {
-				var prop = lola.css.getProperty( style );
-				if ( lola.css.propertyHooks[ style ] != null ) {
-					return lola.css.propertyHooks[style].apply( obj, arguments );
-				}
-				else {
-					if ( value == undefined ) {
-						if (document.defaultView && document.defaultView.getComputedStyle) {
-							return document.defaultView.getComputedStyle( obj )[ prop ];
-						}
-						else if ( typeof(document.body.currentStyle) !== "undefined") {
-							return obj["currentStyle"][prop];
-						}
-						else {
-							return obj.style[prop];
-						}
-					}
-					else {
-						return obj.style[ prop ] = value;
-					}
-				}
-			}
+        /**
+         * gets/sets style on an object
+         * @public
+         * @param {Object} obj styleable object
+         * @param {String} style style property
+         * @param {*} value leave undefined to get style
+         * @return {*}
+         */
+        style: function( obj, style, value ) {
+            //make sure style can be set
+            var prop = lola.css.getProperty( style );
+            if ( lola.css.canStyle( obj ) ) {
+                if ( lola.css.propertyHooks[ prop ] != null ) {
+                    return lola.css.propertyHooks[prop].apply( obj, arguments );
+                }
+                else {
+                    if ( value == undefined )
+                        css.getRawStyle( obj, prop );
+                    else
+                        css.setRawStyle( obj, prop, value );
+                }
+            }
 
-			return false;
-		},
+            return false;
+        },
+
+        /**
+         * gets raw style of an object
+         * @public
+         * @param {Object} obj styleable object
+         * @param {String} style style property
+         * @return {String}
+         */
+        getRawStyle: function ( obj, style ){
+            var prop = lola.css.getProperty( style );
+            if (document.defaultView && document.defaultView.getComputedStyle) {
+                return document.defaultView.getComputedStyle( obj, undefined )  [ prop ];
+            }
+            else if ( typeof(document.body.currentStyle) !== "undefined") {
+                return obj["currentStyle"][prop];
+            }
+            else {
+                return obj.style[prop];
+            }
+        },
+
+        /**
+         * sets raw style on an object
+         * @public
+         * @param {Object} obj styleable object
+         * @param {String} style style property
+         * @param {*} value leave undefined to get style
+         */
+        setRawStyle: function( obj, style, value ){
+            var prop = lola.css.getProperty( style );
+            return obj.style[ prop ] = value;
+        },
+
+        /**
+         * registers hook for style property
+         * @param {String} style
+         * @param {Function} fn function(obj, style, value):*
+         */
+        registerStyleHook: function( style, fn ){
+            var prop = lola.css.getProperty( style );
+            css.propertyHooks[ prop ] = fn;
+        },
+
+        /**
+         * sets a dimension style with or without units
+         * gets a dimensional style with no units
+         * @param obj
+         * @param style
+         * @param value
+         * @private
+         */
+        dimensionalHook: function( obj, style, value ){
+            if (value == undefined) {
+                var val = css.getRawStyle( obj, style );
+                return parseFloat(val.replace( lola.regex.isDimension, "$1"));
+            }
+            else {
+                value = (String(value).match(lola.regex.isDimension)) ? value : value+"px";
+                css.setRawStyle( obj, style, value );
+            }
+        },
 
 		/**
 		 * adds a stylesheet to the document head with an optional source
@@ -5708,7 +5770,7 @@
 		//==================================================================
 		// Attributes
 		//==================================================================
-
+        rDropPx: /px/g,
 
 
 		//==================================================================
@@ -5763,7 +5825,7 @@
 		 * @default []
 		 */
 		getDependencies: function() {
-			return ['math'];
+			return ['math','regex'];
 		},
 
         /**
@@ -5812,6 +5874,73 @@
             }
 
             return norm;
+        },
+
+        /**
+         * returns offset of object
+         * @param {Element} elem
+         * @param {Boolean|undefined} absolute if true returns absolute position
+         */
+        getOffset: function ( elem, absolute ) {
+            if ( !absolute )
+                absolute = false;
+            var point = new geometry.Point( elem.offsetLeft, elem.offsetTop );
+            if ( absolute && elem.offsetParent ) {
+                var parent = geometry.getOffset( elem.offsetParent, true );
+                point.x += parent.x;
+                point.y += parent.y;
+            }
+            return point;
+        },
+
+        /**
+         * gets or sets the width of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        width: function ( elem, value ) {
+            if (value){
+                //setting
+                var bl = lola.css.style(elem,"borderLeft");
+                var br = lola.css.style(elem,"borderRight");
+                var pl = lola.css.style(elem,"paddingLeft");
+                var pr = lola.css.style(elem,"paddingRight");
+                value -= bl+br+pl+pr;
+
+                return lola.css.style( elem, 'width', value);
+            }
+            else{
+                //getting
+                if ( elem.offsetWidth )
+                    return elem.offsetWidth;
+                else
+                    return elem.clientWidth;
+            }
+        },
+
+        /**
+         * gets or sets the height of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        height: function ( elem, value ) {
+            if (value){
+                //setting
+                var bl = lola.css.style(elem,"borderTop");
+                var br = lola.css.style(elem,"borderBottom");
+                var pl = lola.css.style(elem,"paddingTop");
+                var pr = lola.css.style(elem,"paddingBottom");
+                value -= bl+br+pl+pr;
+
+                return lola.css.style( elem, 'height', value);
+            }
+            else{
+                //getting
+                if ( elem.offsetHeight )
+                    return elem.offsetHeight;
+                else
+                    return elem.clientHeight;
+            }
         },
 
 		//==================================================================

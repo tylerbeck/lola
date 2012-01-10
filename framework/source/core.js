@@ -307,12 +307,16 @@
 			//lola.debug('lola::safeDelete');
 			var obj = (property) ? object[ property ] : object;
 			for ( var i = this.safeDeleteHooks.length - 1; i >= 0; i-- ) {
-				var hook = this.safeDeleteHooks[i];
-				hook.fn.call( hook.scope, obj );
+                if (obj){
+                    var hook = this.safeDeleteHooks[i];
+                    hook.fn.call( hook.scope, obj );
+                }
 			}
 
-			if ( object && property )
-				delete object[ property ];
+			if ( object && property ){
+                //object[ property ] = null;
+                delete object[ property ];
+            }
 
 		},
 
@@ -368,21 +372,39 @@
 			return check;
 		},
 
+        /**
+         * adds function to initialization stack
+         * @param {Function} fn
+         */
         addInitializer: function( fn ){
             lola.initializers.push( fn );
         },
 
-		debug: function( msg ){
+        /**
+         * outputs debug statement
+         */
+        debug: function(/*args*/){
 			if (lola.debugMode) {
-				console.log("["+lola.now()+"]",msg);
+				console.log("["+lola.now()+"]", arguments.join(' '));
 
 			}
 		},
 
+        /**
+         * get current time in milliseconds
+         * @return {uint}
+         */
         now: function(){
             return (new Date()).getTime();
         },
 
+        /**
+         * used in selector methods to determine whether to return an array
+         * or an object
+         * @param v
+         * @return {*}
+         * @private
+         */
 		__: function( v ){
 			return (v.length == 1) ? v[0] : v;
 		},
@@ -408,11 +430,6 @@
                 };
             }
 
-            /*if ( !Object.prototype.keys ) {
-                Object.prototype.keys = function(){
-                    return Object.keys( this );
-                }
-            }*/
 
             if ( !Object.forEach ){
                 Object.forEach = function( obj, fun  ) {
@@ -562,33 +579,27 @@
 		/**
 		 *concatenates the elements from one or more
 		 * @param {lola.Selector|Array|Object} obj object to concatenate
+         * @param {Boolean|undefined}
 		 * @return {lola.Selector}
 		 */
-		concat: function( obj ) {
-			if ( obj instanceof Selector ) {
+		concat: function( obj, unique ) {
+			if ( obj instanceof lola.Selector ) {
 				this.elements = this.elements.concat( obj.getAll() );
 			}
 			else if ( obj instanceof Array ) {
 				var item;
 				while ( item = obj.pop() ) {
-					this.concat( item );
+					this.concat( item, unique );
 				}
 			}
 			else {
 				this.elements.push( obj );
 			}
 
-			return this;
-		},
+            if (unique == undefined || unique === true){
+                this.elements = lola.array.unique(this.elements);
+            }
 
-		/**
-		 *  removes framework references for elements
-		 * @return {lola.Selector}
-		 */
-		safeDelete: function() {
-			this.forEach( function( item ){
-				safeDelete( item );
-			});
 			return this;
 		}
 
@@ -670,13 +681,10 @@
 
             this.page = parts.pop();
 
+            this.path = (this.domain == "" ? "" : "/");
             if (parts.length > 0){
-                this.path = (this.domain == "" ? "" : "/") +parts.join("/")+"/";
+                this.path = this.path+parts.join("/")+"/";
             }
-            else{
-                this.path = "";
-            }
-
         },
 
         toString: function(){

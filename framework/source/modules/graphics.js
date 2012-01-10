@@ -61,7 +61,7 @@
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
 			//do module preinitialization
-			lola.safeDeleteHooks.push( {scope:this, fn:this.remove2dContext} );
+			lola.safeDeleteHooks.push( {scope:lola.graphics, fn:lola.graphics.remove2dContext} );
 
 			var canvas = document.createElement('canvas');
 			var ctx = canvas.getContext('2d');

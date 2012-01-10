@@ -29,6 +29,23 @@
 		//==================================================================
 		// Methods
 		//==================================================================
+        /**
+         * preinitializes module
+         * @private
+         * @return {void}
+         */
+        preinitialize: function() {
+            lola.debug( 'lola.dom::preinitialize' );
+            if ( !lola ) throw new Error( 'lola not defined!' );
+
+            //do module preinitialization
+            //lola.safeDeleteHooks.push( {scope:this, fn:this.remove} );
+
+
+            //remove initialization method
+            delete lola.dom.preinitialize;
+        },
+
 		/**
 		 * initializes module
 		 * @public
@@ -346,7 +363,7 @@
 				 * @param {String} newParent
 				 * @return {lola.Selector|Array}
 				 */
-                        parent: function( newParent ) {
+                 parent: function( newParent ) {
 					if ( newParent != undefined ) {
 						this.forEach(function(item){
 							$(newParent).appendChild( item );

@@ -78,7 +78,7 @@
                 "border-left-width border-width bottom font-size height left line-height list-style-position "+
                 "margin margin-top margin-right margin-bottom margin-left max-height max-width min-height "+
                 "min-width outline-width padding padding-top padding-right padding-bottom padding-left right "+
-                "text-indent width";
+                "text-indent top width";
 
             dimensionals.split(' ').forEach( function( item ){
                 lola.css.registerStyleHook( item, lola.css.dimensionalHook );

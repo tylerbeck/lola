@@ -221,10 +221,9 @@
 			var methods = {
 				/**
 				 * gets the type if the specified index
-				 * @param {int} index
 				 * @return {Array}
 				 */
-				getType: function( index ) {
+				getType: function() {
 					var values = [];
 					this.forEach( function( item ) {
 						values.push( lola.type.get(item) );

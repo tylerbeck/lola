@@ -162,8 +162,8 @@
                     var c2p = lola.math.point.add( point.getAnchor(), -6 );
                     $(c2).identify().
                             addClass('point').
-                            style('top',c2p.y+'px').
-                            style('left',c2p.x+'px');
+                            style('top',c2p.y).
+                            style('left',c2p.x);
 
                     if (index > 0 && !last ){
                         //moveable point
@@ -186,8 +186,8 @@
                                 assignAgent('drag').
                                 addClass('point').
                                 addClass('draggable').
-                                style('top',c1p.y+'px').
-                                style('left',c1p.x+'px').
+                                style('top',c1p.y).
+                                style('left',c1p.x).
                                 putData({index:index, type:'entry', entry:c1, anchor:c2, exit:c3},'page').
                                 addListener( 'dragstart', this.handlePointDragStart, false, lola.event.PRIORITY_FIRST, this ).
                                 addListener( 'dragmove', this.handlePointDragMove, false, lola.event.PRIORITY_FIRST, this ).
@@ -204,8 +204,8 @@
                                 assignAgent('drag').
                                 addClass('point').
                                 addClass('draggable').
-                                style('top',c3p.y+'px').
-                                style('left',c3p.x+'px').
+                                style('top',c3p.y).
+                                style('left',c3p.x).
                                 putData({index:index, type:'exit', entry:c1, anchor:c2, exit:c3},'page').
                                 addListener( 'dragstart', this.handlePointDragStart, false, lola.event.PRIORITY_FIRST, this ).
                                 addListener( 'dragmove', this.handlePointDragMove, false, lola.event.PRIORITY_FIRST, this ).
@@ -268,19 +268,17 @@
 
                     switch (data.type){
                         case "anchor":
-                            anchor.x = parseInt( $c2.style("left").replace(/px/g,""))+6;
-                            anchor.y = parseInt( $c2.style("top").replace(/px/g,""))+6;
+                            anchor.x = $c2.style("left")+6;
+                            anchor.y = $c2.style("top")+6;
                             break;
                         case "entry":
-                            pnt = new lola.geometry.Point( parseInt( $c1.style("left").replace(/px/g,""))+6,
-                                    parseInt( $c1.style("top").replace(/px/g,""))+6 );
+                            pnt = new lola.geometry.Point( $c1.style("left")+6, $c1.style("top")+6 );
                             vct = lola.math.point.subtract( anchor, pnt ).toVector();
                             point.setAngle( vct.angle );
                             point.entry.velocity = vct.velocity;
                             break;
                         case "exit":
-                            pnt = new lola.geometry.Point( parseInt( $c3.style("left").replace(/px/g,""))+6,
-                                    parseInt( $c3.style("top").replace(/px/g,""))+6 );
+                            pnt = new lola.geometry.Point( $c3.style("left")+6, $c3.style("top")+6 );
                             vct = lola.math.point.subtract( pnt, anchor ).toVector();
                             point.setAngle( vct.angle );
                             point.exit.velocity = vct.velocity;
@@ -524,7 +522,7 @@
 
                 testFrameworkEasing: function(){
                     console.log('TEST FRAMEWORK');
-                    var fromVal = parseInt($("#box").style('marginLeft').replace(/px/g,""));
+                    var fromVal = $("#box").style('marginLeft');
                     var toVal = (fromVal == 100) ? 800 : 100;
                     var easing = lola.easing.get('custom');
                     //console.log( fromVal, toVal );
@@ -536,7 +534,7 @@
                     var custom = new CustomEase();
                     lola.agent.page.testCount = 0;
                     lola.agent.page.testStart = lola.now();
-                    lola.agent.page.testStartVal = parseInt($("#box").style('marginLeft').replace(/px/g,""));
+                    lola.agent.page.testStartVal = $("#box").style('marginLeft');
                     if (lola.agent.page.testStartVal == 100){
                         lola.agent.page.testDeltaVal = 700;
                     }

@@ -215,13 +215,13 @@
         },
 
         execute: function(){
-            console.log('executing', this.name, 'script');
-            try {
+            console.log('executing', '"'+this.name+'"', 'script');
+            //try {
                 lola.evaluate( this.value );
-            }
-            catch( e ){
-                console.error('error evaluating', this.name, 'script:', e.message );
-            }
+            //}
+            //catch( e ){
+            //   console.error('error evaluating', this.name, 'script:', e.message );
+            //}
 
             return true;
         }
@@ -293,7 +293,7 @@
         },
 
         execute: function(){
-            console.log('test', this.name );
+            console.log( this.name );
             try {
                 if ( this.async ){
                     lola.evaluate( this.test );
@@ -307,8 +307,9 @@
             }
             catch( e ){
                 this.passed = false;
-                this.error = e.message;
-                console.error( '    ', 'failed,', this.error );
+                this.error = 'failed due to error: '+e.message;
+                console.error( '    ', this.error );
+                console.log ( '    ', e );
                 return true;
             }
         },
@@ -364,10 +365,11 @@
             }
 
             if (this.passed) {
-                console.log( '    ','passed');
+                //console.log( '    ','passed');
             }
             else {
-                console.error( '    ', 'failed,', this.error );
+                this.error = 'failed, '+this.error;
+                console.error( '    ', this.error );
             }
         }
     };

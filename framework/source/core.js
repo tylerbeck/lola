@@ -246,19 +246,18 @@
 		 * @param {Function|undefined} callback the function to call after the script has loaded
 		 */
 		loadScript: function( src, callback ) {
-			console.info('loadScript: '+src);
 			var	node = document.getElementsByTagName( 'head' )[0];
 			if ( !node )
 				node = document.documentElement;
 
 			var script = document.createElement( 'script' );
-			script.type = "text/javascript";
-			script.src = src;
 
-			if (typeof callback == "function")
-				lola.event.addListener(script, 'load', function(){ callback.call(); });
+            if (typeof callback == "function")
+                lola.event.addListener(script, 'load', function(){callback.apply()} );
 
+            script.src = src;
 			node.insertBefore( script, node.firstChild );
+
 		},
 
 

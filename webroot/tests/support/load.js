@@ -1,6 +1,4 @@
-(function(window){
-    var tmp = 4;
-    function test( val ){
-        return val * tmp;
-    }
-})(lola.window);
+tmpVal = 4;
+test = function( val ){
+    return val * tmpVal;
+};

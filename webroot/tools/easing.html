@@ -105,6 +105,8 @@
                     var g = lola.graphics;
                     g.setContext('grid');
 
+                    console.log('drawing grid...');
+
                     //background
                     g.applyStyle( 'gridBg' );
                     g.strokeRect( 50,50,w,h );
@@ -127,6 +129,8 @@
                     g.draw( new lola.chart.Axis(50,50+h,w,"min",{x:-8,y:2}) );
                     g.draw( new lola.chart.Axis(50,50,h,"0",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
                     g.draw( new lola.chart.Axis(50+w,50,h,"1",{x:0,y:15}, lola.chart.Axis.VERTICAL ) );
+                    console.log('...complete');
+
                 },
 
                 createPoints: function(){
@@ -139,6 +143,8 @@
                     for (var i=0; i<spl; i++ ){
                         this.createPointUI( i, points[i], (last == i) );
                     }
+
+
                 },
 
                 createPointUI: function( index, point, last ) {

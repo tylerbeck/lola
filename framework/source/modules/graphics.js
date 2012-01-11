@@ -91,23 +91,6 @@
 		},
 
 		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.graphics::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.graphics.initialize;
-		},
-
-		/**
 		 * get module's namespace
 		 * @public
 		 * @return {String}
@@ -239,7 +222,7 @@
          * @param {String} name
          */
         executeRoutine: function( name ) {
-            if (typeof this.routines[name] == "function" ){
+            if ( lola.hasFn(this.routines,name) ){
                 this.routines[name]( this.ctx );
             }
         },
@@ -261,7 +244,7 @@
          * @param {Object|Array} objects
          */
         draw: function( object, flags ){
-            if ( object.draw && typeof object.draw === "function" ){
+            if ( lola.hasFn( object, 'draw')){
                 object.draw( lola.graphics.ctx, flags );
             }
         },

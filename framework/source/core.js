@@ -104,12 +104,10 @@
 				var stackSize = lola.initializers.length;
 
 				for ( i = 0; i < stackSize; i++ ) {
-					var initializer = lola.initializers[i];
-					if (typeof initializer == "function"){
-						initializer();
+					if (lola.hasFn(lola.initializers,i)){
+						lola.initializers[i]();
+						delete lola.initializers[i];
 					}
-
-					delete lola.initializers[i];
 				}
 			}
 		},
@@ -273,25 +271,27 @@
             lola.debug('lola::registerModule - ' + ns );
 
 			//add module dependencies
-            if (module.hasOwnProperty('getDependencies') && typeof module.getDependencies=="function")
+            if (lola.hasFn( module, "getDependencies" ))
 			    lola.dependencies[ns] =  module.getDependencies();
 
 			//add module to namespace
-			lola.extend( lola.getPackage( lola, ns ), module );
+			lola.extend( lola.getPackage( lola, ns ), module, false, false );
 
 			//add selector methods
-			lola.extend( lola.Selector.prototype, module.getSelectorMethods() );
-			delete module['getSelectorMethods'];
+            if (lola.hasFn( module, "getSelectorMethods" )){
+                lola.extend( lola.Selector.prototype, module.getSelectorMethods(), false, false );
+                delete module['getSelectorMethods'];
+            }
 
 			//add initializer
-			if ( module.initialize && typeof module.initialize === "function" ) {
+			if ( lola.hasFn( module, "initialize" ) ) {
 				lola.addInitializer( function() {
 					module.initialize();
 				} );
 			}
 
 			//run preinitialization method if available
-			if ( module.preinitialize && typeof module.preinitialize === "function" ) {
+            if ( lola.hasFn( module, "preinitialize" ) ) {
 				module.preinitialize();
 			}
 		},
@@ -327,52 +327,18 @@
 		 */
 		toString: Object.prototype.toString,
 
-		/**
-		 * checks for required arguments
-		 * @param {String} group
-		 * @param {Array} required
-		 * @param {Array} info
-		 * @return {Boolean}
-		 */
-		checkArgs: function ( group, required, info ) {
-			var check = true;
-			var warnings = [];
-
-
-			for (var i=required.length-1; i >= 0; i--){
-				if (required[i][1] === undefined || required[i][1] === null){
-					check = false;
-					warnings.push(required[i][0]+' is not set!')
-				}
-			}
-
-			if (!check){
-				//start group
-				if (console.groupCollapsed)
-					console.groupCollapsed( group );
-				else
-					console.group( group );
-
-				//error info
-				if (lola.type.get(info) == 'array'){
-					info.forEach( function(item){
-						console.info( item );
-					});
-				}
-
-				//error warnings
-				warnings.forEach( function(item){
-					console.warn( item );
-				});
-
-				//end group
-				console.groupEnd();
-			}
-
-			return check;
-		},
 
         /**
+         * returns true if object has a function with the given name
+         * @param {Object} obj
+         * @param {String} fnName
+         * @return {Boolean}
+         */
+        hasFn: function( obj, fnName ){
+            return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
+        },
+
+       /**
          * adds function to initialization stack
          * @param {Function} fn
          */
@@ -522,8 +488,6 @@
                     catch (e){
                         console.log('Exception:', selector );
                     }
-					//TODO: write lightweight selector to use if Sizzle not loaded
-					//throw new Error( "Sizzle not found" );
 				}
 			}
 			else if ( Array.isArray( selector ) ) {

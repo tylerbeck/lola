@@ -26,22 +26,6 @@
         //==================================================================
         // Methods
         //==================================================================
-        /**
-         * preinitializes module
-         * @private
-         * @return {void}
-         */
-        preinitialize: function() {
-            lola.debug('lola.test::preinitialize');
-            if ( !lola ) throw new Error( 'lola not defined!' );
-
-            //do module preinitialization
-
-
-
-            //remove initialization method
-            delete lola.test.preinitialize;
-        },
 
         /**
          * initializes module
@@ -110,7 +94,7 @@
                         switch( n.nodeName.toLowerCase() ){
                             case 'script':
                                 //this is a setup or teardown script
-                                var script = new test.Script(n)
+                                var script = new test.Script(n);
                                 test.executables.push( script );
                                 break;
                             case 'test':
@@ -151,25 +135,6 @@
          */
         complete: function(){
             console.log('lola.test.complete');
-        },
-
-        //==================================================================
-        // Selection Methods
-        //==================================================================
-        /**
-         * get module's selectors
-         * @public
-         * @return {Object}
-         */
-        getSelectorMethods: function() {
-
-            /**
-             * module's selector methods
-             * @type {Object}
-             */
-            var methods = {};
-            return methods;
-
         },
 
 

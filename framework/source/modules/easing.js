@@ -27,20 +27,6 @@
 		//==================================================================
 		// Methods
 		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.easing::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-			//remove initialization method
-			delete lola.easing.preinitialize;
-		},
 
 		/**
 		 * initializes module

@@ -108,7 +108,7 @@
 		addListener: function( target, type, handler, useCapture, priority, scope ) {
 			var required = [['target',target],['type',type],['handler',handler]];
 			var info = [target,'type: '+type,'useCapture: '+useCapture];
-			if ( lola.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
+			if ( lola.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
 				if (lola.event.hooks[type] != null){
 					return lola.event.hooks[type]['addListener'].call( lola.event.hooks[type], target, type, handler, useCapture, priority, scope );
 				}
@@ -156,7 +156,7 @@
 		removeListener: function( target, type, handler, useCapture ) {
 			var required = [['target',target],['type',type],['handler',handler]];
 			var info = [target,'type: '+type,'useCapture: '+useCapture];
-			if ( lola.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
+			if ( lola.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
 				if (lola.event.hooks[type] != null){
 					lola.event.hooks[type]['removeListener'].call( lola.event.hooks[type], target, type, handler, useCapture );
 				}
@@ -195,7 +195,7 @@
 			//console.info( 'lola.event.removeHandler: '+type+' '+capture );
 			var required = [['handler',handler]];
 			var info = [];
-			if ( lola.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
+			if ( lola.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
 				//get handler uid
 				var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
 
@@ -294,7 +294,7 @@
 			var args = [object, type];
 			var names = ['target','type'];
 			var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
-			if ( lola.checkArgs(args, names, group) ){
+			if ( lola.util.checkArgs(args, names, group) ){
 				if ( bubbles == undefined )
 					bubbles = true;
 				if ( cancelable == undefined )

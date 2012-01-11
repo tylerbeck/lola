@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word Frequency</title>
+    <script src="../bin/lola.js"></script>
+    <script>
+    (function( lola ) {
+        var $ = lola;
+        var page = {
+
+            client: null,
+            worker: null,
+
+            preinitialize: function() {
+                lola.debug('lola.page::preinitialize');
+                if ( !lola ) throw new Error( 'lola not defined!' );
+
+                //do agent preinitialization
+
+                //remove initialization method
+                delete lola.agent.page.preinitialize;
+            },
+
+            initialize: function() {
+                lola.debug('lola.agent.page::initialize');
+                //this framework is dependent on lola framework
+                if ( !lola ) throw new Error( 'lola not defined!' );
+
+                //set up styles
+
+                //do agent initialization
+                $("body").assignAgent( this.getNamespace() );
+
+
+                //remove initialization method
+                delete lola.agent.page.initialize;
+            },
+
+            getNamespace: function() {
+                return "page";
+            },
+
+            getDependencies: function() {
+                return [];
+            },
+
+            sign: function( client ) {
+                var $client = $(client);
+                $client.identify();
+                if (page.client == null) {
+
+                    //not a client yet
+                    page.client = client;
+
+                    //do setup
+
+                    //add listeners
+                    $('#submit').addListener('click', this.handleSubmission, false, 0, page );
+
+                }
+            },
+
+            drop: function( client ) {
+                var $client = $(client);
+                if (page.client == client ) {
+                    $client.removeData( this.getNamespace() );
+
+                    //remove listeners
+
+                    this.client = null;
+                }
+            },
+
+            handleSubmission: function( event ) {
+                var str = $('#input').get().value;
+                var result = page.parse( str );
+                page.output( result.map, result.max );
+            },
+
+            parse: function( str ) {
+                var map = {};
+                var max = 0;
+                var orig = str;
+                var mapWord = function( word ){
+                    if (!map[ word ]){
+                        map[ word ] = 0;
+                        max = Math.max( max, word.length );
+                    }
+                    map[ word ]++;
+                };
+                var splitter = /^([^a-zA-Z0-9_]*)([a-zA-Z0-9_]+)/;
+                var result;
+                while ( result = str.match(splitter)){
+                    mapWord(result[2]);
+                    str = str.substr(result[0].length);
+                }
+
+                return {str:orig, map:map, max:max};
+            },
+
+            output: function(map,max){
+                console.log('max', max);
+                var words = Object.keys( map );
+                words = words.sort().reverse();
+                var l = words.length;
+                var results = [];
+                var i;
+                for ( i = 0; i < l; i++ ){
+                    var w = words[i];
+                    results.push( {word:w,freq:map[w],wordlength:w.length} );
+                }
+
+                results = lola.array.sortOn('freq',lola.array.sortOn('wordlength',results)).reverse();
+                var out = [];
+                l = results.length;
+                for ( i = 0; i < l; i++ ){
+                    var wo = results[i];
+                    //if ( wo.word.length > 2 )
+                    out.push("<div>"+(lola.string.padEnd(wo.word," ",max))+": "+wo.freq+"</div>");
+                }
+                $(document.body).html( "<code><pre>"+out.join("")+"</pre></code>" );
+            },
+
+            outputPacked: function(str,map){
+                var words = Object.keys(map);
+                var list = [];
+                var len=words.length, i;
+                var index = {};
+                for ( i = 0; i < len; i++ ){
+                    var w = words[i];
+                    var f = map[w];
+                    var l = w.length
+                    list.push( {w:w,f:f,l:l} );
+                }
+
+                list = lola.array.sortOn( 'l',list ).reverse();
+                list = lola.array.sortOn( 'f',list ).reverse();
+
+                list.forEach( function(o){
+
+                })
+            }
+
+        };
+
+        //register module
+        lola.agent.registerAgent( page );
+
+    })( lola );
+
+    </script>
+    <style>
+        pre{line-height: 1em;}
+    </style>
+</head>
+<body>
+    <textarea id="input"></textarea>
+    <button id="submit">Submit</button>
+</body>
+</html>

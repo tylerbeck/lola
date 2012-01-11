@@ -27,22 +27,6 @@
 		// Methods
 		//==================================================================
 		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.template::preinitialize');
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.template.preinitialize;
-		},
-
-		/**
 		 * initializes module
 		 * @public
 		 * @return {void}
@@ -433,7 +417,7 @@
                     var block = blocks[i];
                     if (typeof block === "string"){
                         //just push the string
-                        built.push( String(block) );
+                        built.push( block );
                     }
                     else{
                         //replace tag with value

@@ -2,17 +2,33 @@
 <html>
 <head>
 	<title></title>
-	<script src="../bin/lola.min.js"></script>
+	<script src="../bin/lola.js"></script>
+    <script>
+        var crc32Table = (function(){
+            var table = [];
+            var i;
+            for ( i = 0; i < 256; i++)
+            {
+                var n = i;
+                var j
+                for ( j = 8; --j >= 0; )
+                {
+                    if ((n & 1) != 0)
+                        n = 0xedb88320 ^ (n >>> 1);
+                    else
+                        n = n >>> 1;
+                }
+
+                table[i] = n;
+            }
+
+            return table;
+        })();
+
+        console.log( crc32Table );
+
+    </script>
 </head>
 <body>
-
-	<div id="div-id1" class="one"></div>
-	<div id="div-id2" class="two"></div>
-	<div id="div-id3" class="three"></div>
-
-	<span id="span-id1" class="one"></span>
-	<span id="span-id2" class="two"></span>
-	<span id="span-id3" class="three"></span>
-
 </body>
 </html>

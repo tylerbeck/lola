@@ -35,39 +35,6 @@
 		// Methods
 		//==================================================================
 		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.cmd::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.cmd.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.cmd::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.cmd.initialize;
-		},
-
-		/**
 		 * get module's namespace
 		 * @public
 		 * @return {String}
@@ -123,7 +90,7 @@
 					if ( !this.callLater[ name ] ){
 						//try to load command
 						lola.loadScript( this.registry[name], function(e){
-							if ( typeof this.registry[name] == "function" ) {
+							if ( lola.hasFn( this.registry, name ) ) {
 								//command successfully loaded - iterate through queued calls
 								var s = lola.cmd.callLater[ name ].length;
 								for (var i = 0; i < s; i++){

@@ -104,12 +104,10 @@
 				var stackSize = lola.initializers.length;
 
 				for ( i = 0; i < stackSize; i++ ) {
-					var initializer = lola.initializers[i];
-					if (typeof initializer == "function"){
-						initializer();
+					if (lola.hasFn(lola.initializers,i)){
+						lola.initializers[i]();
+						delete lola.initializers[i];
 					}
-
-					delete lola.initializers[i];
 				}
 			}
 		},
@@ -273,25 +271,27 @@
             lola.debug('lola::registerModule - ' + ns );
 
 			//add module dependencies
-            if (module.hasOwnProperty('getDependencies') && typeof module.getDependencies=="function")
+            if (lola.hasFn( module, "getDependencies" ))
 			    lola.dependencies[ns] =  module.getDependencies();
 
 			//add module to namespace
-			lola.extend( lola.getPackage( lola, ns ), module );
+			lola.extend( lola.getPackage( lola, ns ), module, false, false );
 
 			//add selector methods
-			lola.extend( lola.Selector.prototype, module.getSelectorMethods() );
-			delete module['getSelectorMethods'];
+            if (lola.hasFn( module, "getSelectorMethods" )){
+                lola.extend( lola.Selector.prototype, module.getSelectorMethods(), false, false );
+                delete module['getSelectorMethods'];
+            }
 
 			//add initializer
-			if ( module.initialize && typeof module.initialize === "function" ) {
+			if ( lola.hasFn( module, "initialize" ) ) {
 				lola.addInitializer( function() {
 					module.initialize();
 				} );
 			}
 
 			//run preinitialization method if available
-			if ( module.preinitialize && typeof module.preinitialize === "function" ) {
+            if ( lola.hasFn( module, "preinitialize" ) ) {
 				module.preinitialize();
 			}
 		},
@@ -327,52 +327,18 @@
 		 */
 		toString: Object.prototype.toString,
 
-		/**
-		 * checks for required arguments
-		 * @param {String} group
-		 * @param {Array} required
-		 * @param {Array} info
-		 * @return {Boolean}
-		 */
-		checkArgs: function ( group, required, info ) {
-			var check = true;
-			var warnings = [];
-
-
-			for (var i=required.length-1; i >= 0; i--){
-				if (required[i][1] === undefined || required[i][1] === null){
-					check = false;
-					warnings.push(required[i][0]+' is not set!')
-				}
-			}
-
-			if (!check){
-				//start group
-				if (console.groupCollapsed)
-					console.groupCollapsed( group );
-				else
-					console.group( group );
-
-				//error info
-				if (lola.type.get(info) == 'array'){
-					info.forEach( function(item){
-						console.info( item );
-					});
-				}
-
-				//error warnings
-				warnings.forEach( function(item){
-					console.warn( item );
-				});
-
-				//end group
-				console.groupEnd();
-			}
-
-			return check;
-		},
 
         /**
+         * returns true if object has a function with the given name
+         * @param {Object} obj
+         * @param {String} fnName
+         * @return {Boolean}
+         */
+        hasFn: function( obj, fnName ){
+            return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
+        },
+
+       /**
          * adds function to initialization stack
          * @param {Function} fn
          */
@@ -522,8 +488,6 @@
                     catch (e){
                         console.log('Exception:', selector );
                     }
-					//TODO: write lightweight selector to use if Sizzle not loaded
-					//throw new Error( "Sizzle not found" );
 				}
 			}
 			else if ( Array.isArray( selector ) ) {
@@ -2799,7 +2763,7 @@
 		addListener: function( target, type, handler, useCapture, priority, scope ) {
 			var required = [['target',target],['type',type],['handler',handler]];
 			var info = [target,'type: '+type,'useCapture: '+useCapture];
-			if ( lola.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
+			if ( lola.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
 				if (lola.event.hooks[type] != null){
 					return lola.event.hooks[type]['addListener'].call( lola.event.hooks[type], target, type, handler, useCapture, priority, scope );
 				}
@@ -2847,7 +2811,7 @@
 		removeListener: function( target, type, handler, useCapture ) {
 			var required = [['target',target],['type',type],['handler',handler]];
 			var info = [target,'type: '+type,'useCapture: '+useCapture];
-			if ( lola.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
+			if ( lola.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
 				if (lola.event.hooks[type] != null){
 					lola.event.hooks[type]['removeListener'].call( lola.event.hooks[type], target, type, handler, useCapture );
 				}
@@ -2886,7 +2850,7 @@
 			//console.info( 'lola.event.removeHandler: '+type+' '+capture );
 			var required = [['handler',handler]];
 			var info = [];
-			if ( lola.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
+			if ( lola.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
 				//get handler uid
 				var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
 
@@ -2985,7 +2949,7 @@
 			var args = [object, type];
 			var names = ['target','type'];
 			var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
-			if ( lola.checkArgs(args, names, group) ){
+			if ( lola.util.checkArgs(args, names, group) ){
 				if ( bubbles == undefined )
 					bubbles = true;
 				if ( cancelable == undefined )
@@ -3929,29 +3893,35 @@
 		/**
 		 * pads the front of a string with the specified character to the specified length
 		 * @param {String|int} str
-		 * @param {String} chr character to use in pad
+		 * @param {String} chr character to use in pad, can be multiple characters for escaped chrs
 		 * @param {int} size padded length
 		 */
 		padFront: function ( str, chr, size ) {
 			str = str.toString();
-			while ( str.length < size ) {
-				str = chr[0] + str;
+            var l = str.length;
+            var p = [str];
+			while ( l < size ) {
+				p.push(chr);
+                l++;
 			}
-			return str;
+			return p.join("");
 		},
 
 		/**
 		 * pads the end of a string with the specified character to the specified length
 		 * @param {String|int} str
-		 * @param {String} chr character to use in pad
+		 * @param {String} chr character to use in pad, can be multiple characters for escaped chrs
 		 * @param {int} size padded length
 		 */
 		padEnd: function ( str, chr, size ) {
 			str = str.toString();
-			while ( str.length < size ) {
-				str = str + chr[0];
+            var l = str.length;
+            var p = [str];
+            while ( l < size ) {
+                p.unshift(chr);
+                l++;
 			}
-			return str;
+            return p.join("");
 		},
 
 		/**
@@ -4384,6 +4354,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapTag: function( item, index ) {
 			var tag = document.createElement( item );
@@ -4401,6 +4372,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapSpecialTag: function( item, index ) {
 			var tag = document.createElement( item );
@@ -4418,6 +4390,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapObject: function( item, index ) {
 			var type = "[object " + item + "]";
@@ -4597,6 +4570,11 @@
 			return [];
 		},
 
+        /**
+         * copies primitives from source to target
+         * @param source
+         * @param target
+         */
         copyPrimitives: function( source, target ){
             for (var k in source){
                 if (lola.type.isPrimitive(source[k])){
@@ -4604,6 +4582,52 @@
                 }
             }
         },
+
+        /**
+         * checks for required arguments
+         * @param {String} group
+         * @param {Array} required
+         * @param {Array} info
+         * @return {Boolean}
+         */
+        checkArgs: function ( group, required, info ) {
+            var check = true;
+            var warnings = [];
+
+
+            for (var i=required.length-1; i >= 0; i--){
+                if (required[i][1] === undefined || required[i][1] === null){
+                    check = false;
+                    warnings.push(required[i][0]+' is not set!')
+                }
+            }
+
+            if (!check){
+                //start group
+                if (console.groupCollapsed)
+                    console.groupCollapsed( group );
+                else
+                    console.group( group );
+
+                //error info
+                if (lola.type.get(info) == 'array'){
+                    info.forEach( function(item){
+                        console.info( item );
+                    });
+                }
+
+                //error warnings
+                warnings.forEach( function(item){
+                    console.warn( item );
+                });
+
+                //end group
+                console.groupEnd();
+            }
+
+            return check;
+        },
+
 
 		//==================================================================
 		// Classes
@@ -4748,14 +4772,11 @@
             var stackSize = lola.agent.initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                var initializer = lola.agent.initializers[i];
-                if (typeof initializer == "function"){
-                    initializer();
+                if (lola.hasFn( lola.agent.initializers, i )){
+                    lola.agent.initializers[i]();
+	                delete lola.agent.initializers[i];
                 }
-
-                delete lola.agent.initializers[i];
             }
-
 
 			//remove initialization method
 			delete lola.agent.initialize;
@@ -4796,21 +4817,21 @@
 				lola.extend( pkg, agent, true );
 
                 //add dependencies
-                if (agent.hasOwnProperty('getDependencies') && typeof agent.getDependencies=="function")
+                if (lola.hasFn(agent,'getDependencies'))
                     this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
 
 				//map agent
 				this.map[ ns ] = pkg;
 
 				//add initializer
-				if ( agent.initialize && typeof agent.initialize === "function" ) {
+                if (lola.hasFn(agent,'initialize')) {
 					lola.agent.initializers.push( function() {
 						agent.initialize();
 					} );
 				}
 
 				//run preinitialization method if available
-				if ( agent.preinitialize && typeof agent.preinitialize === "function" ) {
+                if (lola.hasFn(agent,'preinitialize')) {
 					agent.preinitialize();
 				}
 
@@ -4950,39 +4971,6 @@
         //==================================================================
         // Methods
         //==================================================================
-        /**
-         * @description preinitializes module
-         * @private
-         * @return {void}
-         */
-        preinitialize:function () {
-            lola.debug('lola.chart::preinitialize');
-            if (!lola) throw new Error('lola not defined!');
-
-            //do module preinitialization
-
-
-            //remove initialization method
-            delete lola.chart.preinitialize;
-        },
-
-        /**
-         * @description initializes module
-         * @public
-         * @return {void}
-         */
-        initialize:function () {
-            lola.debug('lola.chart::initialize');
-            //this framework is dependent on lola framework
-            if (!lola) throw new Error('lola not defined!');
-
-            //do module initialization
-
-
-            //remove initialization method
-            delete lola.chart.initialize;
-        },
-
         /**
          * @description get module's namespace
          * @public
@@ -5178,39 +5166,6 @@
 		// Methods
 		//==================================================================
 		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.cmd::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.cmd.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.cmd::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.cmd.initialize;
-		},
-
-		/**
 		 * get module's namespace
 		 * @public
 		 * @return {String}
@@ -5266,7 +5221,7 @@
 					if ( !this.callLater[ name ] ){
 						//try to load command
 						lola.loadScript( this.registry[name], function(e){
-							if ( typeof this.registry[name] == "function" ) {
+							if ( lola.hasFn( this.registry, name ) ) {
 								//command successfully loaded - iterate through queued calls
 								var s = lola.cmd.callLater[ name ].length;
 								for (var i = 0; i < s; i++){
@@ -5506,20 +5461,6 @@
 		//==================================================================
 		// Methods
 		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.easing::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-			//remove initialization method
-			delete lola.easing.preinitialize;
-		},
 
 		/**
 		 * initializes module
@@ -5798,39 +5739,6 @@
 		//==================================================================
 		// Methods
 		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.geometry::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.geometry.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.math.geom::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.geometry.initialize;
-		},
-
 		/**
 		 * get module's namespace
 		 * @public
@@ -6451,23 +6359,6 @@
 		},
 
 		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.graphics::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.graphics.initialize;
-		},
-
-		/**
 		 * get module's namespace
 		 * @public
 		 * @return {String}
@@ -6599,7 +6490,7 @@
          * @param {String} name
          */
         executeRoutine: function( name ) {
-            if (typeof this.routines[name] == "function" ){
+            if ( lola.hasFn(this.routines,name) ){
                 this.routines[name]( this.ctx );
             }
         },
@@ -6621,7 +6512,7 @@
          * @param {Object|Array} objects
          */
         draw: function( object, flags ){
-            if ( object.draw && typeof object.draw === "function" ){
+            if ( lola.hasFn( object, 'draw')){
                 object.draw( lola.graphics.ctx, flags );
             }
         },
@@ -6707,38 +6598,6 @@
 		//==================================================================
 		// Methods
 		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.http::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.http.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.http::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.http.initialize;
-		},
 
 		/**
 		 * get module's namespace
@@ -7393,39 +7252,6 @@
 		//==================================================================
 		// Methods
 		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.json::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.json.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.json::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.json.initialize;
-		},
-
 		/**
 		 * get module's namespace
 		 * @public
@@ -8781,22 +8607,6 @@
 		// Methods
 		//==================================================================
 		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.template::preinitialize');
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.template.preinitialize;
-		},
-
-		/**
 		 * initializes module
 		 * @public
 		 * @return {void}
@@ -9187,7 +8997,7 @@
                     var block = blocks[i];
                     if (typeof block === "string"){
                         //just push the string
-                        built.push( String(block) );
+                        built.push( block );
                     }
                     else{
                         //replace tag with value
@@ -9235,22 +9045,6 @@
         //==================================================================
         // Methods
         //==================================================================
-        /**
-         * preinitializes module
-         * @private
-         * @return {void}
-         */
-        preinitialize: function() {
-            lola.debug('lola.test::preinitialize');
-            if ( !lola ) throw new Error( 'lola not defined!' );
-
-            //do module preinitialization
-
-
-
-            //remove initialization method
-            delete lola.test.preinitialize;
-        },
 
         /**
          * initializes module
@@ -9319,7 +9113,7 @@
                         switch( n.nodeName.toLowerCase() ){
                             case 'script':
                                 //this is a setup or teardown script
-                                var script = new test.Script(n)
+                                var script = new test.Script(n);
                                 test.executables.push( script );
                                 break;
                             case 'test':
@@ -9360,25 +9154,6 @@
          */
         complete: function(){
             console.log('lola.test.complete');
-        },
-
-        //==================================================================
-        // Selection Methods
-        //==================================================================
-        /**
-         * get module's selectors
-         * @public
-         * @return {Object}
-         */
-        getSelectorMethods: function() {
-
-            /**
-             * module's selector methods
-             * @type {Object}
-             */
-            var methods = {};
-            return methods;
-
         },
 
 
@@ -9689,24 +9464,6 @@
 
 			//remove initialization method
 			delete lola.tween.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.tween::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-
-			//remove initialization method
-			delete lola.tween.initialize;
 		},
 
 		/**

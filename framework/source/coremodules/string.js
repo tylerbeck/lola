@@ -80,29 +80,35 @@
 		/**
 		 * pads the front of a string with the specified character to the specified length
 		 * @param {String|int} str
-		 * @param {String} chr character to use in pad
+		 * @param {String} chr character to use in pad, can be multiple characters for escaped chrs
 		 * @param {int} size padded length
 		 */
 		padFront: function ( str, chr, size ) {
 			str = str.toString();
-			while ( str.length < size ) {
-				str = chr[0] + str;
+            var l = str.length;
+            var p = [str];
+			while ( l < size ) {
+				p.push(chr);
+                l++;
 			}
-			return str;
+			return p.join("");
 		},
 
 		/**
 		 * pads the end of a string with the specified character to the specified length
 		 * @param {String|int} str
-		 * @param {String} chr character to use in pad
+		 * @param {String} chr character to use in pad, can be multiple characters for escaped chrs
 		 * @param {int} size padded length
 		 */
 		padEnd: function ( str, chr, size ) {
 			str = str.toString();
-			while ( str.length < size ) {
-				str = str + chr[0];
+            var l = str.length;
+            var p = [str];
+            while ( l < size ) {
+                p.unshift(chr);
+                l++;
 			}
-			return str;
+            return p.join("");
 		},
 
 		/**

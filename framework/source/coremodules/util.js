@@ -75,6 +75,11 @@
 			return [];
 		},
 
+        /**
+         * copies primitives from source to target
+         * @param source
+         * @param target
+         */
         copyPrimitives: function( source, target ){
             for (var k in source){
                 if (lola.type.isPrimitive(source[k])){
@@ -82,6 +87,52 @@
                 }
             }
         },
+
+        /**
+         * checks for required arguments
+         * @param {String} group
+         * @param {Array} required
+         * @param {Array} info
+         * @return {Boolean}
+         */
+        checkArgs: function ( group, required, info ) {
+            var check = true;
+            var warnings = [];
+
+
+            for (var i=required.length-1; i >= 0; i--){
+                if (required[i][1] === undefined || required[i][1] === null){
+                    check = false;
+                    warnings.push(required[i][0]+' is not set!')
+                }
+            }
+
+            if (!check){
+                //start group
+                if (console.groupCollapsed)
+                    console.groupCollapsed( group );
+                else
+                    console.group( group );
+
+                //error info
+                if (lola.type.get(info) == 'array'){
+                    info.forEach( function(item){
+                        console.info( item );
+                    });
+                }
+
+                //error warnings
+                warnings.forEach( function(item){
+                    console.warn( item );
+                });
+
+                //end group
+                console.groupEnd();
+            }
+
+            return check;
+        },
+
 
 		//==================================================================
 		// Classes

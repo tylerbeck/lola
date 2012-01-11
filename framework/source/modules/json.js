@@ -46,39 +46,6 @@
 		// Methods
 		//==================================================================
 		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.json::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
-
-
-			//remove initialization method
-			delete lola.json.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.json::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.json.initialize;
-		},
-
-		/**
 		 * get module's namespace
 		 * @public
 		 * @return {String}

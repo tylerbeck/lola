@@ -25,39 +25,6 @@
         // Methods
         //==================================================================
         /**
-         * @description preinitializes module
-         * @private
-         * @return {void}
-         */
-        preinitialize:function () {
-            lola.debug('lola.chart::preinitialize');
-            if (!lola) throw new Error('lola not defined!');
-
-            //do module preinitialization
-
-
-            //remove initialization method
-            delete lola.chart.preinitialize;
-        },
-
-        /**
-         * @description initializes module
-         * @public
-         * @return {void}
-         */
-        initialize:function () {
-            lola.debug('lola.chart::initialize');
-            //this framework is dependent on lola framework
-            if (!lola) throw new Error('lola not defined!');
-
-            //do module initialization
-
-
-            //remove initialization method
-            delete lola.chart.initialize;
-        },
-
-        /**
          * @description get module's namespace
          * @public
          * @return {String}

@@ -80,14 +80,11 @@
             var stackSize = lola.agent.initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                var initializer = lola.agent.initializers[i];
-                if (typeof initializer == "function"){
-                    initializer();
+                if (lola.hasFn( lola.agent.initializers, i )){
+                    lola.agent.initializers[i]();
+	                delete lola.agent.initializers[i];
                 }
-
-                delete lola.agent.initializers[i];
             }
-
 
 			//remove initialization method
 			delete lola.agent.initialize;
@@ -128,21 +125,21 @@
 				lola.extend( pkg, agent, true );
 
                 //add dependencies
-                if (agent.hasOwnProperty('getDependencies') && typeof agent.getDependencies=="function")
+                if (lola.hasFn(agent,'getDependencies'))
                     this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
 
 				//map agent
 				this.map[ ns ] = pkg;
 
 				//add initializer
-				if ( agent.initialize && typeof agent.initialize === "function" ) {
+                if (lola.hasFn(agent,'initialize')) {
 					lola.agent.initializers.push( function() {
 						agent.initialize();
 					} );
 				}
 
 				//run preinitialization method if available
-				if ( agent.preinitialize && typeof agent.preinitialize === "function" ) {
+                if (lola.hasFn(agent,'preinitialize')) {
 					agent.preinitialize();
 				}
 

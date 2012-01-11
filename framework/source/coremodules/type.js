@@ -142,6 +142,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapTag: function( item, index ) {
 			var tag = document.createElement( item );
@@ -159,6 +160,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapSpecialTag: function( item, index ) {
 			var tag = document.createElement( item );
@@ -176,6 +178,7 @@
 		 * @private
 		 * @param item
 		 * @param index
+         * @private
 		 */
 		mapObject: function( item, index ) {
 			var type = "[object " + item + "]";

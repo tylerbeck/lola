@@ -7,14 +7,49 @@
  *
  ***********************************************************************/
 ( function( window ) {
-	/**
-	 * @namespace lola
-	 * @description: Lola Framework core is used to load modules and for top-level framework attributes and methods
-	 * @param {String} selector selector string
-	 * @param {Object|undefined} context for selection
-	 * @return {lola.Selector}
-	 */
-	var lola = {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	var loloa = {
 
 		//==================================================================
 		// Attributes
@@ -144,28 +179,6 @@
             return missing;
         },
 
-		/**
-		 * creates/gets and returns the object lineage defined in chain param
-		 * @public
-		 * @param {!Object} base object on which to build chain
-		 * @param {!String} chain "." seperated namespace / package
-		 * @return {Object}
-		 */
-		getPackage: function( base, chain ) {
-			//lola.debug('lola::getPackage');
-			var result = base;
-			if ( typeof chain === 'string' ) {
-				var parts = chain.split( '.' );
-				var part;
-				while ( part = parts.shift() ) {
-					if ( result[part] == null  )
-                        result[part] = {};
-					result = result[part];
-				}
-			}
-			return result;
-		},
-
         /**
          * checks the existence of the object lineage defined in chain param
          * @public
@@ -187,28 +200,6 @@
             }
             return true;
         },
-
-		/**
-		 * extends the target with properties from the source
-		 * @public
-		 * @param target {Object}
-		 * @param source {Object}
-		 * @param overwrite {Boolean|undefined}
-		 * @param errors {Boolean|undefined}
-		 * @return {void}
-		 */
-		extend: function( target, source, overwrite, errors ) {
-			//lola.debug('lola::extend');
-			//TODO: make deep copy an option
-			if ( overwrite == undefined ) overwrite = false;
-			if ( errors == undefined ) errors = false;
-			for ( var k in source ) {
-				if ( overwrite || target[k] == null )
-					target[k] = source[k];
-				else if ( errors )
-					throw new Error( "property " + k + " already exists on extend target!" );
-			}
-		},
 
 
 		/**
@@ -470,34 +461,6 @@
 		 * @return {lola.Selector}
 		 */
 		initialize: function( selector, context ) {
-			if ( typeof selector === "string" ){
-				if (window['Sizzle']) {
-					this.elements = Sizzle( selector, context );
-				}
-				else {
-                    try {
-                        if (!context)
-                            context = document;
-                        var nodeList =  context.querySelectorAll( selector );
-                        var nl = nodeList.length;
-                        this.elements = [];
-                        for (var i=0; i<nl; i++){
-                            this.elements.push( nodeList.item(i) );
-                        }
-                    }
-                    catch (e){
-                        console.log('Exception:', selector );
-                    }
-				}
-			}
-			else if ( Array.isArray( selector ) ) {
-				this.elements = selector;
-			}
-			else {
-				this.elements = [selector];
-			}
-
-			return this;
 		},
 
 		/**

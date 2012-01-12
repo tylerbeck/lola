@@ -14,7 +14,7 @@
 	 * @param {Object|undefined} context for selection
 	 * @return {lola.Selector}
 	 */
-	var lola = {
+    window['lola'] = function( selector, context ){
 
 		//==================================================================
 		// Attributes
@@ -23,117 +23,110 @@
 		 * @private
 		 * @type {int}
 		 */
-		window: window,
+		this.window = window;
 
 		/**
 		 * @private
 		 * @type {int}
 		 */
-		 guid: 0,
+		var guid = 0;
 
 		/**
 		 * @private
 		 * @type {Boolean}
 		 */
-		initialized: false,
+		var initialized = false;
 
 		/**
 		 * @private
 		 * @type {Array}
 		 */
-		initializers: [],
+		var initializers = [];
 
 		/**
 		 * @private
 		 * @type {Object}
 		 */
-		dependencies: {},
+		var dependencies = {};
 
 		/**
 		 * @private
 		 * @type {Array}
 		 */
-		safeDeleteHooks: [],
+		var safeDeleteHooks = [];
 
 		/**
 		 * @public
-		 * @type {Object}
+		 * @type {lola.URL}
 		 */
-		urlvars: {},
-
-		/**
-		 * @public
-		 * @type {String}
-		 */
-		hash: "",
+		this.url = {};
 
 		/**
 		 * @private
 		 * @type {Boolean}
 		 */
-		debugMode: false,
+		var debugMode = false;
 
 		//==================================================================
 		// Methods
 		//==================================================================
 		/**
 		 * framework initialization function
-		 * @private
 		 * @param wnd {Object} reference to window
 		 */
-		initialize: function( wnd ) {
-			if (!lola.initialized) {
-				lola.debug('lola::initialize');
-				lola.initialized  = true;
-				window = wnd;
+		this.initialize = function( wnd ) {
+			if (!this.initialized) {
+                this.debug('lola::initialize');
+                this.initialized  = true;
+                window = wnd;
 
 				var i;
 
 				//remove auto initialization listeners
 				if ( document.addEventListener ) {
-					document.removeEventListener( "DOMContentLoaded", lola.initialize, false );
+					document.removeEventListener( "DOMContentLoaded", initialize, false );
 				}
 				else if ( document.attachEvent ) {
-					document.detachEvent( "onreadystatechange", lola.initialize );
+					document.detachEvent( "onreadystatechange", initialize );
 				}
 
 				//check dependencies
-                lola.checkDependencies(lola.dependencies);
+                checkDependencies(dependencies);
 
 				//execute initialization stack
-				var stackSize = lola.initializers.length;
+				var stackSize = initializers.length;
 
 				for ( i = 0; i < stackSize; i++ ) {
-					if (lola.hasFn(lola.initializers,i)){
-						lola.initializers[i]();
-						delete lola.initializers[i];
+					if (this.hasFn(initializers,i)){
+                        initializers[i]();
+						delete initializers[i];
 					}
 				}
 			}
-		},
+		};
 
         /**
          * checks a dependency map for modules
          * @param {Object} map
          */
-        checkDependencies: function( map ){
+        function checkDependencies( map ){
             var fails = [];
             for ( var k in map ) {
-                var missing = this.checkModules( map[k] );
+                var missing = checkModules( map[k] );
                 if ( missing.length > 0 )
                     fails.push(k+': '+missing.join(', '));
             }
             if ( fails.length > 0 ) {
                 throw new Error( "module dependency checks failed for: \n\t" + fails.join( "\n\t" ) );
             }
-        },
+        }
 
         /**
          * checks if modules are registered and returns missing modules
          * @param {Array} modules
          * @return {Array} missing modules
          */
-        checkModules: function( modules ){
+        function checkModules( modules ){
             var missing = [];
 
             Object.forEach(modules, function(item){
@@ -142,7 +135,7 @@
             });
 
             return missing;
-        },
+        }
 
 		/**
 		 * creates/gets and returns the object lineage defined in chain param
@@ -151,7 +144,7 @@
 		 * @param {!String} chain "." seperated namespace / package
 		 * @return {Object}
 		 */
-		getPackage: function( base, chain ) {
+		this.getPackage = function( base, chain ) {
 			//lola.debug('lola::getPackage');
 			var result = base;
 			if ( typeof chain === 'string' ) {
@@ -164,7 +157,7 @@
 				}
 			}
 			return result;
-		},
+		};
 
         /**
          * checks the existence of the object lineage defined in chain param
@@ -173,7 +166,7 @@
          * @param {!String} chain "." seperated namespace / package
          * @return {Boolean}
          */
-        hasPackage: function( base, chain ) {
+        this.hasPackage = function( base, chain ) {
             var result = base;
             if ( typeof chain === 'string' ) {
                 var parts = chain.split( '.' );
@@ -186,7 +179,7 @@
                 }
             }
             return true;
-        },
+        };
 
 		/**
 		 * extends the target with properties from the source
@@ -197,7 +190,7 @@
 		 * @param errors {Boolean|undefined}
 		 * @return {void}
 		 */
-		extend: function( target, source, overwrite, errors ) {
+		this.extend = function( target, source, overwrite, errors ) {
 			//lola.debug('lola::extend');
 			//TODO: make deep copy an option
 			if ( overwrite == undefined ) overwrite = false;
@@ -216,7 +209,7 @@
 		 * @param {String} expression the expression to evaluate
 		 * @param {Object|undefined} node the node in which to load the script
 		 */
-		evaluate: function( expression, node ) {
+		this.evaluate = function( expression, node ) {
 			//console.info('eval: '+expression);
 			if ( node == null ) {
 				node = document.getElementsByTagName( 'head' )[0];
@@ -236,14 +229,14 @@
 
 			node.insertBefore( script, node.firstChild );
 			node.removeChild( script );
-		},
+		};
 
 		/**
 		 * loads a script from a url src
 		 * @param {String} src the uri of the script to load
 		 * @param {Function|undefined} callback the function to call after the script has loaded
 		 */
-		loadScript: function( src, callback ) {
+		this.loadScript = function( src, callback ) {
 			var	node = document.getElementsByTagName( 'head' )[0];
 			if ( !node )
 				node = document.documentElement;
@@ -251,12 +244,11 @@
 			var script = document.createElement( 'script' );
 
             if (typeof callback == "function")
-                lola.event.addListener(script, 'load', function(){callback.apply()} );
+                this.event.addListener(script, 'load', function(){callback.apply()} );
 
             script.src = src;
 			node.insertBefore( script, node.firstChild );
-
-		},
+		};
 
 
 
@@ -266,35 +258,37 @@
 		 * @param {lola.Module} module
 		 * @return {void}
 		 */
-		registerModule: function( module ) {
+		this.registerModule = function( Module ) {
+            var module = new Module();
             var ns = module.getNamespace();
-            lola.debug('lola::registerModule - ' + ns );
+            this.debug('lola::registerModule - ' + ns );
 
 			//add module dependencies
-            if (lola.hasFn( module, "getDependencies" ))
-			    lola.dependencies[ns] =  module.getDependencies();
+            if (this.hasFn( module, "getDependencies" ))
+                dependencies[ns] =  module.getDependencies();
 
 			//add module to namespace
-			lola.extend( lola.getPackage( lola, ns ), module, false, false );
+            this.getPackage( this, ns ) = module;
+			this.extend( this.getPackage( this, ns ), module, false, false );
 
 			//add selector methods
-            if (lola.hasFn( module, "getSelectorMethods" )){
-                lola.extend( lola.Selector.prototype, module.getSelectorMethods(), false, false );
+            if (this.hasFn( module, "getSelectorMethods" )){
+                this.extend( this.Selector.prototype, module.getSelectorMethods(), false, false );
                 delete module['getSelectorMethods'];
             }
 
 			//add initializer
-			if ( lola.hasFn( module, "initialize" ) ) {
-				lola.addInitializer( function() {
+			if ( this.hasFn( module, "initialize" ) ) {
+				this.addInitializer( function() {
 					module.initialize();
 				} );
 			}
 
 			//run preinitialization method if available
-            if ( lola.hasFn( module, "preinitialize" ) ) {
+            if ( this.hasFn( module, "preinitialize" ) ) {
 				module.preinitialize();
 			}
-		},
+		};
 
 		/**
 		 * delete a property on an object and removes framework references
@@ -303,10 +297,9 @@
 		 * @param {String} property property to delete
 		 * @return {void}
 		 */
-		safeDelete: function( object, property ) {
-			//lola.debug('lola::safeDelete');
+		this.safeDelete = function( object, property ) {
 			var obj = (property) ? object[ property ] : object;
-			for ( var i = this.safeDeleteHooks.length - 1; i >= 0; i-- ) {
+			for ( var i = safeDeleteHooks.length - 1; i >= 0; i-- ) {
                 if (obj){
                     var hook = this.safeDeleteHooks[i];
                     hook.fn.call( hook.scope, obj );
@@ -318,14 +311,14 @@
                 delete object[ property ];
             }
 
-		},
+		};
 
 		/**
 		 * Object prototype's to string method
 		 * @param {Object} object
 		 * @return {String}
 		 */
-		toString: Object.prototype.toString,
+		this.toString = Object.prototype.toString;
 
 
         /**
@@ -334,35 +327,34 @@
          * @param {String} fnName
          * @return {Boolean}
          */
-        hasFn: function( obj, fnName ){
+        this.hasFn = function( obj, fnName ){
             return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
-        },
+        };
 
-       /**
+        /**
          * adds function to initialization stack
          * @param {Function} fn
          */
-        addInitializer: function( fn ){
-            lola.initializers.push( fn );
-        },
+        this.addInitializer = function( fn ){
+            initializers.push( fn );
+        };
 
         /**
          * outputs debug statement
          */
-        debug: function(/*args*/){
-			if (lola.debugMode) {
-				console.log("["+lola.now()+"]", arguments.join(' '));
-
+        this.debug = function(/*args*/){
+			if (debugMode) {
+				console.log("["+this.now()+"]", arguments.join(' '));
 			}
-		},
+		};
 
         /**
          * get current time in milliseconds
          * @return {uint}
          */
-        now: function(){
+        this.now = function(){
             return (new Date()).getTime();
-        },
+        };
 
         /**
          * used in selector methods to determine whether to return an array
@@ -371,18 +363,17 @@
          * @return {*}
          * @private
          */
-		__: function( v ){
+		this.__ = function( v ){
 			return (v.length == 1) ? v[0] : v;
-		},
+		};
 
 		//==================================================================
 		// Prototype Upgrades
 		//==================================================================
 		/**
-		 * upgrades object prototype and is then deleted
-		 * @private
+		 * upgrades object prototype
 		 */
-		upgradeObjectPrototype: function() {
+        this.upgradeObjectPrototype = function() {
 
             if ( !Object.keys ) {
                 Object.keys = function ( object ) {
@@ -416,9 +407,7 @@
                     }
                 };
             }
-
-
-		},
+		};
 
 		//==================================================================
 		// Classes
@@ -429,26 +418,28 @@
 		 * @param {Object|undefined} context for selection
 		 * @constructor
 		 */
-		Selector: function( selector, context ) {
+		this.Selector = function( selector, context ) {
 			return this.initialize( selector, context );
-		},
+		};
 
 		/**
 		 * Lola Module Interface
 		 * @interface
 		 */
-		Module: function() {
+		this.Module = function() {
             return this;
-		},
+		};
 
         /**
          * URL Class
          * @class
          * @param str
          */
-        URL: function( str ){
+        this.URL = function( str ){
             return this.init( str );
-        }
+        };
+
+        return new this.Selector( selector, context );
 
 	};
 
@@ -668,18 +659,19 @@
 	//==================================================================
 	// Auto Initialization
 	//==================================================================
-	var main = function( selector, context ) {
-		return new lola.Selector( selector, context );
-	};
+	//var main = function( selector, context ) {
+	//	return new lola.Selector( selector, context );
+	//};
+
+    window['$'] = lola;
+    window['lola'] = lola;
 
 	lola.upgradeObjectPrototype();
 	delete lola.upgradeObjectPrototype;
 
 
-	lola.extend( main, lola, true );
-	lola = main;
-	window['$'] = lola;
-	window['lola'] = lola;
+	//lola.extend( main, lola, true );
+	//lola = main;
 
 	lola.url = new lola.URL( window.location.href );
 	lola.debugMode = lola.url.vars['debug'] == "true";

@@ -13,198 +13,194 @@
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
-	var support = {
+	var Support = function(){
 
-		//==================================================================
-		// Attributes
-		//==================================================================
-		/**
-		 * can script text nodes be appended to script nodes
-		 * @public
-		 * @type {Boolean}
-		 */
-		domEval: false,
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "support";
 
-		/**
-		 * can delete expando properties
-		 * @public
-		 * @type {Boolean}
-		 */
-		deleteExpando: true,
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
 
-		/**
-		 * dom event model
-		 * @public
-		 * @type {Boolean}
-		 */
-		domEvent: false,
+        /**
+         * @private
+         */
+        var _domEval = false;
 
-		/**
-		 * ms event model
-		 * @public
-		 * @type {Boolean}
-		 */
-		msEvent: false,
+        /**
+         * @private
+         */
+        var _style = false;
 
-		/**
-		 * browser animation frame timing
-		 * @public
-		 * @type {Boolean}
-		 */
-		browserAnimationFrame: false,
+        /**
+         * @private
+         */
+        var _cssFloat = false;
 
-		/**
-		 * IE style
-		 * @public
-		 * @type {Boolean}
-		 */
-		style: false,
+        /**
+         * @private
+         */
+        var _colorAlpha = false;
 
-		/**
-		 * float is reserved check whether to user cssFloat or styleFloat
-		 * @public
-		 * @type {Boolean}
-		 */
-		cssFloat: false,
+        /**
+         * @private
+         */
+        var _deleteExpando = true;
 
-		/**
-		 * check color alpha channel support
-		 * @public
-		 * @type {Boolean}
-		 */
-		colorAlpha: false,
+        /**
+         * @private
+         */
+        var _msEvent = false;
 
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.support::preinitialize');
-			//DOM script eval support
-			var root = document.documentElement;
-			var script = document.createElement( 'script' );
-			var uid = "scriptCheck" + (new Date).getTime();
-			script.type = "text/javascript";
-			try {
-				script.appendChild( document.createTextNode( 'window.' + uid + '=true;' ) );
-			}
-			catch( e ) {
+        /**
+         * @private
+         */
+        var _domEvent = true;
 
-			}
-
-			root.insertBefore( script, root.firstChild );
-			root.removeChild( script );
-
-			if ( window[ uid ] ) {
-				this.domEval = true;
-				delete window[ uid ];
-			}
+        /**
+         * @private
+         */
+        var _animationFrameType = 0;
 
 
-			//create test div and test helpers for support tests
-			var div = document.createElement( 'div' );
-			var html = function( val ) {
-				div.innerHTML = val;
-			};
+        //==================================================================
+        // Getters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        /**
+         * DOM eval support getter
+         */
+        this.domEval = function(){
+            return _domEval;
+        };
+
+        /**
+         * style support getter
+         */
+        this.style = function(){
+            return _style;
+        };
+
+        /**
+         * cssFloat support getter
+         */
+        this.cssFloat = function(){
+            return _cssFloat;
+        };
+
+        /**
+         * msEvent support getter
+         */
+        this.msEvent = function(){
+            return _msEvent;
+        };
+
+        /**
+         * domEvent support getter
+         */
+        this.domEvent = function(){
+            return _domEvent;
+        };
+
+        /**
+         * deleteExpando support getter
+         */
+        this.deleteExpando = function(){
+            return _deleteExpando;
+        };
+
+        /**
+         * anaimationFrame type getter
+         */
+        this.animationFrameType = function(){
+            return _animationFrameType;
+        };
 
 
-			//style support
-			html( "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true'>test</div>" );
-			var target = div.firstChild;
-			this.style = (typeof target.getAttribute( 'style' ) === 'string');
-			this.cssFloat = /^left$/.test( target.style.cssFloat );
-			this.colorAlpha = /^rgba.*/.test( target.style.backgroundColor );
+        //==================================================================
+        // Run Checks
+        //==================================================================
+
+        //domEval
+        var root = document.documentElement;
+        var script = document.createElement( 'script' );
+        var uid = "scriptCheck" + (new Date).getTime();
+        script.type = "text/javascript";
+        try {
+            script.appendChild( document.createTextNode( 'lola.window.' + uid + '=true;' ) );
+        }
+        catch( e ){}
+
+        root.insertBefore( script, root.firstChild );
+        root.removeChild( script );
+
+        _domEval = lola.window[ uid ];
+        delete lola.window[ uid ];
+
+        //create div for testing
+        var div = document.createElement( 'div' );
+        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' >test</div>";
+        var target = div.firstChild;
+
+        //style tests
+        _style = (typeof target.getAttribute( 'style' ) === 'string');
+        _cssFloat = /^left$/.test( target.style.cssFloat );
+        _colorAlpha = /^rgba.*/.test( target.style.backgroundColor );
+
+        //delete expandos
+        try {
+            delete target.test;
+        }
+        catch( e ) {
+            _deleteExpando = false;
+        }
+
+        //event model
+        if ( document.addEventListener )
+            this._domEvent = true;
+        else if ( document.attachEvent )
+            this._msEvent = true;
+
+        //animation frame type
+        if ( window.requestAnimationFrame )
+            lola.tween.getFrameType = 1;
+        else if ( window.mozRequestAnimationFrame )
+            lola.tween.getFrameType = 2;
+        else if ( window.webkitRequestAnimationFrame )
+            lola.tween.getFrameType = 3;
+        else if ( window.oRequestAnimationFrame )
+            lola.tween.getFrameType = 4;
 
 
-			//check for deletion of expando properties
-			try {
-				delete target.test;
-			}
-			catch( e ) {
-				this.deleteExpando = false;
-			}
+    };
 
-
-			//Event Model
-			if ( document.addEventListener )
-				this.domEvent = true;
-			else if ( document.attachEvent )
-				this.msEvent = true;
-
-
-			//remove initialization method
-			delete lola.support.preinitialize;
-
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.support::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-
-			//remove initialization method
-			delete lola.support.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "support";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return [];
-		},
-
-
-		//==================================================================
-		// Selector Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
-
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-			};
-
-			return methods;
-
-		}
-
-	};
-
-	//register module
-	lola.registerModule( support );
+    //register module
+    lola.registerModule( new Support() );
 
 })( lola );
 

@@ -8,15 +8,13 @@
  ***********************************************************************/
 ( function( lola ) {
 
-    var $ = lola;
-
     /**
      * @namespace lola
      */
 	var Core = function(){
 
         //==================================================================
-        // Private Attributes
+        // Attributes
         //==================================================================
         /**
          * module's namespace
@@ -24,6 +22,13 @@
          * @private
          */
         var namespace = "";
+
+        /**
+         * module dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = {};
 
         /**
          * global unique identifier
@@ -36,12 +41,6 @@
          * @type {Array}
          */
         var initializers = [];
-
-        /**
-         * @private
-         * @type {Object}
-         */
-        var dependencies = {};
 
         /**
          * @private
@@ -63,16 +62,53 @@
 
 
         //==================================================================
-        // Methods
+        // Getters & Setters
         //==================================================================
         /**
          * get module's namespace
          * @return {String}
          */
-        this.getNamespace = function() {
+        this.namespace = function() {
             return namespace;
         };
 
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        /**
+         * gets url Object
+         * @return {lola.URL}
+         */
+        this.url = function(){
+            return url;
+        };
+
+        /**
+         * sets url Object
+         * @param {String} url
+         */
+        this.setURL = function( url ){
+            url = new Core.URL( url );
+            debugMode = url.vars['debug'] == "true";
+        };
+
+        /**
+         * gets debug mode
+         * @return {Boolean}
+         */
+        this.debugMode = function(){
+            return debugMode;
+        };
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
         /**
          * gets next guid
          * @return {uint}
@@ -99,15 +135,15 @@
 
         /**
          * adds function to safedelete stack
-         * @param {Function} fn
+         * @param {String} namespace
+         * @param {Array} dependsOn
          */
-        this.addDependencies = function( namespace, dependencies ){
-            safeDeleteHooks.push( fn );
+        this.addDependencies = function( namespace, dependsOn ){
+            dependencies[namespace] = dependsOn;
         };
 
         /**
          * delete a property on an object and removes framework references
-         * @public
          * @param {Object} object object on which to delete property
          * @param {String} property property to delete
          * @return {void}
@@ -128,31 +164,6 @@
         };
 
         /**
-         * gets url Object
-         * @return {lola.URL}
-         */
-        this.getURL = function(){
-            return url;
-        };
-
-        /**
-         * sets url Object
-         * @param {String} url
-         */
-        this.setURL = function( url ){
-            url = new Core.URL( url );
-            debugMode = url.vars['debug'] == "true";
-        };
-
-        /**
-         * gets debug mode
-         * @return {Boolean}
-         */
-        this.isDebugMode = function(){
-            return debugMode;
-        };
-
-        /**
          * checks a dependency map for modules
          */
         this.checkDependencies = function(){
@@ -170,6 +181,7 @@
 
         /**
          * checks if modules are registered and returns missing modules
+         * @private
          * @param {Array} modules
          * @return {Array} missing modules
          */
@@ -199,6 +211,120 @@
                 }
             }
         };
+
+        /**
+         * eval abstraction
+         * @param {String} expression the expression to evaluate
+         * @param {Object|undefined} node the node in which to load the script
+         */
+        this.evaluate = function( expression, node ) {
+            //console.info('eval: '+expression);
+            if ( node == null ) {
+                node = document.getElementsByTagName( 'head' )[0];
+                if ( !node )
+                    node = document.documentElement;
+            }
+
+            var script = document.createElement( 'script' );
+            script.type = "text/javascript";
+
+            if ( lola.support.domEval ) {
+                script.appendChild( document.createTextNode( expression ) );
+            }
+            else {
+                script.text = expression;
+            }
+
+            node.insertBefore( script, node.firstChild );
+            node.removeChild( script );
+        };
+
+        /**
+         * loads a script from a url src
+         * @param {String} src the uri of the script to load
+         * @param {Function|undefined} callback the function to call after the script has loaded
+         */
+        this.loadScript = function( src, callback ) {
+            var	node = document.getElementsByTagName( 'head' )[0];
+            if ( !node )
+                node = document.documentElement;
+
+            var script = document.createElement( 'script' );
+
+            if (typeof callback == "function")
+                lola.event.addListener(script, 'load', function(){callback.apply()} );
+
+            script.src = src;
+            node.insertBefore( script, node.firstChild );
+
+        };
+
+        /**
+         * checks the existence of the object lineage defined in chain param
+         * @param {!Object} base object on which to build chain
+         * @param {!String} chain "." seperated namespace / package
+         * @return {Boolean}
+         */
+        this.hasPackage = function( base, chain ) {
+            var result = base;
+            if ( typeof chain === 'string' ) {
+                var parts = chain.split( '.' );
+                var part;
+                while ( part = parts.shift() ) {
+                    if ( result[part] == null  )
+                        return false;
+                    else
+                        result = result[part];
+                }
+            }
+            return true;
+        };
+
+        /**
+         * returns true if object has a function with the given name
+         * @param {Object} obj
+         * @param {String} fnName
+         * @return {Boolean}
+         */
+        this.hasFn = function( obj, fnName ){
+            return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
+        };
+
+        /**
+         * outputs debug statement
+         */
+        this.debug = function(/*args*/){
+            if (debugMode) {
+                console.log("["+this.now()+"]", [].splice.call(arguments,0).join(' '));
+            }
+        };
+
+        /**
+         * Object prototype's to string method
+         * @param {Object} object
+         * @return {String}
+         */
+        this.toString = Object.prototype.toString;
+
+        /**
+         * get current time in milliseconds
+         * @return {uint}
+         */
+        this.now = function(){
+            return (new Date()).getTime();
+        };
+
+        /**
+         * used in selector methods to determine whether to return an array
+         * or an object
+         * @param v
+         * @return {*}
+         * @private
+         */
+        this.__ = function( v ){
+            return (v.length == 1) ? v[0] : v;
+        };
+
 
         //==================================================================
         // Selector Methods
@@ -281,133 +407,12 @@
         };
 
 
-
-
         return this;
-    };
-    Core.prototype = {
-
-        //==================================================================
-        // Methods
-        //==================================================================
-        /**
-         * eval abstraction
-         * @param {String} expression the expression to evaluate
-         * @param {Object|undefined} node the node in which to load the script
-         */
-        evaluate: function( expression, node ) {
-            //console.info('eval: '+expression);
-            if ( node == null ) {
-                node = document.getElementsByTagName( 'head' )[0];
-                if ( !node )
-                    node = document.documentElement;
-            }
-
-            var script = document.createElement( 'script' );
-            script.type = "text/javascript";
-
-            if ( lola.support.domEval ) {
-                script.appendChild( document.createTextNode( expression ) );
-            }
-            else {
-                script.text = expression;
-            }
-
-            node.insertBefore( script, node.firstChild );
-            node.removeChild( script );
-        },
-
-        /**
-         * loads a script from a url src
-         * @param {String} src the uri of the script to load
-         * @param {Function|undefined} callback the function to call after the script has loaded
-         */
-        loadScript: function( src, callback ) {
-            var	node = document.getElementsByTagName( 'head' )[0];
-            if ( !node )
-                node = document.documentElement;
-
-            var script = document.createElement( 'script' );
-
-            if (typeof callback == "function")
-                lola.event.addListener(script, 'load', function(){callback.apply()} );
-
-            script.src = src;
-            node.insertBefore( script, node.firstChild );
-
-        },
-
-        /**
-         * checks the existence of the object lineage defined in chain param
-         * @public
-         * @param {!Object} base object on which to build chain
-         * @param {!String} chain "." seperated namespace / package
-         * @return {Boolean}
-         */
-        hasPackage: function( base, chain ) {
-            var result = base;
-            if ( typeof chain === 'string' ) {
-                var parts = chain.split( '.' );
-                var part;
-                while ( part = parts.shift() ) {
-                    if ( result[part] == null  )
-                        return false;
-                    else
-                        result = result[part];
-                }
-            }
-            return true;
-        },
-
-        /**
-         * returns true if object has a function with the given name
-         * @param {Object} obj
-         * @param {String} fnName
-         * @return {Boolean}
-         */
-        hasFn: function( obj, fnName ){
-            return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
-        },
-
-        /**
-         * outputs debug statement
-         */
-        debug: function(/*args*/){
-            if (this.isDebugMode()) {
-                console.log("["+this.now()+"]", [].splice.call(arguments,0).join(' '));
-            }
-        },
-
-        /**
-         * Object prototype's to string method
-         * @param {Object} object
-         * @return {String}
-         */
-        toString: Object.prototype.toString,
-
-        /**
-         * get current time in milliseconds
-         * @return {uint}
-         */
-        now: function(){
-            return (new Date()).getTime();
-        },
-
-        /**
-         * used in selector methods to determine whether to return an array
-         * or an object
-         * @param v
-         * @return {*}
-         * @private
-         */
-        __: function( v ){
-            return (v.length == 1) ? v[0] : v;
-        }
     };
 
 
     //==================================================================
-    // Core Classes
+    // Classes
     //==================================================================
     /**
      * URL Class
@@ -464,6 +469,8 @@
                 return this.path+this.page+vstr+hstr;
         }
     };
+
+
     var core = new Core();
     core.setURL( lola.window.location.href );
     lola.registerModule( core );

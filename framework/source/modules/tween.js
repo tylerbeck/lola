@@ -66,16 +66,6 @@
 			lola.debug('lola.tween::preinitialize');
 			if ( !lola ) throw new Error( 'lola not defined!' );
 
-            //get optimized animation timer function
-            if ( window.requestAnimationFrame )
-                lola.tween.getFrameType = 1;
-            if ( window.mozRequestAnimationFrame )
-                lola.tween.getFrameType = 2;
-            else if ( window.webkitRequestAnimationFrame )
-                lola.tween.getFrameType = 3;
-            else if ( window.oRequestAnimationFrame )
-                lola.tween.getFrameType = 4;
-
 
 			//do module preinitialization
             //NOTE: This doesn't work in all browsers

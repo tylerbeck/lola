@@ -13,32 +13,128 @@
 	 * @implements {lola.Module}
 	 * @memberof lola
 	 */
-	var data = {
+	var data = function(){
 
-		//==================================================================
-		// Attributes
-		//==================================================================
-		/**
-		 * cache for all data storage
-		 * @private
-		 */
-		cache: {},
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "data";
 
-		/**
-		 * uid for data references
-		 * @private
-		 */
-		uid: 1,
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = ['dom','type'];
 
-		/**
-		 * attribute for data storage uid
-		 * @private
-		 */
-		cacheIDProp: "LOLA-DATA-UID",
+        /**
+         * cache for all data storage
+         * @private
+         */
+        var cache = {};
 
-		//==================================================================
-		// Methods
-		//==================================================================
+        /**
+         * uid for data references
+         * @private
+         */
+        var uid = 1;
+
+        /**
+         * attribute for data storage uid
+         * @private
+         */
+         var cacheIDProp = "LOLA-DATA-UID";
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * get next data uid
+         * @return {int}
+         * @private
+         */
+        function nextUid() {
+            return lola.data.uid++;
+        }
+
+        /**
+         * links element with data cache
+         * @param {Object} object
+         * @param {Boolean|undefined} create defaults to true,
+         * set to false to prevent creating a cache if one doesn't already exist
+         * @private
+         */
+        function getCacheId( object, create ) {
+            create = (create == undefined) ? true : create;
+            //assume if create cache is being called that ther is no cache
+            var cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
+            if ( cacheId == null ) {
+                switch ( lola.type.get( object ) ) {
+                    case 'function':
+                    case 'object':
+                        cacheId = object[cacheIDProp];
+                        if ( cacheId == null && create ) {
+                            cacheId = nextUid();
+                            object[cacheIDProp] = cacheId;
+                        }
+                        break;
+                    case 'applet':
+                    case 'embed':
+                    case 'number':
+                    case 'date':
+                    case 'array':
+                    case 'boolean':
+                    case 'regexp':
+                    case 'string':
+                    case 'textnode':
+                    case 'commentnode':
+                        //not supported
+                        break;
+                    case 'htmlobject':
+                        //TODO: implement special case for flash objects
+                        break;
+                    default:
+                        //get attribute
+                        cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
+                        if ( cacheId == null && create ) {
+                            cacheId = lola.data.nextUid();
+                            lola.dom.attr( object, lola.data.cacheIDProp, cacheId );
+                        }
+                        break;
+                }
+            }
+            return cacheId;
+        }
+
+    };
+
+    var tmp = {
+
+
 		/**
 		 * preinitializes module
 		 * @private
@@ -55,98 +151,6 @@
 			delete lola.data.preinitialize;
 		},
 
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.data::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.data.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "data";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return ["support"];
-		},
-
-		/**
-		 * get next data uid
-		 * @return {int}
-		 * @private
-		 */
-		nextUid: function() {
-			return lola.data.uid++;
-		},
-
-		/**
-		 * links element with data cache
-		 * @param {Object} object
-		 * @param {Boolean|undefined} create defaults to true,
-		 * set to false to prevent creating a cache if one doesn't already exist
-		 */
-		getCacheId: function( object, create ) {
-			create = (create == undefined) ? true : create;
-			//assume if create cache is being called that ther is no cache
-			var cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
-			if ( cacheId == null ) {
-				switch ( lola.type.get( object ) ) {
-					case 'function':
-					case 'object':
-						cacheId = object[lola.data.cacheIDProp];
-						if ( cacheId == null && create ) {
-							cacheId = lola.data.nextUid();
-							object[lola.data.cacheIDProp] = cacheId;
-						}
-						break;
-					case 'applet':
-					case 'embed':
-					case 'number':
-					case 'date':
-					case 'array':
-					case 'boolean':
-					case 'regexp':
-					case 'string':
-					case 'textnode':
-					case 'commentnode':
-						//not supported
-						break;
-					case 'htmlobject':
-						//TODO: implement special case for flash objects
-						break;
-					default:
-						//get attribute
-						cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
-						if ( cacheId == null && create ) {
-							cacheId = lola.data.nextUid();
-							lola.dom.attr( object, lola.data.cacheIDProp, cacheId );
-						}
-						break;
-				}
-			}
-			return cacheId;
-		},
 
 		/**
 		 * gets an objects data for the specified namespace

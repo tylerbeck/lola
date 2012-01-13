@@ -3,207 +3,172 @@
 	/**
 	 * Array Module
 	 * @implements {lola.Module}
-	 * @memberof lola
+     * @namespace lola.array
 	 */
-	var array = {
+	var Array = function(){
 
-		//==================================================================
-		// Attributes
-		//==================================================================
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "array";
 
-
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.array::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module initialization
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
 
 
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
 
-			//remove initialization method
-			delete lola.array.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 * @default array
-		 */
-		getNamespace: function() {
-			return "array";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return [];
-		},
-
-		/**
-		 * checks an array of objects for a property with value
-		 * @public
-		 * @param {Array<Object>} array array to check
-		 * @param {String} property property to inspect
-		 * @param value value to match
-		 * @return {Boolean}
-		 */
-		hasObjectWithProperty: function ( array, property, value ) {
-			var callback = function( item, index, arr ) {
-				return item[property] == value;
-			};
-			return array.some( callback );
-		},
-
-		/**
-		 * returns a unique copy of the array
-		 * @public
-		 * @param array
-		 * @return {Array}
-		 */
-		unique: function ( array ) {
-			var tmp = [];
-			for (var i = array.length-1; i >= 0; i--){
-				if (tmp.indexOf( array[i] ) == -1){
-					tmp.push( array[i] );
-				}
-			}
-
-			return tmp;
-		},
-
-		/**
-		 * checks if array contains object
-		 * @public
-		 * @param {Array} array
-		 * @return {Boolean}
-		 */
-		isIn: function ( array, value ) {
-			return array.indexOf( value ) >= 0;
-		},
-
-		/**
-		 * removes null values from array
-		 * @public
-		 * @param {Array} array
-		 * @return {Array}
-		 */
-		pruneNulls: function( array ) {
-			var tmp = [];
-			array.forEach( function(item){
-				if ( item != null ){
-					tmp.push( item );
-				}
-			});
-			return tmp;
-		},
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
 
 
-		/**
-		 * creates a sort function for property
-		 * @param {String} property
-		 * @return {Function}
-		 */
-		getSortFunction: function( property ){
-			return function( a, b ) {
-				var x = a[property];
-				var y = b[property];
-				return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-			};
-		},
+        //==================================================================
+        // Methods
+        //==================================================================
 
-		/**
-		 * sort an array on a property
-		 * @param {Array} array
-		 * @param {String} property
-		 */
-		sortOn: function( property, array ){
-			return array.sort( lola.array.getSortFunction(property) );
-		},
+        /**
+         * checks an array of objects for a property with value
+         * @public
+         * @param {Array<Object>} array array to check
+         * @param {String} property property to inspect
+         * @param value value to match
+         * @return {Boolean}
+         */
+        this.hasObjectWithProperty = function ( array, property, value ) {
+            var callback = function( item, index, arr ) {
+                return item[property] == value;
+            };
+            return array.some( callback );
+        };
 
+        /**
+         * returns a unique copy of the array
+         * @public
+         * @param array
+         * @return {Array}
+         */
+        this.unique = function ( array ) {
+            var tmp = [];
+            for (var i = array.length-1; i >= 0; i--){
+                if (tmp.indexOf( array[i] ) == -1){
+                    tmp.push( array[i] );
+                }
+            }
 
-		//==================================================================
-		// Selector Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
+            return tmp;
+        };
 
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
+        /**
+         * checks if array contains object
+         * @public
+         * @param {Array} array
+         * @return {Boolean}
+         */
+        this.isIn = function ( array, value ) {
+            return array.indexOf( value ) >= 0;
+        };
 
-				/**
-				 * iterates each element in Selector and applies callback.
-				 * @param {Function} callback function callback( item, index, array ):void
-				 */
-				forEach: function( callback ) {
-                    this.elements.forEach( callback );
-					return this;
-				},
-
-				/**
-				 * iterates each element in Selector and checks that every callback returns true.
-				 * @param {Function} callback function callback( item, index, array ):Boolean
-				 */
-				every: function( callback ) {
-					return this.elements.every( callback );
-				},
-
-				/**
-				 * iterates each element in Selector and checks that at least one callback returns true.
-				 * @param {Function} callback function callback( item, index, array ):Boolean
-				 */
-				some: function( callback ) {
-					return this.elements.some( callback );
-				}
-
-			};
-
-			return methods;
-
-		},
+        /**
+         * removes null values from array
+         * @public
+         * @param {Array} array
+         * @return {Array}
+         */
+        this.pruneNulls = function( array ) {
+            var tmp = [];
+            array.forEach( function(item){
+                if ( item != null ){
+                    tmp.push( item );
+                }
+            });
+            return tmp;
+        };
 
 
-		//==================================================================
-		// Prototype Upgrades
-		//==================================================================
-		/**
-		 * upgrades array prototype and is then deleted
-		 * @private
-		 */
-		upgradeArrayPrototype: function() {
+        /**
+         * creates a sort function for property
+         * @param {String} property
+         * @return {Function}
+         */
+        this.getSortFunction = function( property ){
+            return function( a, b ) {
+                var x = a[property];
+                var y = b[property];
+                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            };
+        };
+
+        /**
+         * sort an array on a property
+         * @param {Array} array
+         * @param {String} property
+         */
+        this.sortOn = function( property, array ){
+            return array.sort( lola.array.getSortFunction(property) );
+        };
 
 
-		}
 
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+        this.selectorMethods = {
 
-	};
+            /**
+             * iterates each element in Selector and applies callback.
+             * @param {Function} callback function callback( item, index, array ):void
+             */
+            forEach: function( callback ) {
+                this.elements.forEach( callback );
+                return this;
+            },
 
-	//update array prototype
-	array.upgradeArrayPrototype();
-	delete array['upgradeArrayPrototype'];
+            /**
+             * iterates each element in Selector and checks that every callback returns true.
+             * @param {Function} callback function callback( item, index, array ):Boolean
+             */
+            every: function( callback ) {
+                return this.elements.every( callback );
+            },
+
+            /**
+             * iterates each element in Selector and checks that at least one callback returns true.
+             * @param {Function} callback function callback( item, index, array ):Boolean
+             */
+            some: function( callback ) {
+                return this.elements.some( callback );
+            }
+
+        };
+
+    };
+
 
 	//register module
-	lola.registerModule( array );
+	lola.registerModule( new Array() );
 
 })( lola );
 

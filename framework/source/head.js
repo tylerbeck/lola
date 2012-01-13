@@ -71,18 +71,18 @@
     /**
      * registers a module with the Lola Framework
      * @public
-     * @param {lola.Module} module
+     * @param {Object} module
      * @return {void}
      */
     lola.registerModule = function( module ) {
-        var namespace = module.getNamespace();
+        var namespace = module.namespace();
 
         //add module to namespace
         lola.extend( lola.getPackage( lola, namespace ), module, false, false );
 
         //add module dependencies
-        if (this.hasFn( module, "getDependencies" )){
-            lola.addDependencies( namespace, module.getDependencies() );
+        if (this.hasFn( module, "dependencies" )){
+            lola.addDependencies( namespace, module.dependencies() );
         }
 
         //add selector methods

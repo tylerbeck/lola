@@ -31,12 +31,38 @@
 	<!-- unify core and modules -->
 	<target name="unify-scripts" depends="init" >
 		<concat destfile="tmp/unified.js" force="no">
-            <fileset dir="framework/source/" includes="head.js,upgrades.js,selector.js"/>
-            <fileset dir="framework/source/modules" includes="core.js,support.js,array.js"/>
-            <fileset dir="framework/source/" includes="tail.js"/>
-			<!--<fileset dir="framework/source/external/" includes="sizzle.js"/>
-			<fileset dir="framework/source/coremodules" includes="**/*.js"/>
-			<fileset dir="framework/source/modules" includes="**/*.js"/>-->
+            <file file="framework/source/head.js" />
+            <file file="framework/source/upgrades.js" />
+            <file file="framework/source/selector.js" />
+            <file file="framework/source/modules/core.js" />
+            <file file="framework/source/modules/support.js" />
+            <file file="framework/source/modules/array.js" />
+            <file file="framework/source/modules/type.js" />
+            <file file="framework/source/modules/dom.js" />
+            <file file="framework/source/modules/data.js" />
+            <file file="framework/source/modules/util.js" />
+            <file file="framework/source/modules/string.js" />
+            <file file="framework/source/modules/regex.js" />
+            <file file="framework/source/modules/event.js" />
+            <file file="framework/source/modules/math.js" />
+            <file file="framework/source/modules/math/color.js" />
+            <file file="framework/source/modules/css.js" />
+            <!--<file file="framework/source/modules/http.js" />-->
+            <!--<file file="framework/source/modules/json.js" />-->
+            <!--<file file="framework/source/modules/agent.js" />-->
+            <!--<file file="framework/source/modules/cmd.js" />-->
+            <!--<file file="framework/source/modules/easing.js" />-->
+            <!--<file file="framework/source/modules/geometry.js" />-->
+            <!--<file file="framework/source/modules/graphics.js" />-->
+            <!--<file file="framework/source/modules/chart.js" />-->
+            <!--<file file="framework/source/modules/template.js" />-->
+            <!--<file file="framework/source/modules/test.js" />-->
+            <!--<file file="framework/source/modules/tween.js" />-->
+            <!--<file file="framework/source/modules/math/point.js" />-->
+            <!--<file file="framework/source/modules/math/tvm.js" />-->
+            <!--<file file="framework/source/modules/math/vector.js" />-->
+
+            <file file="framework/source/tail.js" />
 		</concat>
 	</target>
 

@@ -11,8 +11,8 @@
     /**
      * @namespace lola
      */
-	var Core = function(){
-
+	var Module = function(){
+        var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -93,7 +93,7 @@
          * @param {String} url
          */
         this.setURL = function( url ){
-            url = new Core.URL( url );
+            url = new self.URL( url );
             debugMode = url.vars['debug'] == "true";
         };
 
@@ -129,8 +129,8 @@
          * adds function to safedelete stack
          * @param {Function} fn
          */
-        this.addSafeDeleteHook = function( fn ){
-            safeDeleteHooks.push( fn );
+        this.addSafeDeleteHook = function( fn, scope ){
+            safeDeleteHooks.push( {fn:fn, scope:scope} );
         };
 
         /**
@@ -145,7 +145,7 @@
         /**
          * delete a property on an object and removes framework references
          * @param {Object} object object on which to delete property
-         * @param {String} property property to delete
+         * @param {String|undefined} property property to delete
          * @return {void}
          */
         this.safeDelete = function( object, property ) {
@@ -300,13 +300,6 @@
         };
 
         /**
-         * Object prototype's to string method
-         * @param {Object} object
-         * @return {String}
-         */
-        this.toString = Object.prototype.toString;
-
-        /**
          * get current time in milliseconds
          * @return {uint}
          */
@@ -406,73 +399,75 @@
             }
         };
 
+        //==================================================================
+        // Classes
+        //==================================================================
+        /**
+         * URL Class
+         * @class
+         * @param {String} url
+         */
+        this.URL = function( url ){
+            var parts = url.split("#",2);
+            this.hash = (parts[1])?parts[1]:"";
 
-        return this;
-    };
-
-
-    //==================================================================
-    // Classes
-    //==================================================================
-    /**
-     * URL Class
-     * @class
-     * @param {String} url
-     */
-    Core.URL = function( url ){
-        var parts = url.split("#",2);
-        this.hash = (parts[1])?parts[1]:"";
-
-        var vars = {};
-        parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
-            vars[key] = value;return "";
-        });
-        this.vars = vars;
-
-        parts = parts.split(":");
-        if (parts.length == 2 ){
-            this.protocol = parts[0];
-            parts = parts[1].substr(2).split("/");
-            this.domain = parts.shift();
-        }
-        else {
-            parts = parts[0].split("/");
-        }
-
-        this.page = parts.pop();
-
-        this.path = (this.domain == "" ? "" : "/");
-        if (parts.length > 0){
-            this.path = this.path+parts.join("/")+"/";
-        }
-
-        return this;
-    };
-    Core.URL.prototype = {
-        protocol: "",
-        domain:"",
-        path:"",
-        page:"",
-        vars:{},
-        hash:"",
-
-        toString: function(){
-            var v = [];
-            Object.forEach( this.vars, function( item, key ){
-                v.push( key+"="+item );
+            var vars = {};
+            parts = parts[0].replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;return "";
             });
-            var vstr = (v.length)?"?"+v.join("&"):"";
-            var hstr = (this.hash == "")?"":"#"+this.hash;
-            if (this.protocol != "")
-                return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
-            else
-                return this.path+this.page+vstr+hstr;
-        }
+            this.vars = vars;
+
+            parts = parts.split(":");
+            if (parts.length == 2 ){
+                this.protocol = parts[0];
+                parts = parts[1].substr(2).split("/");
+                this.domain = parts.shift();
+            }
+            else {
+                parts = parts[0].split("/");
+            }
+
+            this.page = parts.pop();
+
+            this.path = (this.domain == "" ? "" : "/");
+            if (parts.length > 0){
+                this.path = this.path+parts.join("/")+"/";
+            }
+
+            return this;
+        };
+        this.URL.prototype = {
+            protocol: "",
+            domain:"",
+            path:"",
+            page:"",
+            vars:{},
+            hash:"",
+
+            toString: function(){
+                var v = [];
+                Object.forEach( this.vars, function( item, key ){
+                    v.push( key+"="+item );
+                });
+                var vstr = (v.length)?"?"+v.join("&"):"";
+                var hstr = (this.hash == "")?"":"#"+this.hash;
+                if (this.protocol != "")
+                    return this.protocol+"://"+this.domain+this.path+this.page+vstr+hstr;
+                else
+                    return this.path+this.page+vstr+hstr;
+            }
+        };
+
+
+
+        return this;
     };
 
 
-    var core = new Core();
+
+
+    var core = new Module();
     core.setURL( lola.window.location.href );
-    lola.registerModule( core );
+    lola.registerModule( core, true );
 
 })( lola );

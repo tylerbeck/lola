@@ -51,9 +51,10 @@
      * @public
      * @param {!Object} base object on which to build chain
      * @param {!String} chain "." seperated namespace / package
+     * @param {!Object} object object to set in lineage
      * @return {Object}
      */
-    lola.getPackage = function( base, chain ) {
+    lola.getPackage = function( base, chain, obj ) {
         //lola.debug('lola::getPackage');
         var result = base;
         if ( typeof chain === 'string' ) {
@@ -62,6 +63,8 @@
             while ( part = parts.shift() ) {
                 if ( result[part] == null  )
                     result[part] = {};
+                if ( parts.length == 0 && obj )
+                    result[part] = obj;
                 result = result[part];
             }
         }
@@ -72,13 +75,20 @@
      * registers a module with the Lola Framework
      * @public
      * @param {Object} module
+     * @param {Boolean} extend
      * @return {void}
      */
-    lola.registerModule = function( module ) {
+    lola.registerModule = function( module, extend ) {
+        extend = extend == undefined ? false : extend;
         var namespace = module.namespace();
 
         //add module to namespace
-        lola.extend( lola.getPackage( lola, namespace ), module, false, false );
+        if (extend)
+            lola.extend( lola.getPackage( lola, namespace ), module, false, false );
+        else {
+            lola.getPackage( lola, namespace, module );
+        }
+
 
         //add module dependencies
         if (this.hasFn( module, "dependencies" )){

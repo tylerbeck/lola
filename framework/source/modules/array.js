@@ -1,12 +1,19 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Array
+ *  Description: Array module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
 (function( lola ) {
 	var $ = lola;
 	/**
 	 * Array Module
-	 * @implements {lola.Module}
      * @namespace lola.array
 	 */
-	var Array = function(){
-
+	var Module = function(){
+        var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -136,13 +143,13 @@
         // Selector Methods
         //==================================================================
         this.selectorMethods = {
-
+            //TODO: See if explicit declaration of the array selector methods is still required
             /**
              * iterates each element in Selector and applies callback.
              * @param {Function} callback function callback( item, index, array ):void
              */
             forEach: function( callback ) {
-                this.elements.forEach( callback );
+                this.forEach( callback );
                 return this;
             },
 
@@ -151,7 +158,7 @@
              * @param {Function} callback function callback( item, index, array ):Boolean
              */
             every: function( callback ) {
-                return this.elements.every( callback );
+                return this.every( callback );
             },
 
             /**
@@ -159,7 +166,7 @@
              * @param {Function} callback function callback( item, index, array ):Boolean
              */
             some: function( callback ) {
-                return this.elements.some( callback );
+                return this.some( callback );
             }
 
         };
@@ -168,7 +175,7 @@
 
 
 	//register module
-	lola.registerModule( new Array() );
+	lola.registerModule( new Module() );
 
 })( lola );
 

@@ -130,63 +130,6 @@
 /***********************************************************************
  * Lola JavaScript Framework
  *
- *  Description: Selector Constructor
- *       Author: Copyright 2011-2012, Tyler Beck
- *
- ***********************************************************************/
-(function(lola){
-    /**
-     * Selector class
-     * @class
-     * @param {*} selector
-     * @param {Node|Element|Object} context
-     */
-    lola.Selector = function( selector, context ){
-        var i = 0;
-        if ( typeof selector === "string" ){
-            if (window['Sizzle']) {
-                var siz = Sizzle( selector, context );
-                for (i=0; i<sl; i++){
-                    this[i] = siz[i];
-                }
-            }
-            else {
-                try {
-                    if (!context)
-                        context = document;
-                    var nodeList =  context.querySelectorAll( selector );
-                    var nl = nodeList.length;
-                    for (i=0; i<nl; i++){
-                        this[i] = nodeList.item(i);
-                    }
-                    this.length = i;
-
-                }
-                catch (e){
-                    console.warn('Exception:', selector );
-                }
-            }
-        }
-        else if ( Array.isArray( selector ) ) {
-            var sl = selector.length;
-            for (i=0; i<sl; i++){
-                this[i] = sl[i];
-            }
-        }
-        else {
-            this[i] = selector;
-            i++;
-        }
-        this.length = i;
-
-        return this;
-    };
-    lola.Selector.prototype = Array.prototype;
-})(lola);
-
-/***********************************************************************
- * Lola JavaScript Framework
- *
  *  Description: Prototype upgrades
  *       Author: Copyright 2011-2012, Tyler Beck
  *
@@ -442,179 +385,62 @@ if ( !Array.isArray ) {
     };
 }
 
-(function( lola ) {
-	var $ = lola;
-	/**
-	 * Array Module
-	 * @implements {lola.Module}
-     * @namespace lola.array
-	 */
-	var Array = function(){
-
-        //==================================================================
-        // Attributes
-        //==================================================================
-        /**
-         * module's namespace
-         * @type {String}
-         * @private
-         */
-        var namespace = "array";
-
-        /**
-         * module's dependencies
-         * @type {Object}
-         * @private
-         */
-        var dependencies = {};
-
-
-        //==================================================================
-        // Getters & Setters
-        //==================================================================
-        /**
-         * get module's namespace
-         * @return {String}
-         */
-        this.namespace = function() {
-            return namespace;
-        };
-
-        /**
-         * get module's dependencies
-         * @return {Array}
-         */
-        this.dependencies = function() {
-            return dependencies;
-        };
-
-
-        //==================================================================
-        // Methods
-        //==================================================================
-
-        /**
-         * checks an array of objects for a property with value
-         * @public
-         * @param {Array<Object>} array array to check
-         * @param {String} property property to inspect
-         * @param value value to match
-         * @return {Boolean}
-         */
-        this.hasObjectWithProperty = function ( array, property, value ) {
-            var callback = function( item, index, arr ) {
-                return item[property] == value;
-            };
-            return array.some( callback );
-        };
-
-        /**
-         * returns a unique copy of the array
-         * @public
-         * @param array
-         * @return {Array}
-         */
-        this.unique = function ( array ) {
-            var tmp = [];
-            for (var i = array.length-1; i >= 0; i--){
-                if (tmp.indexOf( array[i] ) == -1){
-                    tmp.push( array[i] );
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *  Description: Selector Constructor
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function(lola){
+    /**
+     * Selector class
+     * @class
+     * @param {*} selector
+     * @param {Node|Element|Object} context
+     */
+    lola.Selector = function( selector, context ){
+        var i = 0;
+        if ( typeof selector === "string" ){
+            if (window['Sizzle']) {
+                var siz = Sizzle( selector, context );
+                for (i=0; i<sl; i++){
+                    this[i] = siz[i];
                 }
             }
+            else {
+                try {
+                    if (!context)
+                        context = document;
+                    var nodeList =  context.querySelectorAll( selector );
+                    var nl = nodeList.length;
+                    for (i=0; i<nl; i++){
+                        this[i] = nodeList.item(i);
+                    }
+                    this.length = i;
 
-            return tmp;
-        };
-
-        /**
-         * checks if array contains object
-         * @public
-         * @param {Array} array
-         * @return {Boolean}
-         */
-        this.isIn = function ( array, value ) {
-            return array.indexOf( value ) >= 0;
-        };
-
-        /**
-         * removes null values from array
-         * @public
-         * @param {Array} array
-         * @return {Array}
-         */
-        this.pruneNulls = function( array ) {
-            var tmp = [];
-            array.forEach( function(item){
-                if ( item != null ){
-                    tmp.push( item );
                 }
-            });
-            return tmp;
-        };
-
-
-        /**
-         * creates a sort function for property
-         * @param {String} property
-         * @return {Function}
-         */
-        this.getSortFunction = function( property ){
-            return function( a, b ) {
-                var x = a[property];
-                var y = b[property];
-                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-            };
-        };
-
-        /**
-         * sort an array on a property
-         * @param {Array} array
-         * @param {String} property
-         */
-        this.sortOn = function( property, array ){
-            return array.sort( lola.array.getSortFunction(property) );
-        };
-
-
-
-        //==================================================================
-        // Selector Methods
-        //==================================================================
-        this.selectorMethods = {
-
-            /**
-             * iterates each element in Selector and applies callback.
-             * @param {Function} callback function callback( item, index, array ):void
-             */
-            forEach: function( callback ) {
-                this.elements.forEach( callback );
-                return this;
-            },
-
-            /**
-             * iterates each element in Selector and checks that every callback returns true.
-             * @param {Function} callback function callback( item, index, array ):Boolean
-             */
-            every: function( callback ) {
-                return this.elements.every( callback );
-            },
-
-            /**
-             * iterates each element in Selector and checks that at least one callback returns true.
-             * @param {Function} callback function callback( item, index, array ):Boolean
-             */
-            some: function( callback ) {
-                return this.elements.some( callback );
+                catch (e){
+                    console.warn('Exception:', selector );
+                }
             }
+        }
+        else if ( Array.isArray( selector ) ) {
+            var sl = selector.length;
+            for (i=0; i<sl; i++){
+                this[i] = sl[i];
+            }
+        }
+        else {
+            this[i] = selector;
+            i++;
+        }
+        this.length = i;
 
-        };
-
+        return this;
     };
-
-
-	//register module
-	lola.registerModule( new Array() );
-
-})( lola );
+    lola.Selector.prototype = Array.prototype;
+})(lola);
 
 /***********************************************************************
  * Lola JavaScript Framework
@@ -642,7 +468,7 @@ if ( !Array.isArray ) {
         var namespace = "";
 
         /**
-         * module's dependencies
+         * module dependencies
          * @type {Object}
          * @private
          */
@@ -747,8 +573,8 @@ if ( !Array.isArray ) {
          * adds function to safedelete stack
          * @param {Function} fn
          */
-        this.addSafeDeleteHook = function( fn ){
-            safeDeleteHooks.push( fn );
+        this.addSafeDeleteHook = function( fn, scope ){
+            safeDeleteHooks.push( {fn:fn, scope:scope} );
         };
 
         /**
@@ -763,7 +589,7 @@ if ( !Array.isArray ) {
         /**
          * delete a property on an object and removes framework references
          * @param {Object} object object on which to delete property
-         * @param {String} property property to delete
+         * @param {String|undefined} property property to delete
          * @return {void}
          */
         this.safeDelete = function( object, property ) {
@@ -916,13 +742,6 @@ if ( !Array.isArray ) {
                 console.log("["+this.now()+"]", [].splice.call(arguments,0).join(' '));
             }
         };
-
-        /**
-         * Object prototype's to string method
-         * @param {Object} object
-         * @return {String}
-         */
-        this.toString = Object.prototype.toString;
 
         /**
          * get current time in milliseconds
@@ -1105,8 +924,7 @@ if ( !Array.isArray ) {
 	var $ = lola;
 	/**
 	 * Support Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.array
 	 */
 	var Support = function(){
 
@@ -1125,7 +943,7 @@ if ( !Array.isArray ) {
          * @type {Object}
          * @private
          */
-        var dependencies = {};
+        var dependencies = [];
 
         /**
          * @private
@@ -1299,6 +1117,1113 @@ if ( !Array.isArray ) {
 
 })( lola );
 
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Array
+ *  Description: Array module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * Array Module
+     * @namespace lola.array
+	 */
+	var Array = function(){
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "array";
+
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
+
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+
+        /**
+         * checks an array of objects for a property with value
+         * @public
+         * @param {Array<Object>} array array to check
+         * @param {String} property property to inspect
+         * @param value value to match
+         * @return {Boolean}
+         */
+        this.hasObjectWithProperty = function ( array, property, value ) {
+            var callback = function( item, index, arr ) {
+                return item[property] == value;
+            };
+            return array.some( callback );
+        };
+
+        /**
+         * returns a unique copy of the array
+         * @public
+         * @param array
+         * @return {Array}
+         */
+        this.unique = function ( array ) {
+            var tmp = [];
+            for (var i = array.length-1; i >= 0; i--){
+                if (tmp.indexOf( array[i] ) == -1){
+                    tmp.push( array[i] );
+                }
+            }
+
+            return tmp;
+        };
+
+        /**
+         * checks if array contains object
+         * @public
+         * @param {Array} array
+         * @return {Boolean}
+         */
+        this.isIn = function ( array, value ) {
+            return array.indexOf( value ) >= 0;
+        };
+
+        /**
+         * removes null values from array
+         * @public
+         * @param {Array} array
+         * @return {Array}
+         */
+        this.pruneNulls = function( array ) {
+            var tmp = [];
+            array.forEach( function(item){
+                if ( item != null ){
+                    tmp.push( item );
+                }
+            });
+            return tmp;
+        };
+
+
+        /**
+         * creates a sort function for property
+         * @param {String} property
+         * @return {Function}
+         */
+        this.getSortFunction = function( property ){
+            return function( a, b ) {
+                var x = a[property];
+                var y = b[property];
+                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            };
+        };
+
+        /**
+         * sort an array on a property
+         * @param {Array} array
+         * @param {String} property
+         */
+        this.sortOn = function( property, array ){
+            return array.sort( lola.array.getSortFunction(property) );
+        };
+
+
+
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+        this.selectorMethods = {
+            //TODO: See if explicit declaration of the array selector methods is still required
+            /**
+             * iterates each element in Selector and applies callback.
+             * @param {Function} callback function callback( item, index, array ):void
+             */
+            forEach: function( callback ) {
+                this.forEach( callback );
+                return this;
+            },
+
+            /**
+             * iterates each element in Selector and checks that every callback returns true.
+             * @param {Function} callback function callback( item, index, array ):Boolean
+             */
+            every: function( callback ) {
+                return this.every( callback );
+            },
+
+            /**
+             * iterates each element in Selector and checks that at least one callback returns true.
+             * @param {Function} callback function callback( item, index, array ):Boolean
+             */
+            some: function( callback ) {
+                return this.some( callback );
+            }
+
+        };
+
+    };
+
+
+	//register module
+	lola.registerModule( new Array() );
+
+})( lola );
+
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Type
+ *  Description: Type module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+
+	/**
+	 * Type Module
+	 * @namespace lola.type
+	 */
+	var Type = function() {
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "type";
+
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
+
+        /**
+         * map of types
+         * @private
+         * @type {Object}
+         */
+        var map = {};
+
+        /**
+         * primitive types
+         * @private
+         * @type {Array}
+         */
+        var primitives = ["boolean","number","string","undefined","null"];
+
+
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * creates map of object and element types
+         * @private
+         */
+         function createMap() {
+
+            var objTypes = "String Number Date Array Boolean RegExp Function Object";
+            var tagTypes =  "a abbr acronym address applet area article aside audio "+
+                "b base basefont bdi bdo big blockquote body br button "+
+                "canvas caption center cite code col colgroup command "+
+                "datalist dd del details dfn dir div dl dt "+
+                "em embed "+
+                "fieldset figcaption figure font footer form frame frameset "+
+                "h1 h2 h3 h4 h5 h6 head header hgroup hr html "+
+                "i iframe img input ins "+
+                "keygen kbd "+
+                "label legend li link "+
+                "map mark menu meta meter "+
+                "nav noframes noscript "+
+                "object ol optgroup option output "+
+                "p param pre progress "+
+                "q "+
+                "rp rt ruby "+
+                "s samp script section select small source span strike strong style sub summary sup svg "+
+                "table tbody td textarea tfoot th thead time title tr track tt "+
+                "u ul "+
+                "var video "+
+                "wbr "+
+                "xmp";
+            var specialTagTypes ="object";
+
+            objTypes.split(' ').forEach( mapObject );
+            tagTypes.split(' ').forEach( mapTag );
+            specialTagTypes.split(' ').forEach( mapSpecialTag );
+
+            var tn = document.createTextNode( 'test' );
+            var cn = document.createComment( 'test' );
+            var tntype = Object.prototype.toString.call( tn );
+            var cntype = Object.prototype.toString.call( cn );
+            map[ tntype ] = 'textnode';
+            map[ cntype ] = 'commentnode';
+
+            //TODO: add isTextNode and isCommentNode selector functions
+        }
+
+        /**
+         * maps tag type
+         * @param item
+         * @param index
+         * @private
+         */
+        function mapTag( item, index ) {
+            var tag = document.createElement( item );
+            var type = Object.prototype.toString.call( tag );
+            var name = type.replace( /\[object HTML/g, "" ).replace( /Element\]/g, "" );
+            name = name == "" ? "Element" : name;
+            map[ type ] = name.toLowerCase();
+            var isfn = "lola.Selector.prototype['is" + name + "'] = " +
+                "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
+            lola.evaluate( isfn );
+        }
+
+        /**
+         * maps special tag types
+         * @param item
+         * @param index
+         * @private
+         */
+        function mapSpecialTag( item, index ) {
+            var tag = document.createElement( item );
+            var type = Object.prototype.toString.call( tag );
+            var name = type.replace( /\[object /g, "" ).replace( /Element\]/g, "" ); // keep HTML
+            name = name == "" ? "Element" : name;
+            map[ type ] = name.toLowerCase();
+            var isfn = "lola.Selector.prototype['is" + name + "'] = " +
+                "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
+            lola.evaluate( isfn );
+        }
+
+        /**
+         * maps object types
+         * @param item
+         * @param index
+         * @private
+         */
+        function mapObject( item, index ) {
+            var type = "[object " + item + "]";
+            map[ type ] = item.toLowerCase();
+            var isfn = "lola.Selector.prototype['is" + item + "'] = " +
+                "function(index){ return this.isType('" + item.toLowerCase() + "',index); };";
+            lola.evaluate( isfn );
+        }
+
+        /**
+         * gets the specified object's type
+         * @param {Object} object
+         * @return {String}
+         */
+        this.get = function( object ) {
+            if ( object ) {
+                var type = map[ Object.prototype.toString.call( object ) ];
+                if ( type )
+                    return type;
+                return 'other ';
+            }
+            return 'null';
+        };
+
+        this.isPrimitive = function( object ) {
+            return primitives.indexOf(this.get(object)) >= 0;
+        };
+
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+        this.selectorMethods = {
+            /**
+             * gets the type if the specified index
+             * @return {Array}
+             */
+            getType: function() {
+                var values = [];
+                this.forEach( function( item ) {
+                    values.push( lola.type.get(item) );
+                } );
+                return lola.__(values);
+            },
+
+            /**
+             * checks if element at index is a type, or all elements are a type
+             * @param {String} type
+             * @param {int|undefined} index
+             */
+            isType: function( type, index ) {
+                if (index != undefined && index >= 0 ) {
+                    return lola.type.get( this[index]) == type;
+                }
+                else {
+                    return this.every( function( item ){
+                        return lola.type.get(item) == type;
+                    } );
+                }
+            },
+
+            /**
+             * checks if element at index is a primitive, or all elements are primitives
+             * @param {int|undefined} index
+             */
+            isPrimitive: function( index ) {
+                if (index != undefined && index >= 0 ) {
+                    return lola.type.primitives.indexOf( this.getType(index) );
+                }
+                else {
+                    return this.elements.every( function( item ){
+                        return lola.type.isPrimitive(item) >= 0;
+                    } );
+                }
+            }
+
+        };
+
+        //==================================================================
+        // Preinitialize
+        //==================================================================
+        createMap();
+
+
+    };
+
+
+	//register module
+	lola.registerModule( new Type() );
+
+})( lola );
+
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: DOM
+ *  Description: DOM module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+	/**
+	 * DOM Module
+	 * @namespace lola.dom
+	 */
+	var DOM = function(){
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "dom";
+
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
+
+        /**
+         * map of attribute getter/setter hooks
+         * @private
+         * @type {Object}
+         */
+        var attributeHooks = {};
+
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * sets or gets an node attribute
+         * @param {Object} object the object on which to access the attribute
+         * @param {String} name the name of the attribute
+         * @param {*} value (optional) value to set
+         */
+        this.attr = function( object, name, value ) {
+            //console.log('dom.attr');
+            if ( attributeHooks[name] ) {
+                return attributeHooks[name].apply( object, arguments );
+            }
+            else {
+                if ( value || value == "") {   //set value
+                    if (lola(value).isPrimitive()) {
+                        return object[name] = value;
+                    }
+                    else {
+                        throw new Error('attribute values must be primitives');
+                    }
+                }
+                else {
+                    return object[name];
+                }
+            }
+        };
+
+        /**
+         * deletes expando properties
+         * @param {Object} object
+         * @param {String} name
+         */
+        this.deleteExpando =function( object, name ) {
+            if ( lola.support.deleteExpando )
+                delete object[name];
+            else
+                object[name] = null;
+        };
+
+        /**
+         * determines if element a is descendant of element b
+         * @param {Node} a
+         * @param {Node} b
+         */
+        this.isDescendant = function ( a, b ) {
+            return this.isAncestor( b, a );
+        };
+
+        /**
+         * determines if element a is an ancestor of element b
+         * @param {Node} a
+         * @param {Node} b
+         */
+        this.isAncestor = function ( a, b ) {
+            var ancestor = b;
+            while ( ancestor && (ancestor = ancestor.parentNode) && ancestor.nodeName != "BODY" ) {
+                if (a == ancestor) return true;
+            }
+            return false;
+        };
+
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+            /**
+             *  gets sub selection
+             * @return {lola.Selector}
+             */
+            find: function( selector ) {
+                var $instance = $([]);
+                this.forEach( function(item){
+                    var $tmp = $(selector, item);
+                    $instance.concat( $tmp );
+                });
+
+                return $instance;
+            },
+
+            /**
+             *  generation selection
+             * @return {lola.Selector}
+             */
+            generation: function( count ) {
+                if (!count)
+                    count = 1;
+
+                var $instance = $([]);
+                this.forEach( function(item){
+                    var ancestor = item;
+                    var index = 0;
+                    while( ancestor = ancestor.parentNode && index < count ){
+                        index++;
+                    }
+                    if (ancestor)
+                        $instance.concat( [ancestor] );
+                });
+
+                return $instance;
+            },
+
+            /**
+             *  sets or gets html on elements
+             * @return {lola.Selector|Array}
+             */
+            html: function( content ) {
+                if ( arguments.length == 0 ) {
+                    var values = [];
+                    this.forEach( function( item ) {
+                        values.push( (item) ? item.innerHTML : null );
+                    } );
+                    return lola.__(values);
+                }
+                else {
+                    this.forEach( function( item ) {
+                        if (item.hasOwnProperty('childNodes')){
+                            var cnl = item.childNodes.length;
+                            for ( var i=0; i<cnl; i++ ) {
+                                var child = item.childNodes.item(i);
+                                lola.safeDelete( child );
+                            }
+                            switch ( lola.type.get( content ) ) {
+                                case 'null':
+                                case 'undefined':
+                                    item.innerHTML = "";
+                                    break;
+                                case 'string':
+                                    item.innerHTML = content;
+                                    break;
+                                case 'array':
+                                    item.innerHTML = "";
+                                    for ( var c in content ) {
+                                        item.appendChild( c );
+                                    }
+                                    break;
+                                default:
+                                    item.innerHTML = "";
+                                    item.appendChild( content );
+                                    break;
+                            }
+                        }
+                    } );
+                    return this;
+                }
+            },
+
+            /**
+             *  appends node to first selection element in DOM
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            appendChild: function( node ) {
+                if ( this.length > 0 ) {
+                    this.get().appendChild( node );
+                }
+
+                return this;
+            },
+
+            /**
+             *  prepends node to first selection element in DOM
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            prependChild: function( node ) {
+                if ( this.length > 0 ) {
+                    this.get().insertBefore( node, this.get().firstChild );
+                }
+
+                return this;
+            },
+
+            /**
+             *  clones first selection element
+             * @param {Boolean} deep
+             * @return {Element}
+             */
+            cloneNode: function( deep ) {
+                if ( this.length > 0 ) {
+                    return this.get().cloneNode( deep );
+                }
+                return null;
+            },
+
+            /**
+             *  inserts node before first element in DOM
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            insertBefore: function( node ) {
+                if ( this.length > 0 ) {
+                    this.get().insertBefore( node );
+                }
+                return this;
+            },
+
+            /**
+             *  removes node from first element in DOM
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            removeChild: function( node ) {
+                if ( this.length > 0 ) {
+                    lola.safeDelete( node );
+                    this.get().removeChild( node );
+                }
+                return this;
+            },
+
+            /**
+             *  replaces node in first element in DOM
+             * @param {Element} newChild
+             * @param {Element} oldChild
+             * @return {lola.Selector}
+             */
+            replaceChild: function( newChild, oldChild ) {
+                if ( this.length > 0 ) {
+                    lola.safeDelete( oldChild );
+                    //TODO: check if call to below line is needed
+                    //lola.data.destroyCache( oldChild, true );
+                    this.get().replaceChild( newChild, oldChild );
+                }
+                return this;
+            },
+
+            /**
+             *  sets or gets attributes
+             * @param {String} name
+             * @param {*} value
+             * @return {lola.Selector|Array}
+             */
+            attr: function( name, value ) {
+                if ( value != undefined ) {
+                    this.forEach( function( item ) {
+                        lola.dom.attr( item, name, value );
+                    } );
+                    return this;
+                }
+                else {
+                    var values = [];
+                    this.forEach( function( item ) {
+                        values.push( lola.dom.attr( item, name ) );
+                    } );
+                    return lola.__(values);
+                }
+            },
+
+            /**
+             *  removes attribute from elements
+             * @param {String} name
+             * @return {lola.Selector}
+             */
+            removeAttr: function( name ) {
+                this.forEach( function( item ) {
+                    item.removeAttribute( name );
+                } );
+                return this;
+            },
+
+            /**
+             *  sets new parent elements
+             * @param {String} newParent
+             * @return {lola.Selector|Array}
+             */
+            parent: function( newParent ) {
+                if ( newParent != undefined ) {
+                    this.forEach(function(item){
+                        $(newParent).appendChild( item );
+                    });
+                    return this;
+                }
+                else {
+
+                    var values = [];
+                    this.forEach( function( item ) {
+                        values.push( item?item.parentNode:null );
+                    } );
+                    return lola.__(values);
+                }
+            },
+
+            /**
+             *  deletes expando property on elements
+             * @param {String} name
+             * @return {lola.Selector}
+             */
+            deleteExpando: function( name ) {
+                this.forEach( function( item ) {
+                    lola.deleteExpando( item, name );
+                } );
+                return this;
+            }
+        };
+
+
+    };
+
+
+	//register module
+	lola.registerModule( new DOM() );
+
+})( lola );
+
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Module: Data
+ *  Description: Data module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+	var $ = lola;
+	/**
+	 * Data Module
+	 * @namespace lola.data
+	 */
+	var Data = function(){
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "data";
+
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = ['dom','type'];
+
+        /**
+         * cache for all data storage
+         * @private
+         */
+        var cache = {};
+
+        /**
+         * uid for data references
+         * @private
+         */
+        var uid = 1;
+
+        /**
+         * attribute for data storage uid
+         * @private
+         */
+         var cacheIDProp = "LOLA-DATA-UID";
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * get next data uid
+         * @return {int}
+         * @private
+         */
+        function nextUid() {
+            return lola.data.uid++;
+        }
+
+        /**
+         * links element with data cache
+         * @param {Object} object
+         * @param {Boolean|undefined} create defaults to true,
+         * set to false to prevent creating a cache if one doesn't already exist
+         * @private
+         */
+        function getCacheId( object, create ) {
+            create = (create == undefined) ? true : create;
+            //assume if create cache is being called that ther is no cache
+            var cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
+            if ( cacheId == null ) {
+                switch ( lola.type.get( object ) ) {
+                    case 'function':
+                    case 'object':
+                        cacheId = object[cacheIDProp];
+                        if ( cacheId == null && create ) {
+                            cacheId = nextUid();
+                            object[cacheIDProp] = cacheId;
+                        }
+                        break;
+                    case 'applet':
+                    case 'embed':
+                    case 'number':
+                    case 'date':
+                    case 'array':
+                    case 'boolean':
+                    case 'regexp':
+                    case 'string':
+                    case 'textnode':
+                    case 'commentnode':
+                        //not supported
+                        break;
+                    case 'htmlobject':
+                        //TODO: implement special case for flash objects
+                        break;
+                    default:
+                        //get attribute
+                        cacheId = lola.dom.attr( object, lola.data.cacheIDProp );
+                        if ( cacheId == null && create ) {
+                            cacheId = lola.data.nextUid();
+                            lola.dom.attr( object, lola.data.cacheIDProp, cacheId );
+                        }
+                        break;
+                }
+            }
+            return cacheId;
+        }
+
+        /**
+         * gets an objects data for the specified namespace
+         * @param {Object} object the object for which to retrieve data
+         * @param {String} namespace the namespace to retrieve
+         * @param {Boolean|undefined} create namespace data for object if not found,
+         * defaults to false
+         */
+        this.get = function( object, namespace, create ) {
+            var cacheId = getCacheId( object, false );
+            if ( cache[namespace] == null || cacheId == null ) {
+                if (create) {
+                    var obj = {};
+                    return this.set( object, obj, namespace, false );
+                }
+                else {
+                    return null;
+                }
+            }
+            else
+                return cache[namespace][cacheId];
+        };
+
+        /**
+         * gets data for entire namespace
+         * @param {String} namespace the namespace to get from data cache
+         */
+        this.getNamespaceData = function( namespace ) {
+            return cache[namespace];
+        };
+
+        /**
+         * replaces/updates existing object data
+         * @param {Object} object
+         * @param {Object} data
+         * @param {String} namespace namespace to put data
+         * @param {Boolean|undefined} overwite overwite existing data, defaults to false
+         */
+        this.set = function( object, data, namespace, overwite ) {
+            //check for existing cache
+            var cacheId = getCacheId( object, true );
+
+            if ( cache[namespace] == null )
+                cache[namespace] = {};
+
+            if ( overwite || cache[namespace][cacheId] == null )
+                cache[namespace][cacheId] = data;
+            else
+                lola.extend(cache[namespace][cacheId], data, true );
+
+            return cache[namespace][cacheId];
+        };
+
+        /**
+         * removes object data
+         * @param {Object} object
+         * @param {String|undefined} namespace namespace to remove data,
+         * removes data from all namespaces if undefined
+         * @param {Boolean|undefined} recurse recurse childNodes to delete data
+         */
+        this.remove = function( object, namespace, recurse ) {
+            //remove object data
+            var cacheId = getCacheId( object, false );
+            if ( cacheId ) {
+                if ( namespace == null || namespace == undefined ) {
+                    namespace = [];
+                    for ( var ns in cache ) {
+                        namespace.push( ns );
+                    }
+                }
+                else {
+                    if ( lola.type.get(namespace) != "array" )
+                        namespace = [namespace];
+                }
+
+                namespace.forEach( function( nsp ) {
+                    delete cache[nsp][cacheId];
+                } )
+
+            }
+            if (recurse === undefined)
+                recurse = true;
+
+            if ( recurse ) {
+                if ( object.childNodes ) {
+                    object.childNodes.forEach( function( item ) {
+                        lola.data.remove( item, namespace, true );
+                    } )
+                }
+            }
+
+        };
+
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+            /**
+             * get data for elements
+             * @param {String} namespace
+             * @param {Boolean|undefined} create create data object if null
+             * @return {Array}
+             */
+            getData: function( namespace, create ) {
+                var data = [];
+                this.forEach( function( item ) {
+                    data.push( lola.data.get( item, namespace, create ) )
+                } );
+                return lola.__(data);
+            },
+
+            /**
+             * put data for elements
+             * @param {Object} data data to put in cache for elements (overwrites)
+             * @param {String} namespace
+             * @return {lola.Selector}
+             */
+            putData: function( data, namespace ) {
+                this.forEach( function( item ) {
+                    lola.data.set( item, data, namespace, true );
+                } );
+                return this;
+            },
+
+            /**
+             * updates data for elements
+             * @param {Object} data
+             * @param {String} namespace
+             * @return {lola.Selector}
+             */
+            updateData: function( data, namespace ) {
+                this.forEach( function( item ) {
+                    //clear data
+                    lola.data.set( item, data, namespace, false );
+                } );
+                return this;
+            },
+
+            /**
+             * remove specified namespaces from data cache
+             * @param {Array|String|undefined} namespace
+             * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
+             * @return {lola.Selector}
+             */
+            removeData: function( namespace, recurse ) {
+                this.forEach( function( item ) {
+                    //clear data
+                    lola.data.remove( item, namespace, recurse );
+                } );
+                return this;
+            },
+
+            /**
+             * remove specified namespaces from data cache
+             * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
+             * @return {lola.Selector}
+             */
+            removeAllData: function( recurse ) {
+                return this.removeData( null, recurse );
+            }
+        };
+
+        //==================================================================
+        // Preinitialize
+        //==================================================================
+        lola.addSafeDeleteHook( this.remove, this );
+
+    };
+
+
+	//register module
+	lola.registerModule( new Data() );
+
+})( lola );
 /***********************************************************************
  * Lola JavaScript Framework
  *

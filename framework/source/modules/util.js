@@ -7,86 +7,64 @@
  *
  ***********************************************************************/
 (function( lola ) {
-	var $ = lola;
 	/**
 	 * Utility Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.util
 	 */
-	var util = {
+	var Module = function(){
+        var self = this;
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "util";
 
-		//==================================================================
-		// Attributes
-		//==================================================================
-
-
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug( 'lola.util::preinitialize' );
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do module preinitialization
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
 
 
-			//remove initialization method
-			delete lola.util.preinitialize;
-		},
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
 
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug( 'lola.util::initialize' );
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
 
-			//do module initialization
-
-
-			//remove initialization method
-			delete lola.util.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "util";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return [];
-		},
-
+        //==================================================================
+        // Methods
+        //==================================================================
         /**
          * copies primitives from source to target
          * @param source
          * @param target
          */
-        copyPrimitives: function( source, target ){
+        this.copyPrimitives = function( source, target ){
             for (var k in source){
                 if (lola.type.isPrimitive(source[k])){
                     target[k] = source[k];
                 }
             }
-        },
+        };
 
         /**
          * checks for required arguments
@@ -95,10 +73,9 @@
          * @param {Array} info
          * @return {Boolean}
          */
-        checkArgs: function ( group, required, info ) {
+        this.checkArgs = function ( group, required, info ) {
             var check = true;
             var warnings = [];
-
 
             for (var i=required.length-1; i >= 0; i--){
                 if (required[i][1] === undefined || required[i][1] === null){
@@ -131,67 +108,47 @@
             }
 
             return check;
-        },
+        };
 
+        //==================================================================
+        // Selection Methods
+        //==================================================================
 
-		//==================================================================
-		// Classes
-		//==================================================================
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
 
+            /**
+             * iterate through values calling iterator to change value
+             * @param {Function} getVal function tat returns value from each item
+             * @param {Function} compareFn function that compares values / modifies data
+             * @param {Object} initialVal initial value;
+             * @return {*}
+             */
+            compareValues: function( getVal, compareFn, initialVal ) {
+                var value = initialVal;
 
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
+                if ( typeof getVal === 'string' ) {
+                    this.foreach( function( item ) {
+                        value = compareFn.call( this, value, Number( item[getVal] ) );
+                    } );
+                }
+                else if ( typeof getVal === 'function' ) {
+                    this.foreach( function( item ) {
+                        value = compareFn.call( this, value, getVal.call( this, item ) );
+                    } );
+                }
 
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
+                return value;
+            }
 
-				/**
-				 * iterate through values calling iterator to change value
-				 * @param {Function} getVal function tat returns value from each item
-				 * @param {Function} compareFn function that compares values / modifies data
-				 * @param {Object} initialVal initial value;
-				 * @return {*}
-				 */
-				compareValues: function( getVal, compareFn, initialVal ) {
-					var value = initialVal;
+        };
 
-					if ( typeof getVal === 'string' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, Number( item[getVal] ) );
-						} );
-					}
-					else if ( typeof getVal === 'function' ) {
-						this.foreach( function( item ) {
-							value = compareFn.call( this, value, getVal.call( this, item ) );
-						} );
-					}
-
-					return value;
-				}
-
-			};
-
-			return methods;
-
-		}
-	};
-
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
-
+    };
 
 	//register module
-	lola.registerModule( util );
+	lola.registerModule( new Module() );
 
 })( lola );

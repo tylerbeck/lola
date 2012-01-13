@@ -7,14 +7,12 @@
  *
  ***********************************************************************/
 (function( lola ) {
-	var $ = lola;
 	/**
 	 * Support Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.array
 	 */
-	var Support = function(){
-
+	var Module = function(){
+        var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -32,45 +30,17 @@
          */
         var dependencies = [];
 
-        /**
-         * @private
-         */
-        var _domEval = false;
+        //set locally
+        this.domEval = false;
+        this['style'] = false;
+        this.cssFloat = false;
+        this.colorAlpha = false;
+        this.deleteExpando = true;
+        this.msEvent = false;
+        this.domEvent = true;
+        this.animationFrameType = 0;
 
-        /**
-         * @private
-         */
-        var _style = false;
-
-        /**
-         * @private
-         */
-        var _cssFloat = false;
-
-        /**
-         * @private
-         */
-        var _colorAlpha = false;
-
-        /**
-         * @private
-         */
-        var _deleteExpando = true;
-
-        /**
-         * @private
-         */
-        var _msEvent = false;
-
-        /**
-         * @private
-         */
-        var _domEvent = true;
-
-        /**
-         * @private
-         */
-        var _animationFrameType = 0;
+        this.cssRules = false;
 
 
         //==================================================================
@@ -92,55 +62,14 @@
             return dependencies;
         };
 
-        /**
-         * DOM eval support getter
-         */
-        this.domEval = function(){
-            return _domEval;
-        };
 
-        /**
-         * style support getter
-         */
-        this.style = function(){
-            return _style;
+        //==================================================================
+        // Methods
+        //==================================================================
+        this.initialize = function(){
+            lola.debug( 'lola.support::initialize' );
+            self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
         };
-
-        /**
-         * cssFloat support getter
-         */
-        this.cssFloat = function(){
-            return _cssFloat;
-        };
-
-        /**
-         * msEvent support getter
-         */
-        this.msEvent = function(){
-            return _msEvent;
-        };
-
-        /**
-         * domEvent support getter
-         */
-        this.domEvent = function(){
-            return _domEvent;
-        };
-
-        /**
-         * deleteExpando support getter
-         */
-        this.deleteExpando = function(){
-            return _deleteExpando;
-        };
-
-        /**
-         * anaimationFrame type getter
-         */
-        this.animationFrameType = function(){
-            return _animationFrameType;
-        };
-
 
         //==================================================================
         // Run Checks
@@ -159,7 +88,7 @@
         root.insertBefore( script, root.firstChild );
         root.removeChild( script );
 
-        _domEval = lola.window[ uid ];
+        self.domEval = lola.window[ uid ];
         delete lola.window[ uid ];
 
         //create div for testing
@@ -168,39 +97,38 @@
         var target = div.firstChild;
 
         //style tests
-        _style = (typeof target.getAttribute( 'style' ) === 'string');
-        _cssFloat = /^left$/.test( target.style.cssFloat );
-        _colorAlpha = /^rgba.*/.test( target.style.backgroundColor );
+        self['style'] = (typeof target.getAttribute( 'style' ) === 'string');
+        self.cssFloat = /^left$/.test( target.style.cssFloat );
+        self.colorAlpha = /^rgba.*/.test( target.style.backgroundColor );
 
         //delete expandos
         try {
             delete target.test;
         }
         catch( e ) {
-            _deleteExpando = false;
+            self.deleteExpando = false;
         }
 
         //event model
         if ( document.addEventListener )
-            this._domEvent = true;
+            self.domEvent = true;
         else if ( document.attachEvent )
-            this._msEvent = true;
+            self.msEvent = true;
 
         //animation frame type
         if ( window.requestAnimationFrame )
-            lola.tween.getFrameType = 1;
+            self.animationFrameType = 1;
         else if ( window.mozRequestAnimationFrame )
-            lola.tween.getFrameType = 2;
+            self.animationFrameType = 2;
         else if ( window.webkitRequestAnimationFrame )
-            lola.tween.getFrameType = 3;
+            self.animationFrameType = 3;
         else if ( window.oRequestAnimationFrame )
-            lola.tween.getFrameType = 4;
-
+            self.animationFrameType = 4;
 
     };
 
     //register module
-    lola.registerModule( new Support() );
+    lola.registerModule( new Module() );
 
 })( lola );
 

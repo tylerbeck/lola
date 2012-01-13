@@ -10,118 +10,90 @@
 	var $ = lola;
 	/**
 	 * Regular Expression Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.regex
 	 */
-	var regex = {
+	var Module = function(){
 
-		//==================================================================
-		// Attributes
-		//==================================================================
-		extraSpace: /\s\s+/g,
-		isNumber: /^-?\d*(?:\.\d+)?$/,
-		isDimension: /^(-?\d*(?:\.\d+)?)(%|in|cm|mm|em|ex|pt|pc|px)$/,
-		isColor: /^(#|rgb|rgba|hsl|hsla)(.*)$/,
-		isHexColor: /^#([A-F0-9]{3,6})$/,
-		isRGBColor: /^rgba?\(([^\)]+)\)$/,
-		isHSLColor: /^hsla?\(([^\)]+)\)$/,
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "regex";
 
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = [];
 
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.regex::preinitialize');
-			if ( !lola ) throw new Error( 'lola not defined!' );
+        /**
+         * looks for extra spaces
+         */
+        this.extraSpace = /\s\s+/g;
 
-			//do module preinitialization
+        /**
+         * is a valid number
+         */
+        this.isNumber = /^-?\d*(?:\.\d+)?$/;
 
+        /**
+         * is a number with units
+         */
+        this.isDimension = /^(-?\d*(?:\.\d+)?)(%|in|cm|mm|em|ex|pt|pc|px)$/;
 
+        /**
+         * is css color (color names not matched)
+         */
+        this.isColor = /^(#|rgb|rgba|hsl|hsla)(.*)$/;
 
-			//remove initialization method
-			delete lola.regex.preinitialize;
-		},
+        /**
+         * is css hex color
+         */
+        this.isHexColor = /^#([A-F0-9]{3,6})$/;
 
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.regex::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
+        /**
+         * is css rgb or rgba color
+         */
+        this.isRGBColor = /^rgba?\(([^\)]+)\)$/;
 
-			//do module initialization
-
-
-
-			//remove initialization method
-			delete lola.regex.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "regex";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return [];
-		},
-
-		//==================================================================
-		// Classes
-		//==================================================================
+        /**
+         * is css hsl or hsla color
+         */
+        this.isHSLColor = /^hsla?\(([^\)]+)\)$/;
 
 
 
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
 
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-			};
-
-			return methods;
-
-		}
-	};
-
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
 
 
+
+    };
 
 
 	//register module
-	lola.registerModule( regex );
+	lola.registerModule( new Module() );
 
 })( lola );
 

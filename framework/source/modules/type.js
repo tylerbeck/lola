@@ -172,7 +172,7 @@
                 var type = map[ Object.prototype.toString.call( object ) ];
                 if ( type )
                     return type;
-                return 'other ';
+                return 'other';
             }
             return 'null';
         };
@@ -222,7 +222,7 @@
                     return self.isPrimitive( this.getType(index) );
                 }
                 else {
-                    return this.elements.every( function( item ){
+                    return this.every( function( item ){
                         return self.isPrimitive(item) >= 0;
                     } );
                 }

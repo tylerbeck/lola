@@ -96,9 +96,9 @@
         }
 
         //add selector methods
-        if ( module[ "selectorMethods" ] ){
-            lola.extend( lola.Selector.prototype, module[ "selectorMethods" ], false, false );
-            delete module[ "selectorMethods" ];
+        if ( module.selectorMethods ){
+            lola.extend( lola.Selector.prototype, module.selectorMethods, false, false );
+            delete module.selectorMethods;
         }
 
         //add initializer

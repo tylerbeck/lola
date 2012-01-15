@@ -328,7 +328,7 @@
          * @param {Boolean|undefined} useCapture
          */
         this.addDOMListener = function( target, type, handler, useCapture ) {
-            type = lola.event.map[type] ? lola.event.map[type] : [type];
+            type = map[type] ? map[type] : [type];
             type.forEach( function(t) {
                 try {
                     if ( lola.support.domEvent && target.addEventListener )
@@ -352,7 +352,7 @@
          * @param {Boolean|undefined} useCapture
          */
         this.removeDOMListener = function( target, type, handler, useCapture ) {
-            type = lola.event.map[type] ? lola.event.map[type] : [type];
+            type = map[type] ? map[type] : [type];
             type.forEach( function() {
                 try {
                     if ( lola.support.domEvent && target.removeEventListener )
@@ -416,7 +416,7 @@
             else if ( e.which )
                 code = e.which;
 
-            return String.fromCharCode( lola.event.getDOMKeycode(e) );
+            return String.fromCharCode( self.getDOMKeycode(e) );
         };
 
         /**
@@ -693,7 +693,7 @@
             }
 
             function mouseOver( event ){
-                lola.event.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, this );
+                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, this );
                 var data = getData( event.currentTarget );
                 data.hasIntent = true;
                 if (data.timeout < 0)
@@ -701,34 +701,34 @@
             }
 
             function mouseOut( event ){
-                lola.event.removeListener( event.currentTarget, 'mouseout', mouseOut, false );
+                self.removeListener( event.currentTarget, 'mouseout', mouseOut, false );
                 var data = getData( event.currentTarget );
                 data.hasIntent = false;
             }
 
             function confirm( target ){
-                lola.event.removeListener( target, 'mouseout', mouseOut, false, 0, this );
+                self.removeListener( target, 'mouseout', mouseOut, false, 0, this );
                 var data = getData( target );
                 data.timeout = -1;
                 if (data.hasIntent){
-                    lola.event.trigger( target, hookEvent );
+                    self.trigger( target, hookEvent );
                 }
             }
 
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                var uid = lola.event.addListener( target, hookEvent, handler, useCapture, priority, scope );
+                var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope );
                 getData( target );
-                lola.event.addListener( target, 'mouseover', mouseOver, false, 0, this );
+                self.addListener( target, 'mouseover', mouseOver, false, 0, this );
                 return uid;
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
                 var edata = lola.data.get( target, dataNamespace );
-                lola.event.removeListener(target, hookEvent, handler, useCapture );
-                var phase = lola.event.phaseString( target, useCapture );
+                self.removeListener(target, hookEvent, handler, useCapture );
+                var phase = self.phaseString( target, useCapture );
                 //check for other hook listeners before removeing
                 if (edata[phase][hookEvent] == null || Object.keys(edata[phase][hookEvent]).length == 0){
-                    lola.event.removeListener( target, 'mouseover', mouseOver, false );
+                    self.removeListener( target, 'mouseover', mouseOver, false );
                     lola.data.remove( target, ns );
                 }
             };
@@ -769,7 +769,7 @@
                 var data = getData( event.currentTarget );
                 if (!data.within && event.currentTarget != event.relatedTarget){
                     data.within = true;
-                    lola.event.trigger( event.currentTarget, e1, false );
+                    self.trigger( event.currentTarget, e1, false );
                 }
             }
 
@@ -779,7 +779,7 @@
                     !lola.util.isAncestor( event.currentTarget, event.relatedTarget ) &&
                     event.currentTarget != event.relatedTarget ){
                     data.within = false;
-                    lola.event.trigger( event.currentTarget, e2, false );
+                    self.trigger( event.currentTarget, e2, false );
                 }
             }
 
@@ -787,26 +787,26 @@
                 //IE has it already
                 if (!lola.support.msEvent){
                     //deal with other browsers
-                    lola.event.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
-                    lola.event.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
+                    self.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
+                    self.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
                 }
-                return lola.event.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope );
+                return self.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope );
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
 
                 var edata = lola.data.get( target, dataNamespace );
-                var phase = lola.event.phaseString( target, useCapture );
+                var phase = self.phaseString( target, useCapture );
                 type = getEnhancedType( type );
-                lola.event.removeListener( target, type, handler, useCapture );
+                self.removeListener( target, type, handler, useCapture );
 
                 //check for other hook listeners before removeing
                 if (!lola.support.msEvent &&
                     edata[phase][type] == null ||
                     edata[phase][type].keys().length == 0){
                     //deal with other browsers
-                    lola.event.removeListener( target, 'mouseover', mouseOver, useCapture );
-                    lola.event.removeListener( target, 'mouseout', mouseOut, useCapture );
+                    self.removeListener( target, 'mouseover', mouseOver, useCapture );
+                    self.removeListener( target, 'mouseout', mouseOut, useCapture );
                 }
             }
         };

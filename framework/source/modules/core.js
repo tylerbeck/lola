@@ -165,12 +165,13 @@
 
         /**
          * checks a dependency map for modules
+         * @param {Object} map
          */
-        this.checkDependencies = function(){
-
+        this.checkDependencies = function( map ){
+            map = map ? map : dependencies;
             var fails = [];
-            for ( var k in dependencies ) {
-                var missing = hasModules( dependencies[k] );
+            for ( var k in map ) {
+                var missing = hasModules( map[k] );
                 if ( missing.length > 0 )
                     fails.push(k+': '+missing.join(', '));
             }
@@ -331,7 +332,7 @@
             identify: function() {
                 this.forEach( function( item ) {
                     if ( !item.id )
-                        item.id = "lola-guid-" + lola.guid++;
+                        item.id = "lola-guid-" + lola.getGUID()
                 } );
 
                 return this;
@@ -353,7 +354,7 @@
              * @return {Array}
              */
             getAll: function() {
-                return this;
+                return this.slice(0);
             },
 
             /**
@@ -371,30 +372,29 @@
              * @return {lola.Selector}
              */
             concat: function( obj, unique ) {
+                var self = this;
 
-                //TODO: figure out concatination
+                if ( obj instanceof lola.Selector ){
+                    obj.forEach( function(item){
+                        self.push( item );
+                    })
+                }
+                else if (Array.isArray( obj )){
+                    obj.forEach( function(item){
+                        self.push( item );
+                    })
+                }
+                else{
+                    self.push( obj );
+                }
 
-                /*if ( obj instanceof lola.Selector ) {
-                 this.elements = this.concat( obj.getAll() );
-                 }
-                 else if ( obj instanceof Array ) {
-                 var item;
-                 while ( item = obj.pop() ) {
-                 this.push( item );
-                 }
-
-                 }
-                 else {
-                 this.push( obj );
-                 }
-
-                 if (unique == undefined || unique === true){
-                 var uni = lola.array.unique( this );
-                 this.elements =;
-                 }
-
-                 */
-
+                if (unique == undefined || unique === true){
+                    var uni = lola.array.unique( this );
+                    this.splice(0,this.length);
+                    uni.forEach( function(item){
+                        self.push( item );
+                    })
+                }
                 return this;
             }
         };

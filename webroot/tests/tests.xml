@@ -77,7 +77,7 @@
                 var value = test(3);
                 delete window['test'];
                 delete window['tmpVal'];
-                lola.test.current.setResult( value );
+                lola.test.current().setResult( value );
             });
         })();
     ]]></test>
@@ -93,16 +93,16 @@
             var earlier = lola.now();
             setTimeout( function(){
                 var later = lola.now();
-                lola.test.current.setResult( later > earlier );
+                lola.test.current().setResult( later > earlier );
             }, 10 );
 
         })();
     ]]></test>
     <test name="lola.__: array(1)" equals="2" type="int"><![CDATA[ lola.__([2]); ]]></test>
     <test name="lola.__: array(2+)" equals="6" type="int"><![CDATA[ lola.__([2,4,6])[2]; ]]></test>
-    <test name="$: tag selector" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).elements.length ]]></test>
-    <test name="$: class selector" equals="2" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).elements.length ]]></test>
-    <test name="$: id selector" equals="1" type="int"><![CDATA[ $('#testIdTwo', document.getElementById("testContainer")).elements.length ]]></test>
+    <test name="$: tag selector" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).length ]]></test>
+    <test name="$: class selector" equals="2" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).length ]]></test>
+    <test name="$: id selector" equals="1" type="int"><![CDATA[ $('#testIdTwo', document.getElementById("testContainer")).length ]]></test>
     <test name="$().get: no index" equals="true" type="bool"><![CDATA[ $('div', document.getElementById("testContainer")).get() == document.getElementById("testIdOne"); ]]></test>
     <test name="$().get: with index" equals="true" type="bool"><![CDATA[ $('div', document.getElementById("testContainer")).get(1) == document.getElementById("testIdTwo"); ]]></test>
     <test name="$().getAll:" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).getAll().length; ]]></test>

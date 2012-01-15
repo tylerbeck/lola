@@ -135,7 +135,7 @@
              * @return {Number}
              */
             avgValue: function( getVal ) {
-                return this.totalValue( getVal ) / this.elements.length;
+                return this.totalValue( getVal ) / this.length;
             }
 
         };

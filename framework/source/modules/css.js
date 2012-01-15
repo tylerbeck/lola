@@ -86,8 +86,6 @@
          */
         this.initialize = function() {
             lola.debug( 'lola.css::initialize' );
-            //this framework is dependent on lola framework
-            if ( !lola ) throw new Error( 'lola not defined!' );
 
             //add default hooks
             var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
@@ -648,18 +646,16 @@
              * @return {String}
              */
             toString: function() {
-                switch (this.outputType) {
-                    case "#":
-                        return this.toHexString();
-                    case "hsl":
-                        return this.toHslString();
-                    case "hsla":
-                        return this.toHslaString();
-                    case "rgb":
-                        return this.toRgbString();
-                    default:
-                        return this.toRgbaString();
-                }
+                if (this.outputType == "#")
+                    return this.toHexString();
+                else if (this.outputType == "hsl")
+                    return this.toHslString();
+                else if (this.outputType == "hsla")
+                    return this.toHslaString();
+                else if (this.outputType == "rgb")
+                    return this.toRgbString();
+                else
+                    return this.toRgbaString();
             },
 
             /**
@@ -725,12 +721,7 @@
             }
         };
 
-
-
-
-
     };
-
 
 	//register module
 	lola.registerModule( new Module() );

@@ -25,13 +25,13 @@
                 try {
                     if (!context)
                         context = document;
+                    //TODO Optimize: this can be made faster in most browsers
                     var nodeList =  context.querySelectorAll( selector );
                     var nl = nodeList.length;
                     for (i=0; i<nl; i++){
                         this[i] = nodeList.item(i);
                     }
                     this.length = i;
-
                 }
                 catch (e){
                     console.warn('Exception:', selector );
@@ -52,6 +52,21 @@
 
         return this;
     };
-    lola.Selector.prototype = Array.prototype;
+    lola.Selector.prototype = {};
+    lola.Selector.prototype.forEach = Array.prototype.forEach;
+    //lola.Selector.prototype.concat = Array.prototype.concat;
+    lola.Selector.prototype.every = Array.prototype.every;
+    lola.Selector.prototype.filter = Array.prototype.filter;
+    lola.Selector.prototype.indexOf = Array.prototype.indexOf;
+    lola.Selector.prototype.join = Array.prototype.join;
+    lola.Selector.prototype.lastIndexOf = Array.prototype.lastIndexOf;
+    lola.Selector.prototype.map = Array.prototype.map;
+    lola.Selector.prototype.push = Array.prototype.push;
+    lola.Selector.prototype.pop = Array.prototype.pop;
+    lola.Selector.prototype.shift = Array.prototype.shift;
+    lola.Selector.prototype.unshift = Array.prototype.unshift;
+    lola.Selector.prototype.slice = Array.prototype.slice;
+    lola.Selector.prototype.splice = Array.prototype.splice;
+    lola.Selector.prototype.reverse = Array.prototype.reverse;
 })(lola);
 

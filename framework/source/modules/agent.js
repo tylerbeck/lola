@@ -7,249 +7,217 @@
  *
  ***********************************************************************/
 (function( lola ) {
-	var $ = lola;
-	/**
-	 * Ag Module
-	 * @implements {lola.Module}
-	 * @memberof lola
-	 */
-	var agent = {
-
-		//==================================================================
-		// Attributes
-		//==================================================================
-		/**
-		 * registration index
-		 * @private
-		 */
-		index: 0,
-
-		/**
-		 * registration map
-		 * @private
-		 */
-		map: {},
-
-		/**
-		 * initializers
-		 * @private
-		 */
-		initializers: [],
+    /**
+     * Agent Module
+     * @namespace lola.agent
+     */
+    var Module = function(){
+        var self = this;
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "agent";
 
         /**
-         * @private
+         * agents' dependencies (non-standard implementation)
          * @type {Object}
+         * @private
          */
-        dependencies: {},
+        var dependencies = {};
+
+        /**
+         * registration index
+         * @private
+         */
+        var index = 0;
+
+        /**
+         * registration map
+         * @private
+         */
+        var map = {};
+
+        /**
+         * initializers
+         * @private
+         */
+        var agentDependencies = {};
+
+        /**
+         * initializers
+         * @private
+         */
+        var initializers = [];
 
 
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.agent::preinitialize');
-			if ( !lola ) throw new Error( 'lola not defined!' );
 
-			//do module preinitialization
-			lola.safeDeleteHooks.push( {scope:this, fn:this.drop} );
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return ['event','data'];
+        };
 
 
-			//remove initialization method
-			delete lola.agent.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.agent::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * initializes module
+         * @public
+         * @return {void}
+         */
+        this.initialize = function() {
+            lola.debug('lola.agent::initialize');
 
             //check agent dependencies
             lola.checkDependencies( this.dependencies );
 
             //execute agent initialization stack
-            var stackSize = lola.agent.initializers.length;
+            var stackSize = initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn( lola.agent.initializers, i )){
-                    lola.agent.initializers[i]();
-	                delete lola.agent.initializers[i];
+                if (lola.hasFn( initializers, i )){
+                    initializers[i]();
+                    delete initializers[i];
                 }
             }
 
-			//remove initialization method
-			delete lola.agent.initialize;
-		},
+            //remove initialization method
+            delete self.initialize;
+        };
 
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "agent";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}
-		 * @default []
-		 */
-		getDependencies: function() {
-			return ['event','data'];
-		},
-
-
-		/**
-		 * used to register an agent with the framework
-		 * @param {Object} agent object that implements the agent interface
-		 */
-        registerAgent: function( agent ) {
-            var ns = agent.getNamespace();
-			console.info('register agent: '+ns);
-			if (ns && agent.sign && agent.drop) {
-				//setup namespace
-				var pkg = lola.getPackage( lola.agent, ns );
-
-				//copy module methods and attributes
-				lola.extend( pkg, agent, true );
+        /**
+         * used to register an agent with the framework
+         * @param {Object} agent object that implements the agent interface
+         */
+        this.registerAgent = function( agent ) {
+            var ns = agent.namespace();
+            console.info('register agent: '+ns);
+            if ( ns && lola.hasFn( agent,"sign" ) && lola.hasFn( agent,"drop" ) ) {
+                //setup module
+                var pkg = lola.getPackage( lola.agent, ns, agent );
 
                 //add dependencies
                 if (lola.hasFn(agent,'getDependencies'))
                     this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
 
-				//map agent
-				this.map[ ns ] = pkg;
+                //map agent
+                map[ ns ] = pkg;
 
-				//add initializer
-                if (lola.hasFn(agent,'initialize')) {
-					lola.agent.initializers.push( function() {
-						agent.initialize();
-					} );
-				}
+                //add initializer
+                if (lola.hasFn( agent,'initialize' )) {
+                    initializers.push( function() {
+                        agent.initialize();
+                    });
+                }
 
-				//run preinitialization method if available
-                if (lola.hasFn(agent,'preinitialize')) {
-					agent.preinitialize();
-				}
+                //run preinitialization method if available
+                if (lola.hasFn( agent,'preinitialize' )) {
+                    agent.preinitialize();
+                }
 
-			}
-			else {
-				console.error( 'invalid agent implementation: '+name );
-			}
+            }
+            else {
+                console.error( 'invalid agent implementation: '+name );
+            }
+        };
 
-		},
+        /**
+         * assign a client to an agent
+         * @param {Object} client
+         * @param {String} name name of registered agent
+         */
+        this.assign = function( client, name ) {
+            var agent = map[ name ];
+            if (agent){
+                agent.sign( client );
+            }
+            else {
+                throw new Error("unknown agent: "+name);
+            }
+        };
 
-		/**
-		 * assign a client to an agent
-		 * @param {Object} client
-		 * @param {String} name name of registered agent
-		 */
-		assign: function( client, name ) {
-			var agent = lola.agent.map[ name ];
-			if (agent){
-				agent.sign( client );
-			}
-			else {
-				throw new Error("unknown agent: "+name);
-			}
-		},
+        /**
+         * drop a client from an agent
+         * @param {Object} client
+         * @param {String} name name of registered agent
+         */
+        this.drop = function( client, name ) {
+            var agents = {};
+            if (name == undefined){
+                agents = map;
+            }
+            else if (typeof name == 'string'){
+                name.split(',').forEach( function(item){
+                    agents[ item ] = map[ item ];
+                });
+            }
 
-		/**
-		 * drop a client from an agent
-		 * @param {Object} client
-		 * @param {String} name name of registered agent
-		 */
-		drop: function( client, name ) {
-			var agents = {};
-			if (name == !undefined){
-				agents = lola.agent.map;
-			}
-			else if (typeof name == 'string'){
-				name.split(',').forEach( function(item){
-					agents[ item ] = lola.agent.map[ item ];
-				});
-			}
+            for (var i in agents){
+                var a = agents[i];
+                if (a){
+                    a.drop( client );
+                }
+            }
+        };
 
-			for (var i in agents){
-				var agent = agents[i];
-				if (agent){
-					agent.drop( client );
-				}
-			}
-		},
+        //==================================================================
+        // Selection Methods
+        //==================================================================
+        this.selectorMethods = {
 
+            /**
+             * assigns an agent to selector elements
+             * @param {String} agentName name of registered agent
+             */
+            assignAgent: function( agentName ) {
+                this.forEach( function(item){
+                    self.assign( item, agentName );
+                });
+                return this;
+            },
 
+            /**
+             * drops client from agent
+             * @param {String} agentName name of registered agent
+             */
+            dropAgent: function( agentName ) {
+                this.forEach( function(item){
+                    self.drop( item, agentName );
+                })
+            }
 
-		//==================================================================
-		// Classes
-		//==================================================================
+        };
 
+        //==================================================================
+        // Preinitialization
+        //==================================================================
+        lola.addSafeDeleteHook( this.drop, this );
 
-
-		//==================================================================
-		// Selection Methods
-		//==================================================================
-		/**
-		 * get module's selectors
-		 * @public
-		 * @return {Object}
-		 */
-		getSelectorMethods: function() {
-
-			/**
-			 * module's selector methods
-			 * @type {Object}
-			 */
-			var methods = {
-
-				/**
-				 * assigns an agent to selector elements
-				 * @param {String} agentName name of registered agent
-				 */
-				assignAgent: function( agentName ) {
-					this.forEach( function(item){
-						lola.agent.assign( item, agentName );
-					});
-					return this;
-				},
-
-				/**
-				 * drops client from agent
-				 * @param {String} agentName name of registered agent
-				 */
-				dropAgent: function( agentName ) {
-					this.forEach( function(item){
-						lola.agent.drop( item, agentName );
-					})
-				}
-
-			};
-
-			return methods;
-
-		}
-	};
-
-	//==================================================================
-	// Class Prototypes
-	//==================================================================
-
+    };
 
 
 
 	//register module
-	lola.registerModule( agent );
+	lola.registerModule( new Module() );
 
 })( lola );
 

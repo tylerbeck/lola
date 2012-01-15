@@ -7,7 +7,6 @@
  *
  ***********************************************************************/
 (function( lola ) {
-	var $ = lola;
 	/**
 	 * Array Module
      * @namespace lola.array
@@ -147,7 +146,7 @@
             /**
              * iterates each element in Selector and applies callback.
              * @param {Function} callback function callback( item, index, array ):void
-             */
+             *
             forEach: function( callback ) {
                 this.forEach( callback );
                 return this;
@@ -156,7 +155,7 @@
             /**
              * iterates each element in Selector and checks that every callback returns true.
              * @param {Function} callback function callback( item, index, array ):Boolean
-             */
+             *
             every: function( callback ) {
                 return this.every( callback );
             },
@@ -164,11 +163,10 @@
             /**
              * iterates each element in Selector and checks that at least one callback returns true.
              * @param {Function} callback function callback( item, index, array ):Boolean
-             */
+             *
             some: function( callback ) {
                 return this.some( callback );
-            }
-
+            }*/
         };
 
     };

@@ -119,7 +119,7 @@
                         //get attribute
                         cacheId = lola.dom.attr( object, cacheIDProp );
                         if ( cacheId == null && create ) {
-                            cacheId = lola.data.nextUid();
+                            cacheId = nextUid();
                             lola.dom.attr( object, cacheIDProp, cacheId );
                         }
                         break;
@@ -211,7 +211,7 @@
                 recurse = true;
 
             if ( recurse ) {
-                if ( object.childNodes ) {
+                if ( object.childNodes && lola.type.get(object.childNodes) == "array") {
                     object.childNodes.forEach( function( item ) {
                         self.remove( item, namespace, true );
                     } )

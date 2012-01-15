@@ -47,21 +47,18 @@
             <file file="framework/source/modules/math.js" />
             <file file="framework/source/modules/math/color.js" />
             <file file="framework/source/modules/css.js" />
-            <!--<file file="framework/source/modules/http.js" />-->
-            <!--<file file="framework/source/modules/json.js" />-->
-            <!--<file file="framework/source/modules/agent.js" />-->
-            <!--<file file="framework/source/modules/cmd.js" />-->
-            <!--<file file="framework/source/modules/easing.js" />-->
-            <!--<file file="framework/source/modules/geometry.js" />-->
-            <!--<file file="framework/source/modules/graphics.js" />-->
-            <!--<file file="framework/source/modules/chart.js" />-->
-            <!--<file file="framework/source/modules/template.js" />-->
-            <!--<file file="framework/source/modules/test.js" />-->
-            <!--<file file="framework/source/modules/tween.js" />-->
-            <!--<file file="framework/source/modules/math/point.js" />-->
-            <!--<file file="framework/source/modules/math/tvm.js" />-->
-            <!--<file file="framework/source/modules/math/vector.js" />-->
-
+            <file file="framework/source/modules/http.js" />
+            <file file="framework/source/modules/json.js" />
+            <file file="framework/source/modules/agent.js" />
+            <file file="framework/source/modules/cmd.js" />
+            <file file="framework/source/modules/template.js" />
+            <file file="framework/source/modules/geometry.js" />
+            <file file="framework/source/modules/graphics.js" />
+            <file file="framework/source/modules/easing.js" />
+            <file file="framework/source/modules/tween.js" />
+            <file file="framework/source/modules/chart.js" />
+            <file file="framework/source/modules/math/tvm.js" />
+            <file file="framework/source/modules/test.js" />
             <file file="framework/source/tail.js" />
 		</concat>
 	</target>

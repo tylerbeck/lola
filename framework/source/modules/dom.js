@@ -72,7 +72,7 @@
             if ( attributeHooks[name] ) {
                 return attributeHooks[name].apply( object, arguments );
             }
-            else {
+            else if (object) {
                 if ( value || value == "") {   //set value
                     if (lola(value).isPrimitive()) {
                         return object[name] = value;
@@ -82,7 +82,7 @@
                     }
                 }
                 else {
-                    return object[name];
+                    return object[ name ];
                 }
             }
         };
@@ -185,6 +185,7 @@
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
+                                console.log('safeDelete', child.nodeType);
                                 lola.safeDelete( child );
                             }
                             switch ( lola.type.get( content ) ) {

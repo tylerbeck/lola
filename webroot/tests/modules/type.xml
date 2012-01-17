@@ -1,0 +1,228 @@
+<tests>
+
+    <!-- Type Module Tests -->
+    <script name="Setup Type Module Tests"><![CDATA[
+        var tags = "a abbr acronym address applet area article aside audio "+
+                "b base basefont bdi bdo big blockquote body br button "+
+                "canvas caption center cite code col colgroup command "+
+                "datalist dd del details dfn dir div dl dt "+
+                "em embed "+
+                "fieldset figcaption figure font footer form frame frameset "+
+                "h1 h2 h3 h4 h5 h6 head header hgroup hr html "+
+                "i iframe img input ins "+
+                "keygen kbd "+
+                "label legend li link "+
+                "map mark menu meta meter "+
+                "nav noframes noscript "+
+                "object ol optgroup option output "+
+                "p param pre progress "+
+                "q "+
+                "rp rt ruby "+
+                "s samp script section select small source span strike strong style sub summary sup svg "+
+                "table tbody td textarea tfoot th thead time title tr track tt "+
+                "u ul "+
+                "var video "+
+                "wbr "+
+                "xmp";
+
+        var stags = "object";
+        var map = {};
+        tags.split(" ").forEach( function(tag){
+            var node = document.createElement( tag );
+            var type = Object.prototype.toString.call( node );
+            var name = type.replace( /\[object HTML/g, "" ).replace( /Element\]/g, "" );
+            name = name == "" ? "Element" : name;
+            map[name] = node;
+        });
+        stags.split(" ").forEach( function(tag){
+            var node = document.createElement( tag );
+            var type = Object.prototype.toString.call( node );
+            var name = type.replace( /\[object /g, "" ).replace( /Element\]/g, "" );
+            name = name == "" ? "Element" : name;
+            map[name] = node;
+        });
+        map['Array'] = [];
+        map['Object'] = {};
+        map['Number'] = 123.456;
+        map['Boolean'] = true;
+        map['String'] = "string";
+        map['Undefined'] = undefined;
+        map['Null'] = null;
+        map['Function'] = function(){return true;};
+        map['Date'] = new Date();
+        map['RegExp'] = /exp/g;
+
+
+    ]]></script>
+
+    <test name="lola.type.get: Anchor" equals="anchor" type="string"><![CDATA[ lola.type.get( map['Anchor'] ); ]]></test>
+    <test name="$().isAnchor: check" equals="true" type="bool"><![CDATA[ $( map['Anchor'] ).isAnchor(); ]]></test>
+    <test name="lola.type.get: Applet" equals="applet" type="string"><![CDATA[ lola.type.get( map['Applet'] ); ]]></test>
+    <test name="$().isApplet: check" equals="true" type="bool"><![CDATA[ $( map['Applet'] ).isApplet(); ]]></test>
+    <test name="lola.type.get: Area" equals="area" type="string"><![CDATA[ lola.type.get( map['Area'] ); ]]></test>
+    <test name="$().isArea: check" equals="true" type="bool"><![CDATA[ $( map['Area'] ).isArea(); ]]></test>
+    <test name="lola.type.get: Audio" equals="audio" type="string"><![CDATA[ lola.type.get( map['Audio'] ); ]]></test>
+    <test name="$().isAudio: check" equals="true" type="bool"><![CDATA[ $( map['Audio'] ).isAudio(); ]]></test>
+    <test name="lola.type.get: Base" equals="base" type="string"><![CDATA[ lola.type.get( map['Base'] ); ]]></test>
+    <test name="$().isBase: check" equals="true" type="bool"><![CDATA[ $( map['Base'] ).isBase(); ]]></test>
+    <test name="lola.type.get: BaseFont" equals="basefont" type="string"><![CDATA[ lola.type.get( map['BaseFont'] ); ]]></test>
+    <test name="$().isBaseFont: check" equals="true" type="bool"><![CDATA[ $( map['BaseFont'] ).isBaseFont(); ]]></test>
+    <test name="lola.type.get: Blockquote" equals="blockquote" type="string"><![CDATA[ lola.type.get( map['Blockquote'] ); ]]></test>
+    <test name="$().isBlockquote: check" equals="true" type="bool"><![CDATA[ $( map['Blockquote'] ).isBlockquote(); ]]></test>
+    <test name="lola.type.get: Body" equals="body" type="string"><![CDATA[ lola.type.get( map['Body'] ); ]]></test>
+    <test name="$().isBody: check" equals="true" type="bool"><![CDATA[ $( map['Body'] ).isBody(); ]]></test>
+    <test name="lola.type.get: BR" equals="br" type="string"><![CDATA[ lola.type.get( map['BR'] ); ]]></test>
+    <test name="$().isBR: check" equals="true" type="bool"><![CDATA[ $( map['BR'] ).isBR(); ]]></test>
+    <test name="lola.type.get: Button" equals="button" type="string"><![CDATA[ lola.type.get( map['Button'] ); ]]></test>
+    <test name="$().isButton: check" equals="true" type="bool"><![CDATA[ $( map['Button'] ).isButton(); ]]></test>
+    <test name="lola.type.get: Canvas" equals="canvas" type="string"><![CDATA[ lola.type.get( map['Canvas'] ); ]]></test>
+    <test name="$().isCanvas: check" equals="true" type="bool"><![CDATA[ $( map['Canvas'] ).isCanvas(); ]]></test>
+    <test name="lola.type.get: TableCaption" equals="tablecaption" type="string"><![CDATA[ lola.type.get( map['TableCaption'] ); ]]></test>
+    <test name="$().isTableCaption: check" equals="true" type="bool"><![CDATA[ $( map['TableCaption'] ).isTableCaption(); ]]></test>
+    <test name="lola.type.get: TableCol" equals="tablecol" type="string"><![CDATA[ lola.type.get( map['TableCol'] ); ]]></test>
+    <test name="$().isTableCol: check" equals="true" type="bool"><![CDATA[ $( map['TableCol'] ).isTableCol(); ]]></test>
+    <test name="lola.type.get: DataList" equals="datalist" type="string"><![CDATA[ lola.type.get( map['DataList'] ); ]]></test>
+    <test name="$().isDataList: check" equals="true" type="bool"><![CDATA[ $( map['DataList'] ).isDataList(); ]]></test>
+    <test name="lola.type.get: Element" equals="element" type="string"><![CDATA[ lola.type.get( map['Element'] ); ]]></test>
+    <test name="$().isElement: check" equals="true" type="bool"><![CDATA[ $( map['Element'] ).isElement(); ]]></test>
+    <test name="lola.type.get: Mod" equals="mod" type="string"><![CDATA[ lola.type.get( map['Mod'] ); ]]></test>
+    <test name="$().isMod: check" equals="true" type="bool"><![CDATA[ $( map['Mod'] ).isMod(); ]]></test>
+    <test name="lola.type.get: Directory" equals="directory" type="string"><![CDATA[ lola.type.get( map['Directory'] ); ]]></test>
+    <test name="$().isDirectory: check" equals="true" type="bool"><![CDATA[ $( map['Directory'] ).isDirectory(); ]]></test>
+    <test name="lola.type.get: Div" equals="div" type="string"><![CDATA[ lola.type.get( map['Div'] ); ]]></test>
+    <test name="$().isDiv: check" equals="true" type="bool"><![CDATA[ $( map['Div'] ).isDiv(); ]]></test>
+    <test name="lola.type.get: DList" equals="dlist" type="string"><![CDATA[ lola.type.get( map['DList'] ); ]]></test>
+    <test name="$().isDList: check" equals="true" type="bool"><![CDATA[ $( map['DList'] ).isDList(); ]]></test>
+    <test name="lola.type.get: Embed" equals="embed" type="string"><![CDATA[ lola.type.get( map['Embed'] ); ]]></test>
+    <test name="$().isEmbed: check" equals="true" type="bool"><![CDATA[ $( map['Embed'] ).isEmbed(); ]]></test>
+    <test name="lola.type.get: FieldSet" equals="fieldset" type="string"><![CDATA[ lola.type.get( map['FieldSet'] ); ]]></test>
+    <test name="$().isFieldSet: check" equals="true" type="bool"><![CDATA[ $( map['FieldSet'] ).isFieldSet(); ]]></test>
+    <test name="lola.type.get: Font" equals="font" type="string"><![CDATA[ lola.type.get( map['Font'] ); ]]></test>
+    <test name="$().isFont: check" equals="true" type="bool"><![CDATA[ $( map['Font'] ).isFont(); ]]></test>
+    <test name="lola.type.get: Form" equals="form" type="string"><![CDATA[ lola.type.get( map['Form'] ); ]]></test>
+    <test name="$().isForm: check" equals="true" type="bool"><![CDATA[ $( map['Form'] ).isForm(); ]]></test>
+    <test name="lola.type.get: Frame" equals="frame" type="string"><![CDATA[ lola.type.get( map['Frame'] ); ]]></test>
+    <test name="$().isFrame: check" equals="true" type="bool"><![CDATA[ $( map['Frame'] ).isFrame(); ]]></test>
+    <test name="lola.type.get: FrameSet" equals="frameset" type="string"><![CDATA[ lola.type.get( map['FrameSet'] ); ]]></test>
+    <test name="$().isFrameSet: check" equals="true" type="bool"><![CDATA[ $( map['FrameSet'] ).isFrameSet(); ]]></test>
+    <test name="lola.type.get: Heading" equals="heading" type="string"><![CDATA[ lola.type.get( map['Heading'] ); ]]></test>
+    <test name="$().isHeading: check" equals="true" type="bool"><![CDATA[ $( map['Heading'] ).isHeading(); ]]></test>
+    <test name="lola.type.get: Head" equals="head" type="string"><![CDATA[ lola.type.get( map['Head'] ); ]]></test>
+    <test name="$().isHead: check" equals="true" type="bool"><![CDATA[ $( map['Head'] ).isHead(); ]]></test>
+    <test name="lola.type.get: HR" equals="hr" type="string"><![CDATA[ lola.type.get( map['HR'] ); ]]></test>
+    <test name="$().isHR: check" equals="true" type="bool"><![CDATA[ $( map['HR'] ).isHR(); ]]></test>
+    <test name="lola.type.get: Html" equals="html" type="string"><![CDATA[ lola.type.get( map['Html'] ); ]]></test>
+    <test name="$().isHtml: check" equals="true" type="bool"><![CDATA[ $( map['Html'] ).isHtml(); ]]></test>
+    <test name="lola.type.get: IFrame" equals="iframe" type="string"><![CDATA[ lola.type.get( map['IFrame'] ); ]]></test>
+    <test name="$().isIFrame: check" equals="true" type="bool"><![CDATA[ $( map['IFrame'] ).isIFrame(); ]]></test>
+    <test name="lola.type.get: Image" equals="image" type="string"><![CDATA[ lola.type.get( map['Image'] ); ]]></test>
+    <test name="$().isImage: check" equals="true" type="bool"><![CDATA[ $( map['Image'] ).isImage(); ]]></test>
+    <test name="lola.type.get: Input" equals="input" type="string"><![CDATA[ lola.type.get( map['Input'] ); ]]></test>
+    <test name="$().isInput: check" equals="true" type="bool"><![CDATA[ $( map['Input'] ).isInput(); ]]></test>
+    <test name="lola.type.get: Mod" equals="mod" type="string"><![CDATA[ lola.type.get( map['Mod'] ); ]]></test>
+    <test name="$().isMod: check" equals="true" type="bool"><![CDATA[ $( map['Mod'] ).isMod(); ]]></test>
+    <test name="lola.type.get: Keygen" equals="keygen" type="string"><![CDATA[ lola.type.get( map['Keygen'] ); ]]></test>
+    <test name="$().isKeygen: check" equals="true" type="bool"><![CDATA[ $( map['Keygen'] ).isKeygen(); ]]></test>
+    <test name="lola.type.get: Label" equals="label" type="string"><![CDATA[ lola.type.get( map['Label'] ); ]]></test>
+    <test name="$().isLabel: check" equals="true" type="bool"><![CDATA[ $( map['Label'] ).isLabel(); ]]></test>
+    <test name="lola.type.get: Legend" equals="legend" type="string"><![CDATA[ lola.type.get( map['Legend'] ); ]]></test>
+    <test name="$().isLegend: check" equals="true" type="bool"><![CDATA[ $( map['Legend'] ).isLegend(); ]]></test>
+    <test name="lola.type.get: LI" equals="li" type="string"><![CDATA[ lola.type.get( map['LI'] ); ]]></test>
+    <test name="$().isLI: check" equals="true" type="bool"><![CDATA[ $( map['LI'] ).isLI(); ]]></test>
+    <test name="lola.type.get: Link" equals="link" type="string"><![CDATA[ lola.type.get( map['Link'] ); ]]></test>
+    <test name="$().isLink: check" equals="true" type="bool"><![CDATA[ $( map['Link'] ).isLink(); ]]></test>
+    <test name="lola.type.get: Map" equals="map" type="string"><![CDATA[ lola.type.get( map['Map'] ); ]]></test>
+    <test name="$().isMap: check" equals="true" type="bool"><![CDATA[ $( map['Map'] ).isMap(); ]]></test>
+    <test name="lola.type.get: Menu" equals="menu" type="string"><![CDATA[ lola.type.get( map['Menu'] ); ]]></test>
+    <test name="$().isMenu: check" equals="true" type="bool"><![CDATA[ $( map['Menu'] ).isMenu(); ]]></test>
+    <test name="lola.type.get: Meta" equals="meta" type="string"><![CDATA[ lola.type.get( map['Meta'] ); ]]></test>
+    <test name="$().isMeta: check" equals="true" type="bool"><![CDATA[ $( map['Meta'] ).isMeta(); ]]></test>
+    <test name="lola.type.get: OList" equals="olist" type="string"><![CDATA[ lola.type.get( map['OList'] ); ]]></test>
+    <test name="$().isOList: check" equals="true" type="bool"><![CDATA[ $( map['OList'] ).isOList(); ]]></test>
+    <test name="lola.type.get: OptGroup" equals="optgroup" type="string"><![CDATA[ lola.type.get( map['OptGroup'] ); ]]></test>
+    <test name="$().isOptGroup: check" equals="true" type="bool"><![CDATA[ $( map['OptGroup'] ).isOptGroup(); ]]></test>
+    <test name="lola.type.get: Option" equals="option" type="string"><![CDATA[ lola.type.get( map['Option'] ); ]]></test>
+    <test name="$().isOption: check" equals="true" type="bool"><![CDATA[ $( map['Option'] ).isOption(); ]]></test>
+    <test name="lola.type.get: Output" equals="output" type="string"><![CDATA[ lola.type.get( map['Output'] ); ]]></test>
+    <test name="$().isOutput: check" equals="true" type="bool"><![CDATA[ $( map['Output'] ).isOutput(); ]]></test>
+    <test name="lola.type.get: Paragraph" equals="paragraph" type="string"><![CDATA[ lola.type.get( map['Paragraph'] ); ]]></test>
+    <test name="$().isParagraph: check" equals="true" type="bool"><![CDATA[ $( map['Paragraph'] ).isParagraph(); ]]></test>
+    <test name="lola.type.get: Param" equals="param" type="string"><![CDATA[ lola.type.get( map['Param'] ); ]]></test>
+    <test name="$().isParam: check" equals="true" type="bool"><![CDATA[ $( map['Param'] ).isParam(); ]]></test>
+    <test name="lola.type.get: Pre" equals="pre" type="string"><![CDATA[ lola.type.get( map['Pre'] ); ]]></test>
+    <test name="$().isPre: check" equals="true" type="bool"><![CDATA[ $( map['Pre'] ).isPre(); ]]></test>
+    <test name="lola.type.get: Quote" equals="quote" type="string"><![CDATA[ lola.type.get( map['Quote'] ); ]]></test>
+    <test name="$().isQuote: check" equals="true" type="bool"><![CDATA[ $( map['Quote'] ).isQuote(); ]]></test>
+    <test name="lola.type.get: Script" equals="script" type="string"><![CDATA[ lola.type.get( map['Script'] ); ]]></test>
+    <test name="$().isScript: check" equals="true" type="bool"><![CDATA[ $( map['Script'] ).isScript(); ]]></test>
+    <test name="lola.type.get: Select" equals="select" type="string"><![CDATA[ lola.type.get( map['Select'] ); ]]></test>
+    <test name="$().isSelect: check" equals="true" type="bool"><![CDATA[ $( map['Select'] ).isSelect(); ]]></test>
+    <test name="lola.type.get: Source" equals="source" type="string"><![CDATA[ lola.type.get( map['Source'] ); ]]></test>
+    <test name="$().isSource: check" equals="true" type="bool"><![CDATA[ $( map['Source'] ).isSource(); ]]></test>
+    <test name="lola.type.get: Style" equals="style" type="string"><![CDATA[ lola.type.get( map['Style'] ); ]]></test>
+    <test name="$().isStyle: check" equals="true" type="bool"><![CDATA[ $( map['Style'] ).isStyle(); ]]></test>
+    <test name="lola.type.get: Table" equals="table" type="string"><![CDATA[ lola.type.get( map['Table'] ); ]]></test>
+    <test name="$().isTable: check" equals="true" type="bool"><![CDATA[ $( map['Table'] ).isTable(); ]]></test>
+    <test name="lola.type.get: TableSection" equals="tablesection" type="string"><![CDATA[ lola.type.get( map['TableSection'] ); ]]></test>
+    <test name="$().isTableSection: check" equals="true" type="bool"><![CDATA[ $( map['TableSection'] ).isTableSection(); ]]></test>
+    <test name="lola.type.get: TableCell" equals="tablecell" type="string"><![CDATA[ lola.type.get( map['TableCell'] ); ]]></test>
+    <test name="$().isTableCell: check" equals="true" type="bool"><![CDATA[ $( map['TableCell'] ).isTableCell(); ]]></test>
+    <test name="lola.type.get: TextArea" equals="textarea" type="string"><![CDATA[ lola.type.get( map['TextArea'] ); ]]></test>
+    <test name="$().isTextArea: check" equals="true" type="bool"><![CDATA[ $( map['TextArea'] ).isTextArea(); ]]></test>
+    <test name="lola.type.get: TableSection" equals="tablesection" type="string"><![CDATA[ lola.type.get( map['TableSection'] ); ]]></test>
+    <test name="$().isTableSection: check" equals="true" type="bool"><![CDATA[ $( map['TableSection'] ).isTableSection(); ]]></test>
+    <test name="lola.type.get: Title" equals="title" type="string"><![CDATA[ lola.type.get( map['Title'] ); ]]></test>
+    <test name="$().isTitle: check" equals="true" type="bool"><![CDATA[ $( map['Title'] ).isTitle(); ]]></test>
+    <test name="lola.type.get: TableRow" equals="tablerow" type="string"><![CDATA[ lola.type.get( map['TableRow'] ); ]]></test>
+    <test name="$().isTableRow: check" equals="true" type="bool"><![CDATA[ $( map['TableRow'] ).isTableRow(); ]]></test>
+    <test name="lola.type.get: UList" equals="ulist" type="string"><![CDATA[ lola.type.get( map['UList'] ); ]]></test>
+    <test name="$().isUList: check" equals="true" type="bool"><![CDATA[ $( map['UList'] ).isUList(); ]]></test>
+    <test name="lola.type.get: Video" equals="video" type="string"><![CDATA[ lola.type.get( map['Video'] ); ]]></test>
+    <test name="$().isVideo: check" equals="true" type="bool"><![CDATA[ $( map['Video'] ).isVideo(); ]]></test>
+    <test name="lola.type.get: Pre" equals="pre" type="string"><![CDATA[ lola.type.get( map['Pre'] ); ]]></test>
+    <test name="$().isPre: check" equals="true" type="bool"><![CDATA[ $( map['Pre'] ).isPre(); ]]></test>
+    <test name="lola.type.get: HTMLObject" equals="htmlobject" type="string"><![CDATA[ lola.type.get( map['HTMLObject'] ); ]]></test>
+    <test name="$().isHTMLObject: check" equals="true" type="bool"><![CDATA[ $( map['HTMLObject'] ).isHTMLObject(); ]]></test>
+    <test name="lola.type.get: HTMLObject" equals="htmlobject" type="string"><![CDATA[ lola.type.get( map['HTMLObject'] ); ]]></test>
+    <test name="$().isHTMLObject: check" equals="true" type="bool"><![CDATA[ $( map['HTMLObject'] ).isHTMLObject(); ]]></test>
+    <test name="lola.type.get: Array" equals="array" type="string"><![CDATA[ lola.type.get( map['Array'] ); ]]></test>
+    <test name="$().isArray: check" equals="true" type="bool"><![CDATA[ $( map['Array'] ).isArray(); ]]></test>
+    <test name="lola.type.get: Object" equals="object" type="string"><![CDATA[ lola.type.get( map['Object'] ); ]]></test>
+    <test name="$().isObject: check" equals="true" type="bool"><![CDATA[ $( map['Object'] ).isObject(); ]]></test>
+    <test name="lola.type.get: Number" equals="number" type="string"><![CDATA[ lola.type.get( map['Number'] ); ]]></test>
+    <test name="$().isNumber: check" equals="true" type="bool"><![CDATA[ $( map['Number'] ).isNumber(); ]]></test>
+    <test name="lola.type.get: Boolean" equals="boolean" type="string"><![CDATA[ lola.type.get( map['Boolean'] ); ]]></test>
+    <test name="$().isBoolean: check" equals="true" type="bool"><![CDATA[ $( map['Boolean'] ).isBoolean(); ]]></test>
+    <test name="lola.type.get: String" equals="string" type="string"><![CDATA[ lola.type.get( map['String'] ); ]]></test>
+    <test name="$().isString: check" equals="true" type="bool"><![CDATA[ $( map['String'] ).isString(); ]]></test>
+    <test name="lola.type.get: Date" equals="date" type="string"><![CDATA[ lola.type.get( map['Date'] ); ]]></test>
+    <test name="$().isDate: check" equals="true" type="bool"><![CDATA[ $( map['Date'] ).isDate(); ]]></test>
+    <test name="lola.type.get: RegExp" equals="regexp" type="string"><![CDATA[ lola.type.get( map['RegExp'] ); ]]></test>
+    <test name="$().isRegExp: check" equals="true" type="bool"><![CDATA[ $( map['RegExp'] ).isRegExp(); ]]></test>
+    <test name="lola.type.get: Function" equals="function" type="string"><![CDATA[ lola.type.get( map['Function'] ); ]]></test>
+    <test name="$().isFunction: check" equals="true" type="bool"><![CDATA[ $( map['Function'] ).isFunction(); ]]></test>
+    <test name="lola.type.get: Undefined" equals="undefined" type="string"><![CDATA[ lola.type.get( undefined ); ]]></test>
+    <test name="$().isUndefined: check" equals="true" type="bool"><![CDATA[ $( undefined ).isUndefined(); ]]></test>
+    <test name="lola.type.get: Null" equals="null" type="string"><![CDATA[ lola.type.get( map['Null'] ); ]]></test>
+    <test name="$().isNull: check" equals="true" type="bool"><![CDATA[ $( null ).isNull(); ]]></test>
+    <test name="lola.type.isPrimitive: boolean" equals="true" type="bool"><![CDATA[ lola.type.isPrimitive( true ); ]]></test>
+    <test name="lola.type.isPrimitive: number" equals="true" type="bool"><![CDATA[ lola.type.isPrimitive( 1234 ); ]]></test>
+    <test name="lola.type.isPrimitive: string" equals="true" type="bool"><![CDATA[ lola.type.isPrimitive( "1234" ); ]]></test>
+    <test name="lola.type.isPrimitive: undefined" equals="true" type="bool"><![CDATA[ lola.type.isPrimitive( undefined ); ]]></test>
+    <test name="lola.type.isPrimitive: null" equals="true" type="bool"><![CDATA[ lola.type.isPrimitive( null ); ]]></test>
+    <test name="$().isPrimitive: boolean" equals="true" type="bool"><![CDATA[ $( true ).isPrimitive(); ]]></test>
+    <test name="$().isPrimitive: number" equals="true" type="bool"><![CDATA[ $( 1234 ).isPrimitive(); ]]></test>
+    <test name="$().isPrimitive: string" equals="true" type="bool"><![CDATA[ $().concat("1234").isPrimitive(); ]]></test>
+    <test name="$().isPrimitive: undefined" equals="true" type="bool"><![CDATA[ $( undefined).isPrimitive(); ]]></test>
+    <test name="$().isPrimitive: null" equals="true" type="bool"><![CDATA[ $( null ).isPrimitive(); ]]></test>
+    <script name="Teardown Array Module Tests"><![CDATA[
+
+        //"boolean","number","string","undefined","null"
+        delete window['map'];
+        delete window['tags'];
+        delete window['stags'];
+
+        console.log('teardown complete');
+    ]]></script>
+
+</tests>

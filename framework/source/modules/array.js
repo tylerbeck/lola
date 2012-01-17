@@ -116,16 +116,17 @@
 
         /**
          * creates a sort function for property
+         * @private
          * @param {String} property
          * @return {Function}
          */
-        this.getSortFunction = function( property ){
+        function getSortFunction( property ){
             return function( a, b ) {
                 var x = a[property];
                 var y = b[property];
                 return ((x < y) ? -1 : ((x > y) ? 1 : 0));
             };
-        };
+        }
 
         /**
          * sort an array on a property
@@ -133,7 +134,7 @@
          * @param {String} property
          */
         this.sortOn = function( property, array ){
-            return array.sort( lola.array.getSortFunction(property) );
+            return array.sort( getSortFunction(property) );
         };
 
 

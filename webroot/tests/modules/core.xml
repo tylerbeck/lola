@@ -1,0 +1,196 @@
+<tests>
+    <!-- Lola Framework Tests -->
+    <script name="Setup Framework Tests"><![CDATA[
+        var obj = {
+            depth: 0,
+            child:{
+                depth: 1,
+                grandchild:{
+                    depth: 2,
+                    greatgrandchild:{
+                        depth: 3
+                    }
+                }
+            }
+        };
+
+        (function(){
+            var ctnr = document.createElement('div');
+            ctnr.id = "testContainer";
+            ctnr.innerHTML = "TEST CONTAINER";
+            document.body.appendChild( ctnr );
+
+            var elem1 = document.createElement('div');
+            elem1.id = "testIdOne";
+            elem1.className = "testClass1";
+            ctnr.appendChild( elem1 );
+
+            var elem2 = document.createElement('div');
+            elem2.id = "testIdTwo";
+            elem2.className = "testClass1";
+            ctnr.appendChild( elem2 );
+
+            var elem3 = document.createElement('div');
+            elem3.className = "testClass2";
+            ctnr.appendChild( elem3 );
+        })();
+
+    ]]></script>
+    <test name="lola.extend: overwrites" equals="1" type="int"><![CDATA[
+        (function(){
+            var obj2 = {};
+            lola.extend( obj2, obj, true, false );
+            return obj2.child.depth;
+        })();
+    ]]></test>
+    <test name="lola.extend: no overwrites" equals="99" type="int"><![CDATA[
+        (function(){
+            var obj2 = {child:{},depth:99};
+            lola.extend( obj2, obj, false, false );
+            return obj2.depth;
+        })();
+    ]]></test>
+    <test name="lola.getPackage: parent" equals="0" type="int"><![CDATA[ lola.getPackage(obj,"").depth ]]></test>
+    <test name="lola.getPackage: child" equals="1" type="int"><![CDATA[ lola.getPackage(obj,"child").depth ]]></test>
+    <test name="lola.getPackage: grandchild" equals="2" type="int"><![CDATA[ lola.getPackage(obj,"child.grandchild").depth ]]></test>
+    <test name="lola.setURL: no debug" equals="false" type="bool"><![CDATA[
+        (function(){
+            lola.setURL("http://test.com/path/page.html");
+            return lola.debugMode() == true;
+        })();
+    ]]></test>
+    <test name="lola.setURL: debug" equals="true" type="bool"><![CDATA[
+        (function(){
+            lola.setURL("http://test.com/path/page.html?debug=true");
+            return lola.debugMode() == true;
+        })();
+    ]]></test>
+    <test name="lola.getGUID: check" equals="-1" type="int"><![CDATA[ lola.getGUID() - lola.getGUID() ]]></test>
+    <test name="lola.safeDelete: check deletion" equals="true" type="bool"><![CDATA[
+        (function(){
+            var temp = {color:"red",sizes:["big","small"]};
+            lola.safeDelete( temp, "sizes" );
+            return !temp.sizes;
+        })();
+    ]]></test>
+    <test name="lola.evaluate: script node count" equals="true" type="bool"><![CDATA[
+        (function(){
+            var preCount = document.getElementsByName("script").length;
+            lola.evaluate("(function(){ var a = 1; var b = 2; var c = a + b;})()");
+            lola.evaluate("(function(){ var a = 1; var b = 2; var c = a + b;})()");
+            lola.evaluate("(function(){ var a = 1; var b = 2; var c = a + b;})()");
+            var postCount = document.getElementsByName("script").length;
+
+            return preCount === postCount;
+        })();
+    ]]></test>
+    <test name="lola.evaluate: script evaluates" equals="12" type="int"><![CDATA[
+        (function( x ){
+            return 3*x;
+        })(4);
+    ]]></test>
+    <test name="lola.loadScript: script loads and evaluates" equals="12" type="int" async="true"><![CDATA[
+        (function(){
+            lola.loadScript("support/load.js", function(){
+                var value = test(3);
+                delete window['test'];
+                delete window['tmpVal'];
+                lola.test.current().setResult( value );
+            });
+        })();
+    ]]></test>
+    <test name="lola.hasPackage: greatgrandchild" equals="true" type="bool"><![CDATA[ lola.hasPackage(obj,"child.grandchild.greatgrandchild") ]]></test>
+    <test name="lola.hasPackage: stepchild" equals="false" type="bool"><![CDATA[ lola.hasPackage(obj,"child.grandchild.stepchild") ]]></test>
+    <test name="lola.hasFn: check" equals="true" type="bool"><![CDATA[ lola.hasFn( lola,"hasPackage") ]]></test>
+    <test name="lola.now: check valid times" equals="true" type="bool" async="true"><![CDATA[
+        (function(){
+            var earlier = lola.now();
+            setTimeout( function(){
+                var later = lola.now();
+                lola.test.current().setResult( later > earlier );
+            }, 10 );
+
+        })();
+    ]]></test>
+    <test name="lola.__: array(1)" equals="2" type="int"><![CDATA[ lola.__([2]); ]]></test>
+    <test name="lola.__: array(2+)" equals="6" type="int"><![CDATA[ lola.__([2,4,6])[2]; ]]></test>
+
+    <!-- Core Module Selector Methods -->
+    <test name="$: tag selector" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).length ]]></test>
+    <test name="$: class selector" equals="2" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).length ]]></test>
+    <test name="$: id selector" equals="1" type="int"><![CDATA[ $('#testIdTwo', document.getElementById("testContainer")).length ]]></test>
+    <test name="$().identify: no id" equals="lola-guid-" type="string"><![CDATA[ $($('div', document.getElementById("testContainer")).get(2)).identify().attr('id').replace(/^(lola-guid-)\d+$/, "$1"); ]]></test>
+    <test name="$().identify: has id" equals="testIdTwo" type="string"><![CDATA[ $("#testIdTwo").identify().attr('id'); ]]></test>
+    <test name="$().get: no index" equals="true" type="bool"><![CDATA[ $('div', document.getElementById("testContainer")).get() == document.getElementById("testIdOne"); ]]></test>
+    <test name="$().get: with index" equals="true" type="bool"><![CDATA[ $('div', document.getElementById("testContainer")).get(1) == document.getElementById("testIdTwo"); ]]></test>
+    <test name="$().getAll:" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).getAll().length; ]]></test>
+    <test name="$().count: divs" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).count(); ]]></test>
+    <test name="$().count: class" equals="2" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).count(); ]]></test>
+    <test name="$().concat: object not unique" equals="3" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")).get(0), false ).count(); ]]></test>
+    <test name="$().concat: selector not unique" equals="6" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")), false ).count(); ]]></test>
+    <test name="$().concat: array not unique" equals="6" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")).getAll(), false ).count(); ]]></test>
+    <test name="$().concat: object unique" equals="2" type="int"><![CDATA[ $('.testClass1', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")).get(0), true ).count(); ]]></test>
+    <test name="$().concat: selector unique" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")), true ).count(); ]]></test>
+    <test name="$().concat: array unique" equals="3" type="int"><![CDATA[ $('div', document.getElementById("testContainer")).concat( $('div', document.getElementById("testContainer")).getAll(), true ).count(); ]]></test>
+
+    <!-- lola.URL -->
+    <test name="lola.URL.protocol: path/" equals="" type="string"><![CDATA[ (new lola.URL("path/")).protocol; ]]></test>
+    <test name="lola.URL.protocol: http://domain.com/" equals="http" type="string"><![CDATA[ (new lola.URL("http://domain.com/")).protocol; ]]></test>
+    <test name="lola.URL.protocol: http://www.domain.com/" equals="http" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/")).protocol; ]]></test>
+    <test name="lola.URL.protocol: https://www.domain.com/page.html" equals="https" type="string"><![CDATA[ (new lola.URL("https://www.domain.com/page.html")).protocol; ]]></test>
+    <test name="lola.URL.protocol: ftp://www.domain.com/path/to/" equals="ftp" type="string"><![CDATA[ (new lola.URL("ftp://www.domain.com/path/to/")).protocol; ]]></test>
+    <test name="lola.URL.protocol: http://www.domain.com/path/to/page.html" equals="http" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/path/to/page.html")).protocol; ]]></test>
+    <test name="lola.URL.protocol: socket://www.domain.com/path/to/page.php?one=1&amp;two=2" equals="socket" type="string"><![CDATA[ (new lola.URL("socket://www.domain.com/path/to/page.php?one=1&two=2")).protocol; ]]></test>
+    <test name="lola.URL.protocol: https://www.domain.com/path/to/page.php?one=1&amp;two=2#three" equals="https" type="string"><![CDATA[ (new lola.URL("https://www.domain.com/path/to/page.php?one=1&two=2#three")).protocol; ]]></test>
+
+    <test name="lola.URL.domain: http://localhost" equals="localhost" type="string"><![CDATA[ (new lola.URL("http://localhost")).domain; ]]></test>
+    <test name="lola.URL.domain: http://localhost/" equals="localhost" type="string"><![CDATA[ (new lola.URL("http://localhost/")).domain; ]]></test>
+    <test name="lola.URL.domain: http://domain.com/" equals="domain.com" type="string"><![CDATA[ (new lola.URL("http://domain.com/")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com/" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com/page.html" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/page.html")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com/path/to/" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/path/to/")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com?one=1&amp;two=2" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com?one=1&two=2")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com/?one=1&amp;two=2" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/?one=1&two=2")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com#three" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com#three")).domain; ]]></test>
+    <test name="lola.URL.domain: http://www.domain.com/#three" equals="www.domain.com" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/#three")).domain; ]]></test>
+
+    <test name="lola.URL.path: http://localhost" equals="/" type="string"><![CDATA[ (new lola.URL("http://localhost")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/" equals="/" type="string"><![CDATA[ (new lola.URL("http://localhost/")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/path/" equals="/path/" type="string"><![CDATA[ (new lola.URL("http://localhost/path/")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/path/to" equals="/path/" type="string"><![CDATA[ (new lola.URL("http://localhost/path/to")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/path/to/page.html" equals="/path/to/" type="string"><![CDATA[ (new lola.URL("http://localhost/path/to/page.html")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/path/to/?one=1&amp;two=2" equals="/path/to/" type="string"><![CDATA[ (new lola.URL("http://localhost/path/to/?one=1&two=2")).path; ]]></test>
+    <test name="lola.URL.path: http://localhost/path/to/#three" equals="/path/to/" type="string"><![CDATA[ (new lola.URL("http://localhost/path/to/#three")).path; ]]></test>
+    <test name="lola.URL.path: path/" equals="path/" type="string"><![CDATA[ (new lola.URL("path/")).path; ]]></test>
+    <test name="lola.URL.path: path/to" equals="path/" type="string"><![CDATA[ (new lola.URL("path/to")).path; ]]></test>
+    <test name="lola.URL.path: path/to/page.html" equals="path/to/" type="string"><![CDATA[ (new lola.URL("path/to/page.html")).path; ]]></test>
+    <test name="lola.URL.path: path/to/?one=1&amp;two=2" equals="path/to/" type="string"><![CDATA[ (new lola.URL("path/to/?one=1&two=2")).path; ]]></test>
+    <test name="lola.URL.path: path/to/#three" equals="path/to/" type="string"><![CDATA[ (new lola.URL("path/to/#three")).path; ]]></test>
+
+    <test name="lola.URL.page: page.html" equals="page.html" type="string"><![CDATA[ (new lola.URL("page.html")).page; ]]></test>
+    <test name="lola.URL.page: http://localhost/" equals="" type="string"><![CDATA[ (new lola.URL("http://localhost/")).page; ]]></test>
+    <test name="lola.URL.page: http://localhost/page.html" equals="page.html" type="string"><![CDATA[ (new lola.URL("http://localhost/page.html")).page; ]]></test>
+    <test name="lola.URL.page: http://localhost/path/to/page.html" equals="page.html" type="string"><![CDATA[ (new lola.URL("http://localhost/path/to/page.html")).page; ]]></test>
+    <test name="lola.URL.page: path/to/page.html" equals="page.html" type="string"><![CDATA[ (new lola.URL("path/to/page.html")).page; ]]></test>
+    <test name="lola.URL.page: path/to/page.html?one=1&amp;two=2" equals="page.html" type="string"><![CDATA[ (new lola.URL("path/to/page.html?one=1&two=2")).page; ]]></test>
+    <test name="lola.URL.page: path/to/page.html" equals="page.html" type="string"><![CDATA[ (new lola.URL("path/to/page.html")).page; ]]></test>
+
+    <test name="lola.URL.vars: ?one=1&amp;two=2" equals="2" type="string"><![CDATA[ (new lola.URL("?one=1&two=2")).vars['two']; ]]></test>
+    <test name="lola.URL.vars: page.html?one=1&amp;two=2" equals="2" type="string"><![CDATA[ (new lola.URL("page.html?one=1&two=2")).vars['two']; ]]></test>
+    <test name="lola.URL.vars: path/to/page.html?one=1&amp;two=2" equals="2" type="string"><![CDATA[ (new lola.URL("path/to/page.html?one=1&two=2")).vars['two']; ]]></test>
+    <test name="lola.URL.vars: http://www.domain.com?one=1&amp;two=2" equals="2" type="string"><![CDATA[ (new lola.URL("http://www.domain.com?one=1&two=2")).vars['two']; ]]></test>
+    <test name="lola.URL.vars: http://www.domain.com/?one=1&amp;two=2" equals="2" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/?one=1&two=2")).vars['two']; ]]></test>
+
+    <test name="lola.URL.hash: #three" equals="three" type="string"><![CDATA[ (new lola.URL("#three")).hash; ]]></test>
+    <test name="lola.URL.hash: page.html#three" equals="three" type="string"><![CDATA[ (new lola.URL("page.html#three")).hash; ]]></test>
+    <test name="lola.URL.hash: path/to/page.html#three" equals="three" type="string"><![CDATA[ (new lola.URL("path/to/page.html#three")).hash; ]]></test>
+    <test name="lola.URL.hash: http://www.domain.com#three" equals="three" type="string"><![CDATA[ (new lola.URL("http://www.domain.com#three")).hash; ]]></test>
+    <test name="lola.URL.hash: http://www.domain.com/#three" equals="three" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/#three")).hash; ]]></test>
+    <test name="lola.URL.hash: http://www.domain.com/?one=1#three" equals="three" type="string"><![CDATA[ (new lola.URL("http://www.domain.com/?one=1#three")).hash; ]]></test>
+
+    <script name="Teardown Core Tests"><![CDATA[
+        delete window['obj'];
+        $(document.body).removeChild( document.getElementById("testContainer") );
+        console.log('teardown complete');
+    ]]></script>
+</tests>

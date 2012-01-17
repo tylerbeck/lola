@@ -100,10 +100,18 @@
         this.start = function(){
             //load test source
             console.log('lola.test.run: '+src);
-            var req = new lola.http.SyncRequest( src );
+            loadExternalXML( src );
+            index = -1;
+            next();
+        };
+
+
+        function loadExternalXML( source ){
+
+            var req = new lola.http.SyncRequest( source );
             req.send();
             var xml = req.responseXML();
-            executables = [];
+            var list = [];
 
             //parse test source
             if (xml.documentElement.tagName == "tests"){
@@ -117,20 +125,27 @@
                             case 'script':
                                 //this is a setup or teardown script
                                 var script = new Script(n);
-                                executables.push( script );
+                                list.push( script );
                                 break;
                             case 'test':
                                 //this is a test
                                 var t = new Test(n);
-                                executables.push( t );
+                                list.push( t );
+                                break;
+                            case 'xml':
+                                //this is a test
+                                var x = new ExternalXML(n);
+                                list.push( x );
                                 break;
                         }
                     }
                 }
             }
-            index = -1;
-            next();
-        };
+            list.unshift( 0 );
+            list.unshift( index + 1 );
+
+            executables.splice.apply(executables, list );
+        }
 
         /**
          * run next executable
@@ -143,7 +158,7 @@
                 current = executable;
                 var completed = executable.execute();
                 if (completed){
-                    setTimeout( function(){ next();}, 10);
+                    setTimeout( function(){ next();}, 2);
                 }
             }
             else {
@@ -165,194 +180,213 @@
         //==================================================================
         /**
          * @private
+         * @class
          * @param {Node} node
          */
         function Script( node ){
-            return this.init(node);
-        }
-        Script.prototype = {
-            name: "",
-            value: "",
+            var name = "";
+            var value = "";
 
-            init: function( node ){
-                if ((node.hasAttribute('name')))
-                    this.name = node.attributes.getNamedItem("name").nodeValue;
-
-                var str = "";
-                for( var i = 0; i<node.childNodes.length; i++){
-                    str += node.childNodes[i].data;
-                }
-                this.value = str;
-
-                return this;
-            },
-
-            execute: function(){
-                console.log('executing', '"'+this.name+'"', 'script');
+            this.execute = function(){
+                console.log('executing', '"'+name+'"', 'script');
                 //try {
-                lola.evaluate( this.value );
+                lola.evaluate( value );
                 //}
                 //catch( e ){
-                //   console.error('error evaluating', this.name, 'script:', e.message );
+                //   console.error('error evaluating', name, 'script:', e.message );
                 //}
 
                 return true;
+            };
+
+            if ((node.hasAttribute('name')))
+                name = node.attributes.getNamedItem("name").nodeValue;
+
+            var str = "";
+            for( var i = 0; i<node.childNodes.length; i++){
+                str += node.childNodes[i].data;
             }
-        };
+            value = str;
+
+            return this;
+        }
 
         /**
          * @private
+         * @class
          * @param {Node} node
          */
         function Test( node ){
-            return this.init(node);
-        }
-        Test.prototype = {
-            name: undefined,
-            result: undefined,
-            assert: "==",
-            compareTo: undefined,
-            test: undefined,
-            async: false,
-            passed: undefined,
-            error: "",
+            var name;
+            var result;
+            var assert = "==";
+            var compareTo;
+            var test;
+            var async = false;
+            var passed;
+            var error = "";
 
-            init: function( node ){
-
-                this.name = node.attributes.getNamedItem("name").nodeValue;
-
-                if (node.hasAttribute('async'))
-                    this.async = node.attributes.getNamedItem("async").nodeValue == "true";
-
-                if (node.hasAttribute('equals')){
-                    this.assert = "equals";
-                }
-                else if (node.hasAttribute('strictlyEquals')){
-                    this.assert = "strictlyEquals";
-                }
-                else if (node.hasAttribute('doesNotEqual')){
-                    this.assert = "doesNotEqual";
-                }
-                else if (node.hasAttribute('greaterThan')){
-                    this.assert = "greaterThan";
-                }
-                else if (node.hasAttribute('lessThan')){
-                    this.assert = "lessThan";
-                }
-                else if (node.hasAttribute('greaterThanOrEquals')){
-                    this.assert = "greaterThanOrEquals";
-                }
-                else if (node.hasAttribute('lessThanOrEquals')){
-                    this.assert = "lessThanOrEquals";
-                }
-
-                var rawValue = node.attributes.getNamedItem( this.assert ).nodeValue;
-                var type = node.attributes.getNamedItem("type").nodeValue;
-                switch ( type ){
-                    case "float":
-                        this.compareTo = parseFloat( rawValue );
-                        break;
-                    case "int":
-                        this.compareTo = parseInt( rawValue );
-                        break;
-                    case "bool":
-                        this.compareTo = rawValue === "true";
-                        break;
-                    default:
-                        this.compareTo = String( rawValue );
-                        break;
-                }
-
-                var str = "";
-                for( var i = 0; i<node.childNodes.length; i++){
-                    str += node.childNodes[i].data;
-                }
-                this.test = str;
-
-                return this;
-            },
-
-            execute: function(){
-                console.log( this.name );
+            this.execute = function(){
+                console.log( name );
                 try {
-                    if ( this.async ){
-                        lola.evaluate( this.test );
+                    if ( async ){
+                        lola.evaluate( test );
                         return false;
                     }
                     else {
-                        this.result = eval( this.test );
-                        this.compare();
+                        result = eval( test );
+                        compare();
                         return true;
                     }
                 }
                 catch( e ){
-                    this.passed = false;
-                    this.error = 'failed due to error: '+e.message;
-                    console.error( '    ', this.error );
+                    passed = false;
+                    error = 'failed due to error: '+e.message;
+                    console.error( '    ', error );
                     console.log ( '    ', e );
                     return true;
                 }
-            },
+            };
 
-            setResult: function( val ){
-                this.result = val;
-                this.compare();
+            this.setResult = function( val ){
+                result = val;
+                compare();
                 next();
-            },
+            };
 
-            compare:function(){
-                switch (this.assert){
+            function compare(){
+                switch (assert){
                     case "equals":
-                        this.passed = this.result == this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" == "+this.compareTo;
+                        passed = result == compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" == "+compareTo;
                         break;
                     case "strictlyEquals":
-                        this.passed = this.result === this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" === "+this.compareTo;
+                        passed = result === compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" === "+compareTo;
                         break;
                     case "doesNotEqual":
-                        this.passed = this.result != this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" != "+this.compareTo;
+                        passed = result != compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" != "+compareTo;
                         break;
                     case "greaterThan":
-                        this.passed = this.result > this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" > "+this.compareTo;
+                        passed = result > compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" > "+compareTo;
                         break;
                     case "lessThan":
-                        this.passed = this.result < this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" < "+this.compareTo;
+                        passed = result < compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" < "+compareTo;
                         break;
                     case "greaterThanOrEquals":
-                        this.passed = this.result >= this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" >= "+this.compareTo;
+                        passed = result >= compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" >= "+compareTo;
                         break;
                     case "lessThanOrEquals":
-                        this.passed = this.result <= this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" <= "+this.compareTo;
+                        passed = result <= compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" <= "+compareTo;
                         break;
                     default:
-                        this.passed = this.result == this.compareTo;
-                        if (!this.passed)
-                            this.error = "assertion false: "+this.result+" == "+this.compareTo;
+                        passed = result == compareTo;
+                        if (!passed)
+                            error = "assertion false: "+result+" == "+compareTo;
                         break;
                 }
 
-                if (this.passed) {
+                if (passed) {
                     //console.log( '    ','passed');
                 }
                 else {
-                    this.error = 'failed, '+this.error;
-                    console.error( '    ', this.error );
+                    error = 'failed, '+error;
+                    console.error( '    ', error );
                 }
             }
-        };
+
+            function init( node ){
+
+                name = node.attributes.getNamedItem("name").nodeValue;
+
+                if (node.hasAttribute('async'))
+                    async = node.attributes.getNamedItem("async").nodeValue == "true";
+
+                if (node.hasAttribute('equals')){
+                    assert = "equals";
+                }
+                else if (node.hasAttribute('strictlyEquals')){
+                    assert = "strictlyEquals";
+                }
+                else if (node.hasAttribute('doesNotEqual')){
+                    assert = "doesNotEqual";
+                }
+                else if (node.hasAttribute('greaterThan')){
+                    assert = "greaterThan";
+                }
+                else if (node.hasAttribute('lessThan')){
+                    assert = "lessThan";
+                }
+                else if (node.hasAttribute('greaterThanOrEquals')){
+                    assert = "greaterThanOrEquals";
+                }
+                else if (node.hasAttribute('lessThanOrEquals')){
+                    assert = "lessThanOrEquals";
+                }
+
+                var rawValue = node.attributes.getNamedItem( assert ).nodeValue;
+                var type = node.attributes.getNamedItem("type").nodeValue;
+                switch ( type ){
+                    case "float":
+                        compareTo = parseFloat( rawValue );
+                        break;
+                    case "int":
+                        compareTo = parseInt( rawValue );
+                        break;
+                    case "bool":
+                        compareTo = rawValue === "true";
+                        break;
+                    default:
+                        compareTo = String( rawValue );
+                        break;
+                }
+
+                var str = "";
+                for( var i = 0; i<node.childNodes.length; i++){
+                    str += node.childNodes[i].data;
+                }
+                test = str;
+            }
+            init(node);
+            return this;
+        }
+
+        /**
+         * @private
+         * @class
+         * @param {Node} node
+         */
+        function ExternalXML( node ){
+            var source;
+
+            if ((node.hasAttribute('src')))
+                source = node.attributes.getNamedItem("src").nodeValue;
+
+            this.execute = function(){
+                console.log('');
+                console.log('================================================');
+                console.log('loading external xml:', source);
+                console.log('================================================');
+                if (source){
+                    loadExternalXML( source );
+                }
+                return true;
+            };
+
+        }
+
     };
 
 

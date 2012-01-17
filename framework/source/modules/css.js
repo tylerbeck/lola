@@ -430,41 +430,6 @@
             delete obj.style[ getProperty( style ) ];
         };
 
-        /**
-         * parses an HSL or HSLA color
-         * @param {String} val
-         * @return {Object}
-         */
-        this.parseHSLColor = function( val ) {
-            var hsla = { h:0, s:0, l:0, a:1 };
-            var parts = val.match( lola.type.rIsHSLColor );
-            if ( parts != null ) {
-                var v = parts[1].replace( /\s+/g, "" );
-                v = v.split( ',' );
-                hsla.h = parseColorPart( v[0], 360  );
-                hsla.s = parseColorPart( v[1], 1  );
-                hsla.l = parseColorPart( v[2], 1  );
-                hsla.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
-            }
-            return hsla;
-        };
-
-        /**
-         * parses color part value
-         * @private
-         * @param {String} val
-         * @return {Number}
-         */
-        function parseColorPart( val, divisor ) {
-            if ( val ) {
-                if ( val.indexOf( '%' ) > 0 )
-                    return parseFloat( val.replace( /%/g, "" ) ) / 100;
-                else
-                    return parseFloat( val ) / divisor;
-            }
-            return 0;
-        }
-
 
 
         //==================================================================
@@ -562,50 +527,55 @@
         // Classes
         //==================================================================
         this.Color = function( value ){
-            return this.init(value);
-        };
-        this.Color.prototype = {
-
             /**
-             * output color type
+             * rgba color value object
              * @private
              */
-            outputType: "",
+            var rgb;
+
+            /**
+             * hsl color value object
+             * @private
+             */
+            var hsl;
 
             /**
              * hex color value object
-             * @public
+             * @private
              */
-            hexValue: null,
+            var hex;
 
             /**
-             * rgba color value object
-             * @public
+             * get rgba object
+             * @return {Object}
              */
-            rgbValue: null,
+            this.getRgbValue = function(){
+                return rgb;
+            };
 
             /**
-             * hsla color value object
-             * @public
+             * get hsla object
+             * @return {Object}
              */
-            hslValue: null,
+            this.getHslValue = function(){
+                return hsl;
+            };
 
             /**
-             * class initialization function
-             * @param value
+             * get hsla object
+             * @return {Object}
              */
-            init: function( value ){
-                if (value) this.parseString( value );
-                return this;
-            },
+            this.getHexValue = function(){
+                return hex;
+            };
 
             /**
              * parses style color values returns rgba object
              * @public
              * @param {String} val
              */
-            parseString: function( val ) {
-                //console.info('parseColor ------ ');
+            function parseString( val ) {
+
                 var cparts = val.match( lola.regex.isColor );
                 if ( cparts ) {
                     var parts,rgb,hsl,hex;
@@ -614,111 +584,141 @@
                             parts = val.match( lola.regex.isHexColor );
                             hex = ( parts != null ) ? parts[1] : "000000";
                             rgb = lola.math.color.hex2rgb(hex);
-                            hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
+                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
                             rgb.a = hsl.a = 1;
                             break;
                         case 'rgb':
                         case 'rgba':
-                            rgb = self.parseRGBColor( val );
-                            hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
-                            hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
-                            hsl.a = rgb.a;
-                            this.valueType = "rgba";
+                            rgb = parseRGBColorString( val );
+                            hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
+                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
                             break;
                         case 'hsl':
                         case 'hsla':
-                            hsl = self.parseHSLColor( val );
+                            hsl = parseHSLColorString( val );
                             rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                            hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
+                            hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
                             rgb.a = hsl.a;
-                            this.valueType = "hsla";
                             break;
                     }
-
-                    this.hexValue = hex;
-                    this.rgbValue = rgb;
-                    this.hslValue = hsl;
                 }
-            },
+            }
 
             /**
-             * outputs a css color string of the type specified in outputType
-             * @return {String}
+             * parses an HSL or HSLA color
+             * @param {String} val
+             * @private
+             * @return {Object}
              */
-            toString: function() {
-                if (this.outputType == "#")
-                    return this.toHexString();
-                else if (this.outputType == "hsl")
-                    return this.toHslString();
-                else if (this.outputType == "hsla")
-                    return this.toHslaString();
-                else if (this.outputType == "rgb")
-                    return this.toRgbString();
-                else
-                    return this.toRgbaString();
-            },
+            function parseHSLColorString( val ) {
+                var c = { h:0, s:0, l:0, a:1 };
+                var parts = val.match( lola.regex.isHSLColor );
+                if ( parts != null ) {
+                    var v = parts[1].replace( /\s+/g, "" );
+                    v = v.split( ',' );
+                    c.h = parseColorPart( v[0], 360  );
+                    c.s = parseColorPart( v[1], 1  );
+                    c.l = parseColorPart( v[2], 1  );
+                    c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
+                }
+                return c;
+            }
+
+            /**
+             * parses an RGB or RGBA color
+             * @param {String} val
+             * @private
+             * @return {Object}
+             */
+            function parseRGBColorString( val ) {
+                var c = { r:0, g:0, b:0, a:1 };
+                var parts = val.match( lola.regex.isHSLColor );
+                if ( parts != null ) {
+                    var v = parts[1].replace( /\s+/g, "" );
+                    v = v.split( ',' );
+                    c.h = parseColorPart( v[0], 255  );
+                    c.s = parseColorPart( v[1], 255  );
+                    c.l = parseColorPart( v[2], 255  );
+                    c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
+                }
+                return c;
+            }
+
+            /**
+             * parses color part value
+             * @private
+             * @param {String} val
+             * @return {Number}
+             */
+            function parseColorPart( val, divisor ) {
+                if ( val ) {
+                    if ( val.indexOf( '%' ) > 0 )
+                        return parseFloat( val.replace( /%/g, "" ) ) / 100;
+                    else
+                        return parseFloat( val ) / divisor;
+                }
+                return 0;
+            }
 
             /**
              * returns the uint value of color object
              * @return {uint}
              */
-            toInt: function() {
-                return parseInt("0x" + this.hexValue );
-            },
+            this.toInt = function() {
+                return parseInt("0x" + hex );
+            };
 
             /**
              * outputs a css color hex string
              * @return {String}
              */
-            toHexString: function() {
-                return "#" + this.hexValue;
-            },
+            this.toHexString = function() {
+                return "#" + hex;
+            };
 
             /**
              * outputs a css color hsl string
+             * @param {Boolean} alpha
              * @return {String}
              */
-            toHslString: function() {
-                return "hsl("+
-                    Math.round( this.hslValue.h * 360 )+","+
-                    Math.round( this.hslValue.s * 100 )+"%,"+
-                    Math.round( this.hslValue.l * 100 )+"%)";
-            },
+            this.toHslString = function( alpha ) {
+                return (alpha?"hsla":"hsl")+"("+
+                    Math.round( hsl.h * 360 )+","+
+                    Math.round( hsl.s * 100 )+"%,"+
+                    Math.round( hsl.l * 100 )+"%"+
+                    (alpha?","+hsl.a:"")+")";
+            };
 
             /**
              * outputs a css color hsla string
              * @return {String}
              */
-            toHslaString: function() {
-                return "hsla("+
-                    Math.round( this.hslValue.h * 360 )+","+
-                    Math.round( this.hslValue.s * 100 )+"%,"+
-                    Math.round( this.hslValue.l * 100 )+"%,"+
-                    this.hslValue.a+"%)";
-            },
+            this.toHslaString = function() {
+                return self.toHslString( true );
+            };
 
             /**
              * outputs a css color rgb string
+             * @param {Boolean} alpha
              * @return {String}
              */
-            toRgbString: function() {
-                return "rgb("+
-                    Math.round( this.rgbValue.r * 255 )+","+
-                    Math.round( this.rgbValue.g * 255 )+","+
-                    Math.round( this.rgbValue.b * 255 )+")";
-            },
+            this.toRgbString = function(alpha) {
+                return (alpha?"rgba":"rgb")+"("+
+                    Math.round( rgb.r * 255 )+","+
+                    Math.round( rgb.g * 255 )+","+
+                    Math.round( rgb.b * 255 )+
+                    (alpha?","+rgb.a:"")+")";
+            };
 
             /**
              * outputs a css color rgba string
              * @return {String}
              */
-            toRgbaString: function() {
-                return "rgba("+
-                    Math.round( this.rgbValue.r * 255 )+","+
-                    Math.round( this.rgbValue.g * 255 )+","+
-                    Math.round( this.rgbValue.b * 255 )+","+
-                    this.rgbValue.a+")";
-            }
+            this.toRgbaString = function() {
+                return self.toRgbString(true)
+            };
+
+            return this.init(value);
         };
 
     };

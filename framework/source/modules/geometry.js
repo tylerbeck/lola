@@ -72,7 +72,7 @@
             var point = new self.Point( elem.offsetLeft, elem.offsetTop );
             if ( absolute && elem.offsetParent ) {
                 var parent = self.getOffset( elem.offsetParent, true );
-                point = lola.math.point.add( point, parent );
+                point = point.add( parent );
             }
             return point;
         };
@@ -178,7 +178,7 @@
             toVector: function(){
                 var a = Math.atan2( this.y, this.x );
                 var v = Math.sqrt( this.x*this.x + this.y*this.y );
-                return new lola.geometry.Vector(v,a);
+                return new self.Vector(v,a);
             },
 
             /**
@@ -289,27 +289,18 @@
          * @param {uint} flags
          */
         this.Spline = function( points, flags ){
-            this.points = points?points:[];
-            this.flags = flags == undefined ? 0 : flags;
-            return this;
-        };
-        this.Spline.CLOSED = 0x1;
-        this.Spline.FILL = 0x2;
-        this.Spline.STROKE = 0x4;
-        this.Spline.CONTROLS =0x8;
-        this.Spline.prototype = {
             /**
              * array of {lola.geometry.SplinePoint}
              * @type {Array}
              * @private
              */
-            points: [],
+            points = points?points:[];
 
             /**
              * spline flags
              * @type {Boolean}
              */
-            flags: 0x0,
+            flags = flags == undefined ? 0 : flags;
 
             /**
              * adds a point at the specified index.
@@ -317,122 +308,106 @@
              * @param {lola.geometry.SplinePoint} splinePoint
              * @param {uint|undefined} index
              */
-            addPoint: function( splinePoint, index ){
+            this.addPoint = function( splinePoint, index ){
                 if ( index == undefined )
-                    index = this.points.length;
+                    index = points.length;
 
-                this.points.splice(index,0,splinePoint);
-            },
+                points.splice(index,0,splinePoint);
+            };
 
             /**
              * removes the point at the specified index.
              * @param {uint} index
              */
-            removePoint: function( index ){
+            this.removePoint = function( index ){
                 if ( index != undefined )
-                    this.points.splice(index,1,undefined);
-            },
+                    points.splice(index,1,undefined);
+            };
 
             /**
              * updates/replaces a point at the specified index.
              * @param {lola.geometry.SplinePoint} splinePoint
              * @param {uint} index
              */
-            updatePoint: function( splinePoint, index ){
+            this.updatePoint = function( splinePoint, index ){
                 if ( index != undefined )
-                    this.points.splice(index,1,splinePoint);
-            },
+                    points.splice(index,1,splinePoint);
+            };
 
             /**
              * gets the splinePoint at the specified index.
              * @param {uint} index
              */
-            getPoint: function( index ){
-                return this.points[ index ];
-            },
+            this.getPoint = function( index ){
+                if ( index < points.length )
+                    return points[ index ];
+                return null;
+            };
 
             /**
              * gets all splinePoints.
              */
-            getPoints: function(){
-                return this.points;
-            },
+            this.getPoints = function(){
+                return points;
+            };
 
             /**
              * draws spline
              * @param {Boolean} close draw a closed spline
              * @param {Object|String|undefined} ctx
              */
-            draw: function( ctx, flags ){
-                flags = flags == undefined ? this.flags : flags;
-                var sl = this.points.length;
+            this.draw = function( ctx, flgs ){
+                flgs = flgs == undefined ? flags : flgs;
+                var sl = points.length;
                 //console.log('drawSpline: '+sl);
                 if (sl > 1) {
-                    var pts = [];
+                    var p = [];
                     //console.log(pts);
-                    this.points.forEach( function(item){
-                        pts.push( item.getControl1() );
-                        pts.push( item.getAnchor() );
-                        pts.push( item.getControl2() );
+                    points.forEach( function(item){
+                        p.push( item.getControl1(),item.getAnchor(),item.getControl2() );
                     });
-                    var pl = pts.length;
+                    var pl = p.length;
 
 
-                    if (flags & geometry.Spline.CONTROLS){
-
-                        ctx.beginPath();
-                        ctx.moveTo(pts[1].x, pts[1].y);
-                        ctx.lineTo(pts[2].x, pts[2].y);
-                        ctx.stroke();
-                        ctx.closePath();
-
+                    if (flgs &  self.Spline.CONTROLS){
+                        var d = function(q,r){
+                            ctx.beginPath();
+                            ctx.moveTo(p[q].x, p[q].y);
+                            ctx.lineTo(p[r].x, p[r].y);
+                            ctx.stroke();
+                            ctx.closePath();
+                        };
+                        d(1,2);
                         for (var n=3; n<pl-3; n+=3){
-                            var n2 = n+1;
-                            var n3 = n+2;
-                            ctx.beginPath();
-                            ctx.moveTo(pts[n].x, pts[n].y);
-                            ctx.lineTo(pts[n2].x, pts[n2].y);
-                            ctx.stroke();
-                            ctx.closePath();
-
-                            ctx.beginPath();
-                            ctx.moveTo(pts[n2].x, pts[n2].y);
-                            ctx.lineTo(pts[n3].x, pts[n3].y);
-                            ctx.stroke();
-                            ctx.closePath();
+                            d(n,n+1);
+                            d(n+1,n+2)
                         }
-
-                        ctx.beginPath();
-                        ctx.moveTo(pts[n].x, pts[n].y);
-                        ctx.lineTo(pts[n+1].x, pts[n+1].y);
-                        ctx.stroke();
-                        ctx.closePath();
-
+                        d(n,n+1);
                     }
 
                     ctx.beginPath();
-                    ctx.moveTo( pts[1].x,pts[1].y );
+                    ctx.moveTo( p[1].x,p[1].y );
                     for (var i=2; i<pl-3; i+=3){
                         ctx.bezierCurveTo(
-                            pts[i].x,pts[i].y,
-                            pts[i+1].x,pts[i+1].y,
-                            pts[i+2].x,pts[i+2].y
+                            p[i].x,p[i].y,
+                            p[i+1].x,p[i+1].y,
+                            p[i+2].x,p[i+2].y
                         );
                     }
 
-                    if (flags & geometry.Spline.CLOSED){
+                    if (flags &  self.Spline.CLOSED){
                         ctx.bezierCurveTo(
-                            pts[pl-1].x,pts[pl-1].y,
-                            pts[0].x,pts[0].y,
-                            pts[1].x,pts[1].y
+                            p[pl-1].x,p[pl-1].y,
+                            p[0].x,p[0].y,
+                            p[1].x,p[1].y
                         );
                     }
 
-                    if (flags & geometry.Spline.FILL){
+                    if (flags &  self.Spline.FILL){
                         ctx.fill();
                     }
 
-                    if (flags & geometry.Spline.STROKE){
+                    if (flags &  self.Spline.STROKE){
                         ctx.stroke();
                     }
 
@@ -442,8 +417,7 @@
                 else{
                     throw new Error('not enough spline points');
                 }
-            },
-
+            };
 
             /**
              * translates and / or scales a spline based on the specified bounding points
@@ -453,13 +427,14 @@
              * @param {lola.geometry.Point} newMax
              * @param {Boolean|undefined} flipX
              * @param {Boolean|undefined} flipY
+             * @return {lola.geometry.Spline}
              */
-            normalize: function( oldMin, oldMax, newMin, newMax, flipX, flipY ){
+            this.normalize = function( oldMin, oldMax, newMin, newMax, flipX, flipY ){
 
                 flipX = flipX === true;
                 flipY = flipY === true;
 
-                var norm = new self.Spline();
+                var norm = new  self.Spline();
                 var spts = this.getPoints();
                 var l = spts.length;
                 var oldSize = oldMax.subtract( oldMin );
@@ -489,8 +464,15 @@
                 }
 
                 return norm;
-            }
+            };
+
+
+            return this;
         };
+        this.Spline.CLOSED = 0x1;
+        this.Spline.FILL = 0x2;
+        this.Spline.STROKE = 0x4;
+        this.Spline.CONTROLS =0x8;
 
         /**
          * SplinePoint class
@@ -503,42 +485,24 @@
          * @param exitAngle
          */
         this.SplinePoint = function( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle ) {
-            return this.init( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle );
-        };
-        this.SplinePoint.prototype = {
 
             /**
              * splinepoint anchor point
              * @type {lola.geometry.Point|undefined}
              */
-            anchor: undefined,
+            var anchor;
 
             /**
              * splinepoint entry vector
              * @type {lola.geometry.Vector|undefined}
              */
-            entry: undefined,
+            var entry;
 
             /**
              * splinepoint exit vector
              * @type {lola.geometry.Vector|undefined}
              */
-            exit: undefined,
-
-            /**
-             * initialization function
-             * @param ax
-             * @param ay
-             * @param es
-             * @param ea
-             * @param xs
-             * @param xa
-             */
-            init: function (ax, ay, es, ea, xs, xa){
-                this.anchor = new lola.geometry.Point( ax, ay );
-                this.entry = new lola.geometry.Vector( es, ea );
-                this.exit = new lola.geometry.Vector( xs, xa==undefined?ea:xa );
-            },
+            var exit;
 
             /**
              * sets the SplinePont's entry and exit angles
@@ -546,36 +510,40 @@
              * @param {Number} entryAngle
              * @param {Number|undefined} exitAngle
              */
-            setAngle: function( entryAngle, exitAngle) {
-                this.entry.angle = entryAngle;
-                this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
-            },
-
+            this.setAngle = function( entryAngle, exitAngle) {
+                entry.angle = entryAngle;
+                exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+            };
 
             /**
              * gets the spline point's anchor
              * @return {lola.geometry.Point}
              */
-            getAnchor: function(){
-                return this.anchor;
-            },
+            this.getAnchor =function(){
+                return anchor;
+            };
 
             /**
              * gets the spline point's entry control point
              * @return {lola.geometry.Point}
              */
-            getControl1: function(){
-                return lola.math.point.subtract( this.anchor, this.entry.toPoint());
-            },
+            this.getControl1 = function(){
+                return anchor.subtract( entry.toPoint() );
+            };
 
             /**
              * gets the spline point's exit control point
              * @return {lola.geometry.Point}
              */
-            getControl2: function(){
-                return lola.math.point.add( this.anchor, this.exit.toPoint() );
-            }
+            this.getControl2 = function(){
+                return anchor.add( exit.toPoint() );
+            };
 
+            //initialize
+            anchor = new self.Point( anchorX, anchorY );
+            entry = new self.Vector( entryStrength, entryAngle );
+            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle:exitAngle );
+            return this;
         };
 
         /**
@@ -585,38 +553,37 @@
          * @param angle
          */
         this.Vector = function( velocity, angle ){
-            this.velocity = velocity;
-            this.angle = angle;
-            return this;
-        };
-        this.Vector.prototype = {
+
             /**
              * velocity or length of the vector
              * @type {Number}
              */
-            velocity: undefined,
+            this.velocity = velocity;
 
             /**
              * angle of vector (horizontal pointing right is 0 radians)
              * @type {Number}
              */
-            angle: undefined,
+            this.angle = angle;
 
             /**
              * converts a vector to a (0,0) based point
              * @return {lola.geometry.Point}
              */
-            toPoint: function() {
-                return new lola.geometry.Point(
+            this.toPoint = function() {
+                return new self.Point(
                     Math.cos(this.angle)*this.velocity,
                     Math.sin(this.angle)*this.velocity
                 )
-            }
+            };
+
+            return this;
         };
 
     };
 
 	//register module
 	lola.registerModule( new Module() );
+
 
 })( lola );

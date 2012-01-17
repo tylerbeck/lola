@@ -1,164 +1,161 @@
 (function( lola ) {
-	var $ = lola;
-	/**
-	 * Drag Agent
-	 * @implements {lola.Module}
-	 * @memberof lola.agent
-	 */
-	var drag = {
+    var Agent = function(){
+        var self = this;
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * agent's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "drag";
 
-		//==================================================================
-		// Attributes
-		//==================================================================
+        /**
+         * agent's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = ['event','data','graphics','geometry'];
+
         /**
          * map of agent's clients
          * @private
          * @type {Object}
          */
-        clients: {},
+        var clients = {};
 
         /**
          * current drag target
          * @private
          */
-        target: null,
+        var target;
 
         /**
          * bounds
          * @private
          */
-        bounds: null,
+        var bounds;
 
         /**
          * dragging flag
          * @private
          */
-        dragging: false,
+        var dragging = false;
 
         /**
          * drag offset
          * @private
          */
-        offset: null,
+        var offset;
 
-		//==================================================================
-		// Methods
-		//==================================================================
-		/**
-		 * preinitializes module
-		 * @private
-		 * @return {void}
-		 */
-		preinitialize: function() {
-			lola.debug('lola.agent.drag::preinitialize');
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do agent preinitialization
-
-
-
-			//remove initialization method
-			delete lola.agent.drag.preinitialize;
-		},
-
-		/**
-		 * initializes module
-		 * @public
-		 * @return {void}
-		 */
-		initialize: function() {
-			lola.debug('lola.agent.drag::initialize');
-			//this framework is dependent on lola framework
-			if ( !lola ) throw new Error( 'lola not defined!' );
-
-			//do agent initialization
-            $(".draggable").assignAgent( this.getNamespace() );
-
-			//remove initialization method
-			delete lola.agent.drag.initialize;
-		},
-
-		/**
-		 * get module's namespace
-		 * @public
-		 * @return {String}
-		 */
-		getNamespace: function() {
-			return "drag";
-		},
-
-		/**
-		 * get module's dependencies
-		 * @public
-		 * @return {Array}s
-		 * @default []
-		 */
-		getDependencies: function() {
-			return ['event','data','graphics','geometry'];
-		},
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get agent's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
 
         /**
-         * signs a client
-         * @param {*} client
+         * get agent's dependencies
+         * @return {Array}
          */
-        sign: function( client ) {
-            var $client = $(client);
-            $client.identify();
-            if (this.clients[ client.id ] == null) {
-
-                //not a client yet
-                this.clients[ client.id ] = client;
-                $client.putData( {}, this.getNamespace() );
-
-                //add listeners
-                $client.addListener( 'mousedown', this.startDrag, true, undefined, this );
-
-            }
-        },
+        this.dependencies = function() {
+            return dependencies;
+        };
 
         /**
-         * drops a client
-         * @param {*} client
+         * set bounds
+         * @param xMin
+         * @param xMax
+         * @param yMin
+         * @param yMax
          */
-        drop: function( client ) {
-            var $client = $(client);
-            if (this.clients[ client.id ] ) {
-                $client.removeData( this.getNamespace() );
-
-                //remove listeners
-
-                delete this.clients[ client.id ];
-            }
-        },
-
-        setBounds: function( xMin, xMax, yMin, yMax) {
-            this.bounds = {
+        this.setBounds = function( xMin, xMax, yMin, yMax) {
+            bounds = {
                 xMin:xMin,
                 xMax:xMax,
                 yMin:yMin,
                 yMax:yMax
             };
-        },
-        getBounds: function() {
+        };
+
+        /**
+         * get bounds
+         * @return {Object}
+         */
+        this.getBounds = function() {
             return {
-                xMin:this.bounds.xMin,
-                xMax:this.bounds.xMax,
-                yMin:this.bounds.yMin,
-                yMax:this.bounds.yMax
+                xMin:bounds.xMin,
+                xMax:bounds.xMax,
+                yMin:bounds.yMin,
+                yMax:bounds.yMax
             };
-        },
+        };
 
-        resetBounds: function( xMin, xMax, yMin, yMax) {
-            this.bounds = null;
-        },
 
-        startDrag: function( event ) {
-            this.target = event.currentTarget;
-            this.offset = new lola.geometry.Point(-event.localX,-event.localY);
-            this.dragging = false;
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * signs a client
+         * @param {*} client
+         */
+        this.sign = function( client ) {
+            var $client = $(client);
+            $client.identify();
+            if ( clients[ client.id ] == null) {
+
+                //not a client yet
+                clients[ client.id ] = client;
+                $client.putData( {}, namespace );
+
+                //add listeners
+                $client.addListener( 'mousedown', startDrag, true, undefined, self );
+
+            }
+        };
+
+        /**
+         * drops a client
+         * @param {*} client
+         */
+        this.drop = function( client ) {
+            var $client = $(client);
+            if (clients[ client.id ] ) {
+                $client.removeData( namespace );
+
+                //remove listeners
+                $client.removeListener( 'mousedown', startDrag, true );
+                delete clients[ client.id ];
+            }
+        };
+
+        /**
+         * resets bounds
+         */
+        this.resetBounds = function() {
+            bounds = null;
+        };
+
+        /**
+         * drag start handler
+         * @param event
+         * @private
+         */
+        function startDrag( event ) {
+            target = event.currentTarget;
+            offset = new lola.geometry.Point(-event.localX,-event.localY);
+            dragging = false;
 
             var $target = $(event.currentTarget);
-            var data = $target.getData(this.getNamespace(), true );
+            var data = $target.getData(namespace, true );
             data.position = new lola.geometry.Point(event.globalX, event.globalY);
             data.parent = $target.parent();
             data.zIndex = $target.style('zIndex');
@@ -166,27 +163,31 @@
             $target.style('zIndex', 10000 );
             $target.style('cursor', 'none' );
 
+            $(document).addListener('mousemove', doDrag, true, undefined, self );
+            $(document).addListener('mouseup', endDrag, true, undefined, self );
+        }
 
-            $(document).addListener('mousemove', this.doDrag, true, undefined, this );
-            $(document).addListener('mouseup', this.endDrag, true, undefined, this );
-        },
+        /**
+         * do drag
+         * @param event
+         * @private
+         */
+        function doDrag( event ){
+            var $target = $(target);
 
-        doDrag: function( event ){
-            var $target = $(this.target);
-
-            if (!this.dragging) {
-                this.dragging = true;
+            if (!dragging) {
+                dragging = true;
                 $target.style('position', 'absolute');
-                $('body').appendChild(this.target);
+                $('body').appendChild(target);
                 $target.trigger( "dragstart", false, false );
             }
 
-            var newX = event.globalX + this.offset.x;
-            var newY = event.globalY + this.offset.y;
+            var newX = event.globalX + offset.x;
+            var newY = event.globalY + offset.y;
 
-            if (this.bounds) {
-                newX = lola.math.normalizeRange( this.bounds.xMin, newX, this.bounds.xMax );
-                newY = lola.math.normalizeRange( this.bounds.yMin, newY, this.bounds.yMax );
+            if (bounds) {
+                newX = lola.math.normalizeRange( bounds.xMin, newX, bounds.xMax );
+                newY = lola.math.normalizeRange( bounds.yMin, newY, bounds.yMax );
             }
             else {
                 newX = event.globalX;
@@ -197,25 +198,35 @@
             $target.style('top',newY+'px');
 
             $target.trigger( "dragmove", false, false, { x:newX, y:newY } );
-        },
+        }
 
-        endDrag: function( event ){
-            var $target = $(this.target);
-            var data = $target.getData(this.getNamespace(), true );
+        /**
+         * end drag handler
+         * @param event
+         * @private
+         */
+        function endDrag( event ){
+            var $target = $(target);
+            var data = $target.getData(namespace, true );
             $target.style('cursor', data.cursor );
             $target.style('zIndex', data.zIndex );
-            this.dragging = false;
-            this.target = null;
-            $(document).removeListener('mousemove', this.doDrag, true );
-            $(document).removeListener('mouseup', this.endDrag, true );
+            dragging = false;
+            target = null;
+            $(document).removeListener('mousemove', doDrag, true );
+            $(document).removeListener('mouseup', endDrag, true );
             $target.trigger( "dragend", false, false );
 
         }
 
-	};
+        this.initialize = function(){
+            lola(".draggable").assignAgent( namespace );
+        };
+
+    };
+
 
 	//register module
-	lola.agent.registerAgent( drag );
+	lola.agent.registerAgent( new Agent() );
 
 })( lola );
 

@@ -49,18 +49,18 @@
                     } );
 
                     //do agent initialization
-                    $("body").assignAgent( this.getNamespace() );
+                    $("body").assignAgent( this.namespace() );
 
 
                     //remove initialization method
                     delete lola.agent.page.initialize;
                 },
 
-                getNamespace: function() {
+                namespace: function() {
                     return "page";
                 },
 
-                getDependencies: function() {
+                dependencies: function() {
                     return ['graphics','chart','math','math.point'];
                 },
 
@@ -78,7 +78,7 @@
                         //this.spline = new lola.geometry.Spline([start, end], false);
 
                         //do setup
-                        $('canvas').register2dContext();
+                        $('canvas').registerContext();
                         this.drawGrid(400,400);
                         this.createPoints();
                         this.drawCurves();
@@ -165,7 +165,7 @@
                     g.setContext( c2.getContext('2d') );
                     g.applyStyle( (index == 0 || last)?'endPt':'middlePt' );
                     g.executeRoutine( 'point' );
-                    var c2p = lola.math.point.add( point.getAnchor(), -6 );
+                    var c2p = point.getAnchor().add( -6 );
                     $(c2).identify().
                             addClass('point').
                             style('top',c2p.y).
@@ -187,7 +187,7 @@
                         g.setContext( c1.getContext('2d') );
                         g.applyStyle( 'ctrlPt' );
                         g.executeRoutine( 'point' );
-                        var c1p = lola.math.point.add( point.getControl1(), -6 );
+                        var c1p = point.getControl1().add( -6 );
                         $(c1).identify().
                                 assignAgent('drag').
                                 addClass('point').
@@ -205,7 +205,7 @@
                         g.setContext( c3.getContext('2d') );
                         g.applyStyle( 'ctrlPt' );
                         g.executeRoutine( 'point' );
-                        var c3p = lola.math.point.add( point.getControl2(), -6);
+                        var c3p = point.getControl2().add( -6 );
                         $(c3).identify().
                                 assignAgent('drag').
                                 addClass('point').
@@ -279,13 +279,13 @@
                             break;
                         case "entry":
                             pnt = new lola.geometry.Point( $c1.style("left")+6, $c1.style("top")+6 );
-                            vct = lola.math.point.subtract( anchor, pnt ).toVector();
+                            vct = anchor.subtract( pnt ).toVector();
                             point.setAngle( vct.angle );
                             point.entry.velocity = vct.velocity;
                             break;
                         case "exit":
                             pnt = new lola.geometry.Point( $c3.style("left")+6, $c3.style("top")+6 );
-                            vct = lola.math.point.subtract( pnt, anchor ).toVector();
+                            vct = pnt.subtract( anchor ).toVector();
                             point.setAngle( vct.angle );
                             point.exit.velocity = vct.velocity;
                             break;
@@ -411,12 +411,14 @@
                 },
 
                 getSplineSamplingFunction: function(){
-                    var normSpline =  lola.geometry.normalizeSpline( this.spline,
-                                                                    {x:50,y:150},
-                                                                    {x:450, y:350},
-                                                                    {x:0,y:0},
-                                                                    {x:1, y:1},
-                                                                    false, true );
+                    var p = function(x,y){
+                        return new lola.geometry.Point(x,y);
+                    }
+                    var normSpline =  this.spline.normalize( p(50,150),
+                                                             p(450,350),
+                                                             p(0,0),
+                                                             p(1,1),
+                                                             false, true );
 
                     lola.easing.register( 'custom', normSpline, 1000, true );
 

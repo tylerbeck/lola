@@ -75,7 +75,7 @@
          */
          function createMap() {
 
-            var objTypes = "String Number Date Array Boolean RegExp Function Object";
+            var objTypes = "String Number Date Array Boolean RegExp Function Object Undefined Null";
             var tagTypes =  "a abbr acronym address applet area article aside audio "+
                 "b base basefont bdi bdo big blockquote body br button "+
                 "canvas caption center cite code col colgroup command "+
@@ -88,7 +88,7 @@
                 "label legend li link "+
                 "map mark menu meta meter "+
                 "nav noframes noscript "+
-                "object ol optgroup option output "+
+                "ol optgroup option output "+
                 "p param pre progress "+
                 "q "+
                 "rp rt ruby "+
@@ -168,13 +168,14 @@
          * @return {String}
          */
         this.get = function( object ) {
-            if ( object ) {
+            //if ( object ) {
                 var type = map[ Object.prototype.toString.call( object ) ];
                 if ( type )
                     return type;
                 return 'other';
-            }
-            return 'null';
+            //}
+            //else if ( object === undefined )
+            //return 'null';
         };
 
         this.isPrimitive = function( object ) {
@@ -204,11 +205,11 @@
              */
             isType: function( type, index ) {
                 if (index != undefined && index >= 0 ) {
-                    return self.get( this[index]) == type;
+                    return self.get( this[index]) === type;
                 }
                 else {
                     return this.every( function( item ){
-                        return self.get(item) == type;
+                        return self.get(item) === type;
                     } );
                 }
             },

@@ -123,7 +123,7 @@
         /**
          * samples a splines points for use in time based easing
          * @private
-         * @param {lola.geometry.spline} spline
+         * @param {lola.geometry.Spline} spline
          * @param {uint} resolution per spline section
          */
         function sampleSpline( spline, resolution ) {

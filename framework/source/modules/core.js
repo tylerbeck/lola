@@ -90,10 +90,10 @@
 
         /**
          * sets url Object
-         * @param {String} url
+         * @param {String} str
          */
-        this.setURL = function( url ){
-            url = new self.URL( url );
+        this.setURL = function( str ){
+            url = new self.URL( str );
             debugMode = url.vars['debug'] == "true";
         };
 

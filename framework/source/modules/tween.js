@@ -451,6 +451,89 @@
         };
 
         //==================================================================
+        // Tween Types
+        //==================================================================
+        this.addTweenType('simple', {
+                match: lola.regex.isNumber,
+                parse: function(val){
+                    return parseFloat( val );
+                },
+                canTween: function(a,b){
+                    return (a && b);
+                },
+                getDelta: function( to, from, method) {
+                    if( method ){
+                        return to;
+                    }
+                    else{
+                        return to - from;
+                    }
+                },
+                proxy: null
+            });
+
+        this.addTweenType('dimensional', {
+                match: lola.regex.isDimension,
+                    parse: function(val){
+                    var parts = String( val ).match( lola.regex.isDimension );
+                    return { value: parseFloat( parts[1] ), units: parts[2] };
+                },
+                canTween: function(a,b){
+                    return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
+                },
+                getDelta: function( to, from, method) {
+                    if( method ){
+                        return {value:to.value, units:to.units};
+                    }
+                    else{
+                        return {value:to.value - from.value, units:to.units};
+                    }
+                },
+                proxy: function( target, property, from, delta, progress ) {
+                    target[property] = (from.value + delta.value * progress) + delta.units;
+                }
+            });
+
+        this.addTweenType('color', {
+                match: lola.regex.isColor,
+                    parse: function(val){
+                    //console.log ('color.parse: ',val);
+                    var color = new lola.css.Color( val );
+                    //console.log( '    ', color.rgbValue );
+                    return color.getRgbValue();
+                },
+                canTween: function( a, b ) {
+                    //console.log ('color.canTween: ',( a && b ));
+                    return ( a && b );
+                },
+                getDelta: function( to, from, method ) {
+                    if( method ){
+                        //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
+                        return { r:to.r, g:to.g, b:to.b, a:to.a };
+                    }
+                    else{
+                        //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
+                        return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
+                    }
+                },
+
+                proxy: function( target, property, from, delta, progress ) {
+                    var r = ((from.r + delta.r * progress) * 255) | 0;
+                    var g = ((from.g + delta.g * progress) * 255) | 0;
+                    var b = ((from.b + delta.b * progress) * 255) | 0;
+                    var a = (from.a + delta.a * progress);
+                    //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
+
+                    if ( lola.support.colorAlpha )
+                        target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                    else
+                        target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
+                }
+            });
+
+
+
+        //==================================================================
         // Selection Methods
         //==================================================================
         /**

@@ -430,13 +430,13 @@ if ( !String.prototype.trim ) {
                 try {
                     if (!context)
                         context = document;
-                    //TODO Optimize: this can be made faster in most browsers
                     var nodeList =  context.querySelectorAll( selector );
                     var nl = nodeList.length;
                     for (i=0; i<nl; i++){
                         this[i] = nodeList.item(i);
                     }
                     this.length = i;
+
                 }
                 catch (e){
                     console.warn('Exception:', selector );
@@ -567,10 +567,10 @@ if ( !String.prototype.trim ) {
 
         /**
          * sets url Object
-         * @param {String} str
+         * @param {String} url
          */
-        this.setURL = function( str ){
-            url = new self.URL( str );
+        this.setURL = function( url ){
+            url = new self.URL( url );
             debugMode = url.vars['debug'] == "true";
         };
 
@@ -1199,17 +1199,16 @@ if ( !String.prototype.trim ) {
 
         /**
          * creates a sort function for property
-         * @private
          * @param {String} property
          * @return {Function}
          */
-        function getSortFunction( property ){
+        this.getSortFunction = function( property ){
             return function( a, b ) {
                 var x = a[property];
                 var y = b[property];
                 return ((x < y) ? -1 : ((x > y) ? 1 : 0));
             };
-        }
+        };
 
         /**
          * sort an array on a property
@@ -1217,7 +1216,7 @@ if ( !String.prototype.trim ) {
          * @param {String} property
          */
         this.sortOn = function( property, array ){
-            return array.sort( getSortFunction(property) );
+            return array.sort( lola.array.getSortFunction(property) );
         };
 
 
@@ -1338,7 +1337,7 @@ if ( !String.prototype.trim ) {
          */
          function createMap() {
 
-            var objTypes = "String Number Date Array Boolean RegExp Function Object Undefined Null";
+            var objTypes = "String Number Date Array Boolean RegExp Function Object";
             var tagTypes =  "a abbr acronym address applet area article aside audio "+
                 "b base basefont bdi bdo big blockquote body br button "+
                 "canvas caption center cite code col colgroup command "+
@@ -1351,7 +1350,7 @@ if ( !String.prototype.trim ) {
                 "label legend li link "+
                 "map mark menu meta meter "+
                 "nav noframes noscript "+
-                "ol optgroup option output "+
+                "object ol optgroup option output "+
                 "p param pre progress "+
                 "q "+
                 "rp rt ruby "+
@@ -1431,14 +1430,13 @@ if ( !String.prototype.trim ) {
          * @return {String}
          */
         this.get = function( object ) {
-            //if ( object ) {
+            if ( object ) {
                 var type = map[ Object.prototype.toString.call( object ) ];
                 if ( type )
                     return type;
                 return 'other';
-            //}
-            //else if ( object === undefined )
-            //return 'null';
+            }
+            return 'null';
         };
 
         this.isPrimitive = function( object ) {
@@ -1468,11 +1466,11 @@ if ( !String.prototype.trim ) {
              */
             isType: function( type, index ) {
                 if (index != undefined && index >= 0 ) {
-                    return self.get( this[index]) === type;
+                    return self.get( this[index]) == type;
                 }
                 else {
                     return this.every( function( item ){
-                        return self.get(item) === type;
+                        return self.get(item) == type;
                     } );
                 }
             },
@@ -4305,6 +4303,41 @@ if ( !String.prototype.trim ) {
             delete obj.style[ getProperty( style ) ];
         };
 
+        /**
+         * parses an HSL or HSLA color
+         * @param {String} val
+         * @return {Object}
+         */
+        this.parseHSLColor = function( val ) {
+            var hsla = { h:0, s:0, l:0, a:1 };
+            var parts = val.match( lola.type.rIsHSLColor );
+            if ( parts != null ) {
+                var v = parts[1].replace( /\s+/g, "" );
+                v = v.split( ',' );
+                hsla.h = parseColorPart( v[0], 360  );
+                hsla.s = parseColorPart( v[1], 1  );
+                hsla.l = parseColorPart( v[2], 1  );
+                hsla.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
+            }
+            return hsla;
+        };
+
+        /**
+         * parses color part value
+         * @private
+         * @param {String} val
+         * @return {Number}
+         */
+        function parseColorPart( val, divisor ) {
+            if ( val ) {
+                if ( val.indexOf( '%' ) > 0 )
+                    return parseFloat( val.replace( /%/g, "" ) ) / 100;
+                else
+                    return parseFloat( val ) / divisor;
+            }
+            return 0;
+        }
+
 
 
         //==================================================================
@@ -4402,55 +4435,50 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         this.Color = function( value ){
-            /**
-             * rgba color value object
-             * @private
-             */
-            var rgb;
+            return this.init(value);
+        };
+        this.Color.prototype = {
 
             /**
-             * hsl color value object
+             * output color type
              * @private
              */
-            var hsl;
+            outputType: "",
 
             /**
              * hex color value object
-             * @private
+             * @public
              */
-            var hex;
+            hexValue: null,
 
             /**
-             * get rgba object
-             * @return {Object}
+             * rgba color value object
+             * @public
              */
-            this.getRgbValue = function(){
-                return rgb;
-            };
+            rgbValue: null,
 
             /**
-             * get hsla object
-             * @return {Object}
+             * hsla color value object
+             * @public
              */
-            this.getHslValue = function(){
-                return hsl;
-            };
+            hslValue: null,
 
             /**
-             * get hsla object
-             * @return {Object}
+             * class initialization function
+             * @param value
              */
-            this.getHexValue = function(){
-                return hex;
-            };
+            init: function( value ){
+                if (value) this.parseString( value );
+                return this;
+            },
 
             /**
              * parses style color values returns rgba object
              * @public
              * @param {String} val
              */
-            function parseString( val ) {
-
+            parseString: function( val ) {
+                //console.info('parseColor ------ ');
                 var cparts = val.match( lola.regex.isColor );
                 if ( cparts ) {
                     var parts,rgb,hsl,hex;
@@ -4459,141 +4487,111 @@ if ( !String.prototype.trim ) {
                             parts = val.match( lola.regex.isHexColor );
                             hex = ( parts != null ) ? parts[1] : "000000";
                             rgb = lola.math.color.hex2rgb(hex);
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                            hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
                             rgb.a = hsl.a = 1;
                             break;
                         case 'rgb':
                         case 'rgba':
-                            rgb = parseRGBColorString( val );
-                            hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                            rgb = self.parseRGBColor( val );
+                            hsl = lola.math.color.rgb2hsl(rgb.r,rgb.g,rgb.b);
+                            hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
+                            hsl.a = rgb.a;
+                            this.valueType = "rgba";
                             break;
                         case 'hsl':
                         case 'hsla':
-                            hsl = parseHSLColorString( val );
+                            hsl = self.parseHSLColor( val );
                             rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                            hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
+                            hex = lola.math.color.rgb2hex(rgb.r,rgb.g,rgb.b);
                             rgb.a = hsl.a;
+                            this.valueType = "hsla";
                             break;
                     }
+
+                    this.hexValue = hex;
+                    this.rgbValue = rgb;
+                    this.hslValue = hsl;
                 }
-            }
+            },
 
             /**
-             * parses an HSL or HSLA color
-             * @param {String} val
-             * @private
-             * @return {Object}
+             * outputs a css color string of the type specified in outputType
+             * @return {String}
              */
-            function parseHSLColorString( val ) {
-                var c = { h:0, s:0, l:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
-                if ( parts != null ) {
-                    var v = parts[1].replace( /\s+/g, "" );
-                    v = v.split( ',' );
-                    c.h = parseColorPart( v[0], 360  );
-                    c.s = parseColorPart( v[1], 1  );
-                    c.l = parseColorPart( v[2], 1  );
-                    c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
-                }
-                return c;
-            }
-
-            /**
-             * parses an RGB or RGBA color
-             * @param {String} val
-             * @private
-             * @return {Object}
-             */
-            function parseRGBColorString( val ) {
-                var c = { r:0, g:0, b:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
-                if ( parts != null ) {
-                    var v = parts[1].replace( /\s+/g, "" );
-                    v = v.split( ',' );
-                    c.h = parseColorPart( v[0], 255  );
-                    c.s = parseColorPart( v[1], 255  );
-                    c.l = parseColorPart( v[2], 255  );
-                    c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
-                }
-                return c;
-            }
-
-            /**
-             * parses color part value
-             * @private
-             * @param {String} val
-             * @return {Number}
-             */
-            function parseColorPart( val, divisor ) {
-                if ( val ) {
-                    if ( val.indexOf( '%' ) > 0 )
-                        return parseFloat( val.replace( /%/g, "" ) ) / 100;
-                    else
-                        return parseFloat( val ) / divisor;
-                }
-                return 0;
-            }
+            toString: function() {
+                if (this.outputType == "#")
+                    return this.toHexString();
+                else if (this.outputType == "hsl")
+                    return this.toHslString();
+                else if (this.outputType == "hsla")
+                    return this.toHslaString();
+                else if (this.outputType == "rgb")
+                    return this.toRgbString();
+                else
+                    return this.toRgbaString();
+            },
 
             /**
              * returns the uint value of color object
              * @return {uint}
              */
-            this.toInt = function() {
-                return parseInt("0x" + hex );
-            };
+            toInt: function() {
+                return parseInt("0x" + this.hexValue );
+            },
 
             /**
              * outputs a css color hex string
              * @return {String}
              */
-            this.toHexString = function() {
-                return "#" + hex;
-            };
+            toHexString: function() {
+                return "#" + this.hexValue;
+            },
 
             /**
              * outputs a css color hsl string
-             * @param {Boolean} alpha
              * @return {String}
              */
-            this.toHslString = function( alpha ) {
-                return (alpha?"hsla":"hsl")+"("+
-                    Math.round( hsl.h * 360 )+","+
-                    Math.round( hsl.s * 100 )+"%,"+
-                    Math.round( hsl.l * 100 )+"%"+
-                    (alpha?","+hsl.a:"")+")";
-            };
+            toHslString: function() {
+                return "hsl("+
+                    Math.round( this.hslValue.h * 360 )+","+
+                    Math.round( this.hslValue.s * 100 )+"%,"+
+                    Math.round( this.hslValue.l * 100 )+"%)";
+            },
 
             /**
              * outputs a css color hsla string
              * @return {String}
              */
-            this.toHslaString = function() {
-                return self.toHslString( true );
-            };
+            toHslaString: function() {
+                return "hsla("+
+                    Math.round( this.hslValue.h * 360 )+","+
+                    Math.round( this.hslValue.s * 100 )+"%,"+
+                    Math.round( this.hslValue.l * 100 )+"%,"+
+                    this.hslValue.a+"%)";
+            },
 
             /**
              * outputs a css color rgb string
-             * @param {Boolean} alpha
              * @return {String}
              */
-            this.toRgbString = function(alpha) {
-                return (alpha?"rgba":"rgb")+"("+
-                    Math.round( rgb.r * 255 )+","+
-                    Math.round( rgb.g * 255 )+","+
-                    Math.round( rgb.b * 255 )+
-                    (alpha?","+rgb.a:"")+")";
-            };
+            toRgbString: function() {
+                return "rgb("+
+                    Math.round( this.rgbValue.r * 255 )+","+
+                    Math.round( this.rgbValue.g * 255 )+","+
+                    Math.round( this.rgbValue.b * 255 )+")";
+            },
 
             /**
              * outputs a css color rgba string
              * @return {String}
              */
-            this.toRgbaString = function() {
-                return self.toRgbString(true)
-            };
-
-            return this.init(value);
+            toRgbaString: function() {
+                return "rgba("+
+                    Math.round( this.rgbValue.r * 255 )+","+
+                    Math.round( this.rgbValue.g * 255 )+","+
+                    Math.round( this.rgbValue.b * 255 )+","+
+                    this.rgbValue.a+")";
+            }
         };
 
     };
@@ -6536,7 +6534,7 @@ if ( !String.prototype.trim ) {
             var point = new self.Point( elem.offsetLeft, elem.offsetTop );
             if ( absolute && elem.offsetParent ) {
                 var parent = self.getOffset( elem.offsetParent, true );
-                point = point.add( parent );
+                point = lola.math.point.add( point, parent );
             }
             return point;
         };
@@ -6642,7 +6640,7 @@ if ( !String.prototype.trim ) {
             toVector: function(){
                 var a = Math.atan2( this.y, this.x );
                 var v = Math.sqrt( this.x*this.x + this.y*this.y );
-                return new self.Vector(v,a);
+                return new lola.geometry.Vector(v,a);
             },
 
             /**
@@ -6753,18 +6751,27 @@ if ( !String.prototype.trim ) {
          * @param {uint} flags
          */
         this.Spline = function( points, flags ){
+            this.points = points?points:[];
+            this.flags = flags == undefined ? 0 : flags;
+            return this;
+        };
+        this.Spline.CLOSED = 0x1;
+        this.Spline.FILL = 0x2;
+        this.Spline.STROKE = 0x4;
+        this.Spline.CONTROLS =0x8;
+        this.Spline.prototype = {
             /**
              * array of {lola.geometry.SplinePoint}
              * @type {Array}
              * @private
              */
-            points = points?points:[];
+            points: [],
 
             /**
              * spline flags
              * @type {Boolean}
              */
-            flags = flags == undefined ? 0 : flags;
+            flags: 0x0,
 
             /**
              * adds a point at the specified index.
@@ -6772,106 +6779,122 @@ if ( !String.prototype.trim ) {
              * @param {lola.geometry.SplinePoint} splinePoint
              * @param {uint|undefined} index
              */
-            this.addPoint = function( splinePoint, index ){
+            addPoint: function( splinePoint, index ){
                 if ( index == undefined )
-                    index = points.length;
+                    index = this.points.length;
 
-                points.splice(index,0,splinePoint);
-            };
+                this.points.splice(index,0,splinePoint);
+            },
 
             /**
              * removes the point at the specified index.
              * @param {uint} index
              */
-            this.removePoint = function( index ){
+            removePoint: function( index ){
                 if ( index != undefined )
-                    points.splice(index,1,undefined);
-            };
+                    this.points.splice(index,1,undefined);
+            },
 
             /**
              * updates/replaces a point at the specified index.
              * @param {lola.geometry.SplinePoint} splinePoint
              * @param {uint} index
              */
-            this.updatePoint = function( splinePoint, index ){
+            updatePoint: function( splinePoint, index ){
                 if ( index != undefined )
-                    points.splice(index,1,splinePoint);
-            };
+                    this.points.splice(index,1,splinePoint);
+            },
 
             /**
              * gets the splinePoint at the specified index.
              * @param {uint} index
              */
-            this.getPoint = function( index ){
-                if ( index < points.length )
-                    return points[ index ];
-                return null;
-            };
+            getPoint: function( index ){
+                return this.points[ index ];
+            },
 
             /**
              * gets all splinePoints.
              */
-            this.getPoints = function(){
-                return points;
-            };
+            getPoints: function(){
+                return this.points;
+            },
 
             /**
              * draws spline
              * @param {Boolean} close draw a closed spline
              * @param {Object|String|undefined} ctx
              */
-            this.draw = function( ctx, flgs ){
-                flgs = flgs == undefined ? flags : flgs;
-                var sl = points.length;
+            draw: function( ctx, flags ){
+                flags = flags == undefined ? this.flags : flags;
+                var sl = this.points.length;
                 //console.log('drawSpline: '+sl);
                 if (sl > 1) {
-                    var p = [];
+                    var pts = [];
                     //console.log(pts);
-                    points.forEach( function(item){
-                        p.push( item.getControl1(),item.getAnchor(),item.getControl2() );
+                    this.points.forEach( function(item){
+                        pts.push( item.getControl1() );
+                        pts.push( item.getAnchor() );
+                        pts.push( item.getControl2() );
                     });
-                    var pl = p.length;
+                    var pl = pts.length;
 
 
-                    if (flgs &  self.Spline.CONTROLS){
-                        var d = function(q,r){
+                    if (flags & geometry.Spline.CONTROLS){
+
+                        ctx.beginPath();
+                        ctx.moveTo(pts[1].x, pts[1].y);
+                        ctx.lineTo(pts[2].x, pts[2].y);
+                        ctx.stroke();
+                        ctx.closePath();
+
+                        for (var n=3; n<pl-3; n+=3){
+                            var n2 = n+1;
+                            var n3 = n+2;
                             ctx.beginPath();
-                            ctx.moveTo(p[q].x, p[q].y);
-                            ctx.lineTo(p[r].x, p[r].y);
+                            ctx.moveTo(pts[n].x, pts[n].y);
+                            ctx.lineTo(pts[n2].x, pts[n2].y);
                             ctx.stroke();
                             ctx.closePath();
-                        };
-                        d(1,2);
-                        for (var n=3; n<pl-3; n+=3){
-                            d(n,n+1);
-                            d(n+1,n+2)
+
+                            ctx.beginPath();
+                            ctx.moveTo(pts[n2].x, pts[n2].y);
+                            ctx.lineTo(pts[n3].x, pts[n3].y);
+                            ctx.stroke();
+                            ctx.closePath();
                         }
-                        d(n,n+1);
+
+                        ctx.beginPath();
+                        ctx.moveTo(pts[n].x, pts[n].y);
+                        ctx.lineTo(pts[n+1].x, pts[n+1].y);
+                        ctx.stroke();
+                        ctx.closePath();
+
                     }
 
                     ctx.beginPath();
-                    ctx.moveTo( p[1].x,p[1].y );
+                    ctx.moveTo( pts[1].x,pts[1].y );
                     for (var i=2; i<pl-3; i+=3){
                         ctx.bezierCurveTo(
-                            p[i].x,p[i].y,
-                            p[i+1].x,p[i+1].y,
-                            p[i+2].x,p[i+2].y
+                            pts[i].x,pts[i].y,
+                            pts[i+1].x,pts[i+1].y,
+                            pts[i+2].x,pts[i+2].y
                         );
                     }
 
-                    if (flags &  self.Spline.CLOSED){
+                    if (flags & geometry.Spline.CLOSED){
                         ctx.bezierCurveTo(
-                            p[pl-1].x,p[pl-1].y,
-                            p[0].x,p[0].y,
-                            p[1].x,p[1].y
+                            pts[pl-1].x,pts[pl-1].y,
+                            pts[0].x,pts[0].y,
+                            pts[1].x,pts[1].y
                         );
                     }
 
-                    if (flags &  self.Spline.FILL){
+                    if (flags & geometry.Spline.FILL){
                         ctx.fill();
                     }
 
-                    if (flags &  self.Spline.STROKE){
+                    if (flags & geometry.Spline.STROKE){
                         ctx.stroke();
                     }
 
@@ -6881,7 +6904,8 @@ if ( !String.prototype.trim ) {
                 else{
                     throw new Error('not enough spline points');
                 }
-            };
+            },
+
 
             /**
              * translates and / or scales a spline based on the specified bounding points
@@ -6891,14 +6915,13 @@ if ( !String.prototype.trim ) {
              * @param {lola.geometry.Point} newMax
              * @param {Boolean|undefined} flipX
              * @param {Boolean|undefined} flipY
-             * @return {lola.geometry.Spline}
              */
-            this.normalize = function( oldMin, oldMax, newMin, newMax, flipX, flipY ){
+            normalize: function( oldMin, oldMax, newMin, newMax, flipX, flipY ){
 
                 flipX = flipX === true;
                 flipY = flipY === true;
 
-                var norm = new  self.Spline();
+                var norm = new self.Spline();
                 var spts = this.getPoints();
                 var l = spts.length;
                 var oldSize = oldMax.subtract( oldMin );
@@ -6928,15 +6951,8 @@ if ( !String.prototype.trim ) {
                 }
 
                 return norm;
-            };
-
-
-            return this;
+            }
         };
-        this.Spline.CLOSED = 0x1;
-        this.Spline.FILL = 0x2;
-        this.Spline.STROKE = 0x4;
-        this.Spline.CONTROLS =0x8;
 
         /**
          * SplinePoint class
@@ -6949,24 +6965,42 @@ if ( !String.prototype.trim ) {
          * @param exitAngle
          */
         this.SplinePoint = function( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle ) {
+            return this.init( anchorX, anchorY, entryStrength, entryAngle, exitStrength, exitAngle );
+        };
+        this.SplinePoint.prototype = {
 
             /**
              * splinepoint anchor point
              * @type {lola.geometry.Point|undefined}
              */
-            var anchor;
+            anchor: undefined,
 
             /**
              * splinepoint entry vector
              * @type {lola.geometry.Vector|undefined}
              */
-            var entry;
+            entry: undefined,
 
             /**
              * splinepoint exit vector
              * @type {lola.geometry.Vector|undefined}
              */
-            var exit;
+            exit: undefined,
+
+            /**
+             * initialization function
+             * @param ax
+             * @param ay
+             * @param es
+             * @param ea
+             * @param xs
+             * @param xa
+             */
+            init: function (ax, ay, es, ea, xs, xa){
+                this.anchor = new lola.geometry.Point( ax, ay );
+                this.entry = new lola.geometry.Vector( es, ea );
+                this.exit = new lola.geometry.Vector( xs, xa==undefined?ea:xa );
+            },
 
             /**
              * sets the SplinePont's entry and exit angles
@@ -6974,40 +7008,36 @@ if ( !String.prototype.trim ) {
              * @param {Number} entryAngle
              * @param {Number|undefined} exitAngle
              */
-            this.setAngle = function( entryAngle, exitAngle) {
-                entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle:exitAngle;
-            };
+            setAngle: function( entryAngle, exitAngle) {
+                this.entry.angle = entryAngle;
+                this.exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+            },
+
 
             /**
              * gets the spline point's anchor
              * @return {lola.geometry.Point}
              */
-            this.getAnchor =function(){
-                return anchor;
-            };
+            getAnchor: function(){
+                return this.anchor;
+            },
 
             /**
              * gets the spline point's entry control point
              * @return {lola.geometry.Point}
              */
-            this.getControl1 = function(){
-                return anchor.subtract( entry.toPoint() );
-            };
+            getControl1: function(){
+                return lola.math.point.subtract( this.anchor, this.entry.toPoint());
+            },
 
             /**
              * gets the spline point's exit control point
              * @return {lola.geometry.Point}
              */
-            this.getControl2 = function(){
-                return anchor.add( exit.toPoint() );
-            };
+            getControl2: function(){
+                return lola.math.point.add( this.anchor, this.exit.toPoint() );
+            }
 
-            //initialize
-            anchor = new self.Point( anchorX, anchorY );
-            entry = new self.Vector( entryStrength, entryAngle );
-            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle:exitAngle );
-            return this;
         };
 
         /**
@@ -7017,38 +7047,39 @@ if ( !String.prototype.trim ) {
          * @param angle
          */
         this.Vector = function( velocity, angle ){
-
+            this.velocity = velocity;
+            this.angle = angle;
+            return this;
+        };
+        this.Vector.prototype = {
             /**
              * velocity or length of the vector
              * @type {Number}
              */
-            this.velocity = velocity;
+            velocity: undefined,
 
             /**
              * angle of vector (horizontal pointing right is 0 radians)
              * @type {Number}
              */
-            this.angle = angle;
+            angle: undefined,
 
             /**
              * converts a vector to a (0,0) based point
              * @return {lola.geometry.Point}
              */
-            this.toPoint = function() {
-                return new self.Point(
+            toPoint: function() {
+                return new lola.geometry.Point(
                     Math.cos(this.angle)*this.velocity,
                     Math.sin(this.angle)*this.velocity
                 )
-            };
-
-            return this;
+            }
         };
 
     };
 
 	//register module
 	lola.registerModule( new Module() );
-
 
 })( lola );
 /***********************************************************************
@@ -7262,9 +7293,9 @@ if ( !String.prototype.trim ) {
          */
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );
-            var sty = (typeof style == "string") ?  styles[ style ] || reset : style;
+            var styles = (typeof style == "string") ?  styles[ style ] || reset : style;
             lola.util.copyPrimitives( reset, ctx );
-            lola.util.copyPrimitives( sty, ctx );
+            lola.util.copyPrimitives( styles, ctx );
         };
 
         /**
@@ -7286,11 +7317,7 @@ if ( !String.prototype.trim ) {
             ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         };
 
-        function copyContextMethod( prop ){
-            self[ prop ] = function(){
-                context[prop].apply( context, arguments );
-            }
-        }
+
         //==================================================================
         // Selection Methods
         //==================================================================
@@ -7317,16 +7344,21 @@ if ( !String.prototype.trim ) {
         //get reset context
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
-        for ( var prop in ctx ){
-            if ( lola.type.isPrimitive( ctx[ prop ] ) ){
-                reset[ prop ] = ctx[ prop ];
+        for ( var k in ctx ){
+            if ( lola.type.isPrimitive( ctx[k] ) ){
+                reset[ k ] = ctx[k];
             }
-            else if (lola.type.get( ctx[prop] ) == 'function'){
-                copyContextMethod( prop );
-            }
+            /*else if ( lola.type.get(ctx[k]) == "array"){
+                if ( !this[k] ){
+                    lola.evaluate( "lola.graphics."+k+" = function(){"+
+                        "this.ctx."+k+".apply( this.ctx, arguments );"+
+                        "}");
+                }
+            }*/
         }
 
     };
+
 
 	//register module
 	lola.registerModule( new Module() );
@@ -7457,7 +7489,7 @@ if ( !String.prototype.trim ) {
         /**
          * samples a splines points for use in time based easing
          * @private
-         * @param {lola.geometry.Spline} spline
+         * @param {lola.geometry.spline} spline
          * @param {uint} resolution per spline section
          */
         function sampleSpline( spline, resolution ) {
@@ -8045,89 +8077,6 @@ if ( !String.prototype.trim ) {
         };
 
         //==================================================================
-        // Tween Types
-        //==================================================================
-        this.addTweenType('simple', {
-                match: lola.regex.isNumber,
-                parse: function(val){
-                    return parseFloat( val );
-                },
-                canTween: function(a,b){
-                    return (a && b);
-                },
-                getDelta: function( to, from, method) {
-                    if( method ){
-                        return to;
-                    }
-                    else{
-                        return to - from;
-                    }
-                },
-                proxy: null
-            });
-
-        this.addTweenType('dimensional', {
-                match: lola.regex.isDimension,
-                    parse: function(val){
-                    var parts = String( val ).match( lola.regex.isDimension );
-                    return { value: parseFloat( parts[1] ), units: parts[2] };
-                },
-                canTween: function(a,b){
-                    return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
-                },
-                getDelta: function( to, from, method) {
-                    if( method ){
-                        return {value:to.value, units:to.units};
-                    }
-                    else{
-                        return {value:to.value - from.value, units:to.units};
-                    }
-                },
-                proxy: function( target, property, from, delta, progress ) {
-                    target[property] = (from.value + delta.value * progress) + delta.units;
-                }
-            });
-
-        this.addTweenType('color', {
-                match: lola.regex.isColor,
-                    parse: function(val){
-                    //console.log ('color.parse: ',val);
-                    var color = new lola.css.Color( val );
-                    //console.log( '    ', color.rgbValue );
-                    return color.getRgbValue();
-                },
-                canTween: function( a, b ) {
-                    //console.log ('color.canTween: ',( a && b ));
-                    return ( a && b );
-                },
-                getDelta: function( to, from, method ) {
-                    if( method ){
-                        //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
-                        return { r:to.r, g:to.g, b:to.b, a:to.a };
-                    }
-                    else{
-                        //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
-                        return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
-                    }
-                },
-
-                proxy: function( target, property, from, delta, progress ) {
-                    var r = ((from.r + delta.r * progress) * 255) | 0;
-                    var g = ((from.g + delta.g * progress) * 255) | 0;
-                    var b = ((from.b + delta.b * progress) * 255) | 0;
-                    var a = (from.a + delta.a * progress);
-                    //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
-
-                    if ( lola.support.colorAlpha )
-                        target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
-                    else
-                        target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
-                }
-            });
-
-
-
-        //==================================================================
         // Selection Methods
         //==================================================================
         /**
@@ -8318,95 +8267,113 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         this.Grid = function(x,y,width,height,spacing,flags){
+            return this.init(x,y,width,height,spacing,flags);
+        };
+        this.Grid.HORIZONTAL = 0x1;
+        this.Grid.VERTICAL = 0x2;
+        this.Grid.prototype = {
+            x:0,
+            y:0,
+            width:100,
+            height:100,
+            spacing:10,
+            flags:3,
+            init: function(x,y,width,height,spacing,flags){
+                this.x = x || 0;
+                this.y = y || 0;
+                this.width = width || 100;
+                this.height = height || 100;
+                this.spacing = spacing || 10;
+                this.flags = (flags==undefined)?3:flags;
 
-            function init(x,y,width,height,spacing,flags){
-                x = x || 0;
-                y = y || 0;
-                width = width || 100;
-                height = height || 100;
-                spacing = spacing || 10;
-                flags = (flags==undefined)?3:flags;
-            }
+                return this;
+            },
 
-            this.draw = function( ctx, flgs ){
-                flgs = flgs == undefined ? flags : flgs;
+            draw: function( ctx, flags ){
+                flags = flags == undefined ? this.flags : flags;
 
                 var i;
                 //vertical
-                if (flgs & self.Grid.VERTICAL){
-                    for (i=x+spacing; i<=width+x; i+=spacing){
+                if (flags & self.Grid.VERTICAL){
+                    for (i=this.x+this.spacing; i<=this.width+this.x; i+=this.spacing){
                         ctx.beginPath();
-                        ctx.moveTo(i,y);
-                        ctx.lineTo(i,y+height);
+                        ctx.moveTo(i,this.y);
+                        ctx.lineTo(i,this.y+this.height);
                         ctx.stroke();
                         ctx.closePath();
                     }
                 }
                 //horizontal
-                if (flgs & self.Grid.HORIZONTAL){
-                    for (i=y+spacing; i<=height+y; i+=spacing){
+                if (flags & self.Grid.HORIZONTAL){
+                    for (i=this.y+this.spacing; i<=this.height+this.y; i+=this.spacing){
                         ctx.beginPath();
-                        ctx.moveTo(x,i);
-                        ctx.lineTo(x+width,i);
+                        ctx.moveTo(this.x,i);
+                        ctx.lineTo(this.x+this.width,i);
                         ctx.stroke();
                         ctx.closePath();
                     }
                 }
-            };
-
-            init(x,y,width,height,spacing,flags);
-
-            return this;
+            }
         };
-        this.Grid.HORIZONTAL = 0x1;
-        this.Grid.VERTICAL = 0x2;
 
 
         this.Axis =function(x,y,size,label,labelOffset,flags ){
-            function init(x,y,size,label,labelOffset,flags){
-                x = x || 0;
-                y = y || 0;
-                size = size || 100;
-                label = label;
-                if( labelOffset ) labelOffset = labelOffset;
-                flags = (flags==undefined)?0x2:flags;
-            }
+            return this.init(x,y,size,label,labelOffset,flags);
+        };
+        this.Axis.VERTICAL = 0x1;
+        this.Axis.prototype = {
+            x:0,
+            y:0,
+            size: 100,
+            label: undefined,
+            labelOffset: {x:0,y:0},
+            flags: 0x2,
+            init: function(x,y,size,label,labelOffset,flags){
+                this.x = x || 0;
+                this.y = y || 0;
+                this.size = size || 100;
+                this.label = label;
+                if( labelOffset ) this.labelOffset = labelOffset;
+                this.flags = (flags==undefined)?0x0:flags;
+                return this;
+            },
 
-            this.draw = function( ctx, flgs ){
-                flgs = flgs == undefined ? flags : flgs;
+            draw: function( ctx, flags ){
+                flags = flags == undefined ? this.flags : flags;
                 ctx.beginPath();
-                ctx.moveTo( x, y );
-                if (flgs & self.Axis.VERTICAL){
+                ctx.moveTo( this.x, this.y );
+                if (flags & self.Axis.VERTICAL){
                     //vertical axis
-                    ctx.lineTo( x, y+size );
+                    ctx.lineTo( this.x, this.y+this.size );
                 }
                 else {
                     //horizontal axis
-                    ctx.lineTo( x+size, y );
+                    ctx.lineTo( this.x+this.size, this.y );
                 }
                 ctx.stroke();
                 ctx.closePath();
 
-                if (label) {
-                    if (flgs & self.Axis.VERTICAL) {
+                if (this.label) {
+                    if (flags & self.Axis.VERTICAL) {
                         //label at bottom
                         ctx.textAlign = "center";
-                        ctx.fillText( label, x + labelOffset.x, y + size + labelOffset.y );
+                        ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.size + this.labelOffset.y );
                     }
                     else {
                         ctx.textAlign = "right";
-                        ctx.fillText( label, x + labelOffset.x, y + labelOffset.y );
+                        ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.labelOffset.y );
                     }
                 }
-            };
-
-
-            init(x,y,size,label,labelOffset,flags);
-            return this;
+            }
         };
-        this.Axis.VERTICAL = 0x1;
 
     };
+
+
+    //==================================================================
+    // Class Prototypes
+    //==================================================================
+
 
 
     //register module
@@ -8634,18 +8601,10 @@ if ( !String.prototype.trim ) {
         this.start = function(){
             //load test source
             console.log('lola.test.run: '+src);
-            loadExternalXML( src );
-            index = -1;
-            next();
-        };
-
-
-        function loadExternalXML( source ){
-
-            var req = new lola.http.SyncRequest( source );
+            var req = new lola.http.SyncRequest( src );
             req.send();
             var xml = req.responseXML();
-            var list = [];
+            executables = [];
 
             //parse test source
             if (xml.documentElement.tagName == "tests"){
@@ -8659,27 +8618,20 @@ if ( !String.prototype.trim ) {
                             case 'script':
                                 //this is a setup or teardown script
                                 var script = new Script(n);
-                                list.push( script );
+                                executables.push( script );
                                 break;
                             case 'test':
                                 //this is a test
                                 var t = new Test(n);
-                                list.push( t );
-                                break;
-                            case 'xml':
-                                //this is a test
-                                var x = new ExternalXML(n);
-                                list.push( x );
+                                executables.push( t );
                                 break;
                         }
                     }
                 }
             }
-            list.unshift( 0 );
-            list.unshift( index + 1 );
-
-            executables.splice.apply(executables, list );
-        }
+            index = -1;
+            next();
+        };
 
         /**
          * run next executable
@@ -8692,7 +8644,7 @@ if ( !String.prototype.trim ) {
                 current = executable;
                 var completed = executable.execute();
                 if (completed){
-                    setTimeout( function(){ next();}, 2);
+                    setTimeout( function(){ next();}, 10);
                 }
             }
             else {
@@ -8714,176 +8666,101 @@ if ( !String.prototype.trim ) {
         //==================================================================
         /**
          * @private
-         * @class
          * @param {Node} node
          */
         function Script( node ){
-            var name = "";
-            var value = "";
+            return this.init(node);
+        }
+        Script.prototype = {
+            name: "",
+            value: "",
 
-            this.execute = function(){
-                console.log('executing', '"'+name+'"', 'script');
+            init: function( node ){
+                if ((node.hasAttribute('name')))
+                    this.name = node.attributes.getNamedItem("name").nodeValue;
+
+                var str = "";
+                for( var i = 0; i<node.childNodes.length; i++){
+                    str += node.childNodes[i].data;
+                }
+                this.value = str;
+
+                return this;
+            },
+
+            execute: function(){
+                console.log('executing', '"'+this.name+'"', 'script');
                 //try {
-                lola.evaluate( value );
+                lola.evaluate( this.value );
                 //}
                 //catch( e ){
-                //   console.error('error evaluating', name, 'script:', e.message );
+                //   console.error('error evaluating', this.name, 'script:', e.message );
                 //}
 
                 return true;
-            };
-
-            if ((node.hasAttribute('name')))
-                name = node.attributes.getNamedItem("name").nodeValue;
-
-            var str = "";
-            for( var i = 0; i<node.childNodes.length; i++){
-                str += node.childNodes[i].data;
             }
-            value = str;
-
-            return this;
-        }
+        };
 
         /**
          * @private
-         * @class
          * @param {Node} node
          */
         function Test( node ){
-            var name;
-            var result;
-            var assert = "==";
-            var compareTo;
-            var test;
-            var async = false;
-            var passed;
-            var error = "";
+            return this.init(node);
+        }
+        Test.prototype = {
+            name: undefined,
+            result: undefined,
+            assert: "==",
+            compareTo: undefined,
+            test: undefined,
+            async: false,
+            passed: undefined,
+            error: "",
 
-            this.execute = function(){
-                console.log( name );
-                try {
-                    if ( async ){
-                        lola.evaluate( test );
-                        return false;
-                    }
-                    else {
-                        result = eval( test );
-                        compare();
-                        return true;
-                    }
-                }
-                catch( e ){
-                    passed = false;
-                    error = 'failed due to error: '+e.message;
-                    console.error( '    ', error );
-                    console.log ( '    ', e );
-                    return true;
-                }
-            };
+            init: function( node ){
 
-            this.setResult = function( val ){
-                result = val;
-                compare();
-                next();
-            };
-
-            function compare(){
-                switch (assert){
-                    case "equals":
-                        passed = result == compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" == "+compareTo;
-                        break;
-                    case "strictlyEquals":
-                        passed = result === compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" === "+compareTo;
-                        break;
-                    case "doesNotEqual":
-                        passed = result != compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" != "+compareTo;
-                        break;
-                    case "greaterThan":
-                        passed = result > compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" > "+compareTo;
-                        break;
-                    case "lessThan":
-                        passed = result < compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" < "+compareTo;
-                        break;
-                    case "greaterThanOrEquals":
-                        passed = result >= compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" >= "+compareTo;
-                        break;
-                    case "lessThanOrEquals":
-                        passed = result <= compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" <= "+compareTo;
-                        break;
-                    default:
-                        passed = result == compareTo;
-                        if (!passed)
-                            error = "assertion false: "+result+" == "+compareTo;
-                        break;
-                }
-
-                if (passed) {
-                    //console.log( '    ','passed');
-                }
-                else {
-                    error = 'failed, '+error;
-                    console.error( '    ', error );
-                }
-            }
-
-            function init( node ){
-
-                name = node.attributes.getNamedItem("name").nodeValue;
+                this.name = node.attributes.getNamedItem("name").nodeValue;
 
                 if (node.hasAttribute('async'))
-                    async = node.attributes.getNamedItem("async").nodeValue == "true";
+                    this.async = node.attributes.getNamedItem("async").nodeValue == "true";
 
                 if (node.hasAttribute('equals')){
-                    assert = "equals";
+                    this.assert = "equals";
                 }
                 else if (node.hasAttribute('strictlyEquals')){
-                    assert = "strictlyEquals";
+                    this.assert = "strictlyEquals";
                 }
                 else if (node.hasAttribute('doesNotEqual')){
-                    assert = "doesNotEqual";
+                    this.assert = "doesNotEqual";
                 }
                 else if (node.hasAttribute('greaterThan')){
-                    assert = "greaterThan";
+                    this.assert = "greaterThan";
                 }
                 else if (node.hasAttribute('lessThan')){
-                    assert = "lessThan";
+                    this.assert = "lessThan";
                 }
                 else if (node.hasAttribute('greaterThanOrEquals')){
-                    assert = "greaterThanOrEquals";
+                    this.assert = "greaterThanOrEquals";
                 }
                 else if (node.hasAttribute('lessThanOrEquals')){
-                    assert = "lessThanOrEquals";
+                    this.assert = "lessThanOrEquals";
                 }
 
-                var rawValue = node.attributes.getNamedItem( assert ).nodeValue;
+                var rawValue = node.attributes.getNamedItem( this.assert ).nodeValue;
                 var type = node.attributes.getNamedItem("type").nodeValue;
                 switch ( type ){
                     case "float":
-                        compareTo = parseFloat( rawValue );
+                        this.compareTo = parseFloat( rawValue );
                         break;
                     case "int":
-                        compareTo = parseInt( rawValue );
+                        this.compareTo = parseInt( rawValue );
                         break;
                     case "bool":
-                        compareTo = rawValue === "true";
+                        this.compareTo = rawValue === "true";
                         break;
                     default:
-                        compareTo = String( rawValue );
+                        this.compareTo = String( rawValue );
                         break;
                 }
 
@@ -8891,36 +8768,92 @@ if ( !String.prototype.trim ) {
                 for( var i = 0; i<node.childNodes.length; i++){
                     str += node.childNodes[i].data;
                 }
-                test = str;
-            }
-            init(node);
-            return this;
-        }
+                this.test = str;
 
-        /**
-         * @private
-         * @class
-         * @param {Node} node
-         */
-        function ExternalXML( node ){
-            var source;
+                return this;
+            },
 
-            if ((node.hasAttribute('src')))
-                source = node.attributes.getNamedItem("src").nodeValue;
-
-            this.execute = function(){
-                console.log('');
-                console.log('================================================');
-                console.log('loading external xml:', source);
-                console.log('================================================');
-                if (source){
-                    loadExternalXML( source );
+            execute: function(){
+                console.log( this.name );
+                try {
+                    if ( this.async ){
+                        lola.evaluate( this.test );
+                        return false;
+                    }
+                    else {
+                        this.result = eval( this.test );
+                        this.compare();
+                        return true;
+                    }
                 }
-                return true;
-            };
+                catch( e ){
+                    this.passed = false;
+                    this.error = 'failed due to error: '+e.message;
+                    console.error( '    ', this.error );
+                    console.log ( '    ', e );
+                    return true;
+                }
+            },
 
-        }
+            setResult: function( val ){
+                this.result = val;
+                this.compare();
+                next();
+            },
 
+            compare:function(){
+                switch (this.assert){
+                    case "equals":
+                        this.passed = this.result == this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" == "+this.compareTo;
+                        break;
+                    case "strictlyEquals":
+                        this.passed = this.result === this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" === "+this.compareTo;
+                        break;
+                    case "doesNotEqual":
+                        this.passed = this.result != this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" != "+this.compareTo;
+                        break;
+                    case "greaterThan":
+                        this.passed = this.result > this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" > "+this.compareTo;
+                        break;
+                    case "lessThan":
+                        this.passed = this.result < this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" < "+this.compareTo;
+                        break;
+                    case "greaterThanOrEquals":
+                        this.passed = this.result >= this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" >= "+this.compareTo;
+                        break;
+                    case "lessThanOrEquals":
+                        this.passed = this.result <= this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" <= "+this.compareTo;
+                        break;
+                    default:
+                        this.passed = this.result == this.compareTo;
+                        if (!this.passed)
+                            this.error = "assertion false: "+this.result+" == "+this.compareTo;
+                        break;
+                }
+
+                if (this.passed) {
+                    //console.log( '    ','passed');
+                }
+                else {
+                    this.error = 'failed, '+this.error;
+                    console.error( '    ', this.error );
+                }
+            }
+        };
     };
 
 

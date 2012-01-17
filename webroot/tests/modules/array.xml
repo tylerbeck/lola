@@ -1,0 +1,43 @@
+<tests>
+
+    <!-- Array Module Tests -->
+    <script name="Setup Array Module Tests"><![CDATA[
+        var aOne = [
+            {one:1,two:7,test:false},
+            {one:2,two:6,test:false},
+            {one:3,two:5,test:false},
+            {one:4,two:4,test:"blue"},
+            {one:5,two:3,test:false},
+            {one:6,two:2,test:false},
+            {one:7,two:1,test:false}
+        ];
+        var aTwo = [
+            {one:1,two:7,test:false},
+            {one:2,two:6,test:false},
+            {one:3,two:5,test:false},
+            {one:4,two:4,test:false},
+            {one:5,two:3,test:false},
+            {one:6,two:2,test:false},
+            {one:7,two:1,test:false}
+        ];
+
+        var aDups = [ 1,2,3,1,2,3,4,5 ];
+        var aNulls = [ 0,1,0,null,null,undefined,0,1,1 ];
+
+    ]]></script>
+    <test name="lola.array.hasObjectWithProperty: false" equals="false" type="bool"><![CDATA[ lola.array.hasObjectWithProperty( aTwo, 'test', 'blue' ); ]]></test>
+    <test name="lola.array.hasObjectWithProperty: true" equals="true" type="bool"><![CDATA[ lola.array.hasObjectWithProperty( aOne, 'test', 'blue' ); ]]></test>
+    <test name="lola.array.unique: remove duplicates" equals="5" type="int"><![CDATA[ lola.array.unique( aDups ).length; ]]></test>
+    <test name="lola.array.isIn: true" equals="true" type="bool"><![CDATA[ lola.array.isIn( aDups, 4 ); ]]></test>
+    <test name="lola.array.isIn: false" equals="false" type="bool"><![CDATA[ lola.array.isIn( aDups, 6 ); ]]></test>
+    <test name="lola.array.pruneNulls: check" equals="6" type="int"><![CDATA[ lola.array.pruneNulls( aNulls ).length; ]]></test>
+    <test name="lola.array.sortOn: check" equals="6" type="int"><![CDATA[ lola.array.sortOn('two',aTwo)[5].two; ]]></test>
+    <script name="Teardown Array Module Tests"><![CDATA[
+        delete window['aOne'];
+        delete window['aTwo'];
+        delete window['aDups'];
+        delete window['aNulls'];
+        console.log('teardown complete');
+    ]]></script>
+
+</tests>

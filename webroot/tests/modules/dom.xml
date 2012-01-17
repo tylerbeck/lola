@@ -1,0 +1,53 @@
+<tests>
+
+    <!-- Array Module Tests -->
+    <script name="Setup Array Module Tests"><![CDATA[
+        var div = document.createElement('div');
+        div.id = "unchanged";
+        div.className = "one";
+        div.test = "true";
+
+        var child = document.createElement('div');
+        child.id="child";
+
+        var span = document.createElement('span');
+        span.id="child";
+        span.innerHTML="TEXT CONTENTS";
+
+        div.appendChild( child );
+        child.appendChild( span );
+    ]]></script>
+    <test name="lola.dom.attr: get id" equals="unchanged" type="string"><![CDATA[ lola.dom.attr( div, 'id' ); ]]></test>
+    <test name="lola.dom.attr: get test" equals="true" type="string"><![CDATA[ lola.dom.attr( div, 'test' ); ]]></test>
+    <test name="lola.dom.attr: set id" equals="changed" type="string"><![CDATA[
+        (function(){
+            lola.dom.attr( div, 'id', 'changed' );
+            return lola.dom.attr( div, 'id' );
+        })();
+    ]]></test>
+    <test name="lola.dom.attr: set test" equals="false" type="string"><![CDATA[
+        (function(){
+            lola.dom.attr( div, 'test', 'false' );
+            return lola.dom.attr( div, 'test' );
+        })();
+    ]]></test>
+    <test name="lola.dom.deleteExpando: check" equals="false" type="bool"><![CDATA[
+        (function(){
+            lola.dom.deleteExpando( div, 'test' );
+            return lola.dom.attr( div, 'test' ) == 'false';
+        })();
+    ]]></test>
+    <test name="lola.dom.isDescendant: yes" equals="true" type="bool"><![CDATA[ lola.dom.isDescendant( span, div ); ]]></test>
+    <test name="lola.dom.isDescendant: no" equals="false" type="bool"><![CDATA[ lola.dom.isDescendant( div, span ); ]]></test>
+    <test name="lola.dom.isAncestor: no" equals="false" type="bool"><![CDATA[ lola.dom.isAncestor( span, div ); ]]></test>
+    <test name="lola.dom.isAncestor: yes" equals="true" type="bool"><![CDATA[ lola.dom.isAncestor( div, span ); ]]></test>
+
+    <!-- TODO: add tests for selector methods -->
+    <script name="Teardown Array Module Tests"><![CDATA[
+        delete window['div'];
+        delete window['child'];
+        delete window['span'];
+        console.log('teardown complete');
+    ]]></script>
+
+</tests>

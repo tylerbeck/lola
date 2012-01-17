@@ -59,113 +59,95 @@
         // Classes
         //==================================================================
         this.Grid = function(x,y,width,height,spacing,flags){
-            return this.init(x,y,width,height,spacing,flags);
-        };
-        this.Grid.HORIZONTAL = 0x1;
-        this.Grid.VERTICAL = 0x2;
-        this.Grid.prototype = {
-            x:0,
-            y:0,
-            width:100,
-            height:100,
-            spacing:10,
-            flags:3,
-            init: function(x,y,width,height,spacing,flags){
-                this.x = x || 0;
-                this.y = y || 0;
-                this.width = width || 100;
-                this.height = height || 100;
-                this.spacing = spacing || 10;
-                this.flags = (flags==undefined)?3:flags;
 
-                return this;
-            },
+            function init(x,y,width,height,spacing,flags){
+                x = x || 0;
+                y = y || 0;
+                width = width || 100;
+                height = height || 100;
+                spacing = spacing || 10;
+                flags = (flags==undefined)?3:flags;
+            }
 
-            draw: function( ctx, flags ){
-                flags = flags == undefined ? this.flags : flags;
+            this.draw = function( ctx, flgs ){
+                flgs = flgs == undefined ? flags : flgs;
 
                 var i;
                 //vertical
-                if (flags & self.Grid.VERTICAL){
-                    for (i=this.x+this.spacing; i<=this.width+this.x; i+=this.spacing){
+                if (flgs & self.Grid.VERTICAL){
+                    for (i=x+spacing; i<=width+x; i+=spacing){
                         ctx.beginPath();
-                        ctx.moveTo(i,this.y);
-                        ctx.lineTo(i,this.y+this.height);
+                        ctx.moveTo(i,y);
+                        ctx.lineTo(i,y+height);
                         ctx.stroke();
                         ctx.closePath();
                     }
                 }
                 //horizontal
-                if (flags & self.Grid.HORIZONTAL){
-                    for (i=this.y+this.spacing; i<=this.height+this.y; i+=this.spacing){
+                if (flgs & self.Grid.HORIZONTAL){
+                    for (i=y+spacing; i<=height+y; i+=spacing){
                         ctx.beginPath();
-                        ctx.moveTo(this.x,i);
-                        ctx.lineTo(this.x+this.width,i);
+                        ctx.moveTo(x,i);
+                        ctx.lineTo(x+width,i);
                         ctx.stroke();
                         ctx.closePath();
                     }
                 }
-            }
+            };
+
+            init(x,y,width,height,spacing,flags);
+
+            return this;
         };
+        this.Grid.HORIZONTAL = 0x1;
+        this.Grid.VERTICAL = 0x2;
 
 
         this.Axis =function(x,y,size,label,labelOffset,flags ){
-            return this.init(x,y,size,label,labelOffset,flags);
-        };
-        this.Axis.VERTICAL = 0x1;
-        this.Axis.prototype = {
-            x:0,
-            y:0,
-            size: 100,
-            label: undefined,
-            labelOffset: {x:0,y:0},
-            flags: 0x2,
-            init: function(x,y,size,label,labelOffset,flags){
-                this.x = x || 0;
-                this.y = y || 0;
-                this.size = size || 100;
-                this.label = label;
-                if( labelOffset ) this.labelOffset = labelOffset;
-                this.flags = (flags==undefined)?0x0:flags;
-                return this;
-            },
+            function init(x,y,size,label,labelOffset,flags){
+                x = x || 0;
+                y = y || 0;
+                size = size || 100;
+                label = label;
+                if( labelOffset ) labelOffset = labelOffset;
+                flags = (flags==undefined)?0x2:flags;
+            }
 
-            draw: function( ctx, flags ){
-                flags = flags == undefined ? this.flags : flags;
+            this.draw = function( ctx, flgs ){
+                flgs = flgs == undefined ? flags : flgs;
                 ctx.beginPath();
-                ctx.moveTo( this.x, this.y );
-                if (flags & self.Axis.VERTICAL){
+                ctx.moveTo( x, y );
+                if (flgs & self.Axis.VERTICAL){
                     //vertical axis
-                    ctx.lineTo( this.x, this.y+this.size );
+                    ctx.lineTo( x, y+size );
                 }
                 else {
                     //horizontal axis
-                    ctx.lineTo( this.x+this.size, this.y );
+                    ctx.lineTo( x+size, y );
                 }
                 ctx.stroke();
                 ctx.closePath();
 
-                if (this.label) {
-                    if (flags & self.Axis.VERTICAL) {
+                if (label) {
+                    if (flgs & self.Axis.VERTICAL) {
                         //label at bottom
                         ctx.textAlign = "center";
-                        ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.size + this.labelOffset.y );
+                        ctx.fillText( label, x + labelOffset.x, y + size + labelOffset.y );
                     }
                     else {
                         ctx.textAlign = "right";
-                        ctx.fillText( this.label, this.x + this.labelOffset.x, this.y + this.labelOffset.y );
+                        ctx.fillText( label, x + labelOffset.x, y + labelOffset.y );
                     }
                 }
-            }
+            };
+
+
+            init(x,y,size,label,labelOffset,flags);
+            return this;
         };
+        this.Axis.VERTICAL = 0x1;
 
     };
-
-
-    //==================================================================
-    // Class Prototypes
-    //==================================================================
-
 
 
     //register module

@@ -209,9 +209,9 @@
          */
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );
-            var styles = (typeof style == "string") ?  styles[ style ] || reset : style;
+            var sty = (typeof style == "string") ?  styles[ style ] || reset : style;
             lola.util.copyPrimitives( reset, ctx );
-            lola.util.copyPrimitives( styles, ctx );
+            lola.util.copyPrimitives( sty, ctx );
         };
 
         /**
@@ -233,7 +233,11 @@
             ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         };
 
-
+        function copyContextMethod( prop ){
+            self[ prop ] = function(){
+                context[prop].apply( context, arguments );
+            }
+        }
         //==================================================================
         // Selection Methods
         //==================================================================
@@ -260,21 +264,16 @@
         //get reset context
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
-        for ( var k in ctx ){
-            if ( lola.type.isPrimitive( ctx[k] ) ){
-                reset[ k ] = ctx[k];
+        for ( var prop in ctx ){
+            if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                reset[ prop ] = ctx[ prop ];
             }
-            /*else if ( lola.type.get(ctx[k]) == "array"){
-                if ( !this[k] ){
-                    lola.evaluate( "lola.graphics."+k+" = function(){"+
-                        "this.ctx."+k+".apply( this.ctx, arguments );"+
-                        "}");
-                }
-            }*/
+            else if (lola.type.get( ctx[prop] ) == 'function'){
+                copyContextMethod( prop );
+            }
         }
 
     };
-
 
 	//register module
 	lola.registerModule( new Module() );

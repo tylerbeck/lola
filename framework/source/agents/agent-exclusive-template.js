@@ -28,11 +28,11 @@
         var dependencies = [];
 
         /**
-         * map of agent's clients
+         * agent's client
          * @private
          * @type {Object}
          */
-        var clients = {};
+        var client = null;
 
         //==================================================================
         // Getters & Setters
@@ -58,15 +58,15 @@
         //==================================================================
         /**
          * signs a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.sign = function( client ) {
-            var $client = $(client);
+        this.sign = function( cl ) {
+            var $client = $(cl);
             $client.identify();
-            if ( clients[ client.id ] == null) {
+            if ( client == null) {
 
-                //not a client yet
-                clients[ client.id ] = client;
+                //not signed yet
+                client = cl;
                 $client.putData( {}, namespace );
 
                 //add listeners
@@ -76,17 +76,17 @@
 
         /**
          * drops a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.drop = function( client ) {
+        this.drop = function( cl ) {
             var $client = $(client);
-            if (clients[ client.id ] ) {
+            if (client == cl ) {
                 $client.removeData( namespace );
 
                 //remove listeners
 
                 //remove client
-                delete clients[ client.id ];
+                client = null;
             }
         };
 

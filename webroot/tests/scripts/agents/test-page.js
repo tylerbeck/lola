@@ -1,15 +1,15 @@
 /***********************************************************************
  * Lola JavaScript Framework
  *
- *       Agent: AGENT
+ *       Agent: Test Page Agent
  *  Description:
  *       Author: Copyright 2011-2012, Tyler Beck
  *
  ***********************************************************************/
 (function( lola ) {
+    var $ = lola;
     var Agent = function(){
         var self = this;
-
         //==================================================================
         // Attributes
         //==================================================================
@@ -18,7 +18,7 @@
          * @type {String}
          * @private
          */
-        var namespace = "AGENT";
+        var namespace = "page";
 
         /**
          * agent's dependencies
@@ -28,11 +28,16 @@
         var dependencies = [];
 
         /**
-         * map of agent's clients
+         * agent's client
          * @private
          * @type {Object}
          */
-        var clients = {};
+        var client = null;
+
+        /**
+         * selected output div
+         */
+        var $output;
 
         //==================================================================
         // Getters & Setters
@@ -58,43 +63,73 @@
         //==================================================================
         /**
          * signs a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.sign = function( client ) {
-            var $client = $(client);
+        this.sign = function( cl ) {
+            var $client = $(cl);
             $client.identify();
-            if ( clients[ client.id ] == null) {
+            if ( client == null) {
 
-                //not a client yet
-                clients[ client.id ] = client;
+                //not signed yet
+                client = cl;
                 $client.putData( {}, namespace );
 
-                //add listeners
-
+                //add listeners & do setup
+                setup();
             }
         };
 
         /**
          * drops a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.drop = function( client ) {
+        this.drop = function( cl ) {
             var $client = $(client);
-            if (clients[ client.id ] ) {
+            if (client == cl ) {
                 $client.removeData( namespace );
 
-                //remove listeners
+                //remove listeners & do teardown
 
                 //remove client
-                delete clients[ client.id ];
+                client = null;
             }
         };
+
+        function setup(){
+            //set output div
+            $output = $('#output');
+            if ($output.length == 0)
+                $output = $('body');
+
+            //set output function
+            lola.test.setLogFn( log );
+            lola.test.setErrorFn( error );
+
+            //start tests
+            lola.test.start();
+        }
+
+        function log(){
+            output( 'info', [].splice.call(arguments,0).join(' ') );
+        }
+
+        function error(){
+            output( 'error', [].splice.call(arguments,0).join(' ') );
+        }
+
+        function output( className, msg ){
+            var div = document.createElement('div');
+            msg = msg.replace(/[\n\r]/g, "<br/>" );
+
+            $(div).addClass( className ).html( msg );
+            $output.appendChild( div );
+        }
 
         /**
          * agent initializer
          */
         this.initialize = function(){
-            //lola(".AGENT").assignAgent( namespace );
+            lola("body").assignAgent( namespace );
         };
 
     };

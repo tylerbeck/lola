@@ -1,3 +1,12 @@
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
+ *       Agent: Drag Agent
+ *  Description: handles javascript dragging
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+
 (function( lola ) {
     var Agent = function(){
         var self = this;

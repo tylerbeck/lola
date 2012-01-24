@@ -54,7 +54,16 @@
          */
         var current = null;
 
-
+        /**
+         * function used to output test results
+         * @private
+         */
+        var logFn = function(){
+            console.log( [].splice.call(arguments,0).join(' ') );
+        };
+        var errorFn = function(){
+            console.error( [].splice.call(arguments,0).join(' ') );
+        };
 
         //==================================================================
         // Getters & Setters
@@ -73,6 +82,21 @@
          */
         this.dependencies = function() {
             return dependencies;
+        };
+
+        /**
+         * sets the output function
+         * @param {Function} fn
+         */
+        this.setLogFn = function( fn ){
+            logFn = fn;
+        };
+        /**
+         * sets the output function
+         * @param {Function} fn
+         */
+        this.setErrorFn = function( fn ){
+            errorFn = fn;
         };
 
         /**
@@ -99,13 +123,18 @@
          */
         this.start = function(){
             //load test source
-            console.log('lola.test.run: '+src);
+            executables = [];
+            logFn('lola.test.run: '+src);
             loadExternalXML( src );
             index = -1;
             next();
+            return "";
         };
 
-
+        /**
+         * loads external test xml source
+         * @param source
+         */
         function loadExternalXML( source ){
 
             var req = new lola.http.SyncRequest( source );
@@ -119,7 +148,7 @@
                 var count = root.childNodes.length;
                 for ( var i = 0; i < count; i++ ){
                     var n = root.childNodes[i];
-                    //console.log( n.nodeType, n.nodeName.toLowerCase() );
+                    //logFn( n.nodeType, n.nodeName.toLowerCase() );
                     if ( n.nodeType == 1){
                         switch( n.nodeName.toLowerCase() ){
                             case 'script':
@@ -152,7 +181,7 @@
          */
         function next(){
             index++;
-            //console.log( test.index, '/', test.executables.length );
+            //logFn( test.index, '/', test.executables.length );
             if ( index < executables.length ){
                 var executable = executables[ index ];
                 current = executable;
@@ -172,7 +201,7 @@
          * @private
          */
         function complete(){
-            console.log('lola.test.complete');
+            logFn('lola.test.complete');
         }
 
         //==================================================================
@@ -188,12 +217,12 @@
             var value = "";
 
             this.execute = function(){
-                console.log('executing', '"'+name+'"', 'script');
+                logFn('executing', '"'+name+'"', 'script');
                 //try {
                 lola.evaluate( value );
                 //}
                 //catch( e ){
-                //   console.error('error evaluating', name, 'script:', e.message );
+                //   errorFn('error evaluating', name, 'script:', e.message );
                 //}
 
                 return true;
@@ -227,7 +256,7 @@
             var error = "";
 
             this.execute = function(){
-                console.log( name );
+                logFn( name );
                 try {
                     if ( async ){
                         lola.evaluate( test );
@@ -242,8 +271,8 @@
                 catch( e ){
                     passed = false;
                     error = 'failed due to error: '+e.message;
-                    console.error( '    ', error );
-                    console.log ( '    ', e );
+                    errorFn( '    ', error );
+                    logFn ( '    ', e );
                     return true;
                 }
             };
@@ -299,11 +328,11 @@
                 }
 
                 if (passed) {
-                    //console.log( '    ','passed');
+                    //logFn( '    ','passed');
                 }
                 else {
                     error = 'failed, '+error;
-                    console.error( '    ', error );
+                    errorFn( '    ', error );
                 }
             }
 
@@ -375,10 +404,7 @@
                 source = node.attributes.getNamedItem("src").nodeValue;
 
             this.execute = function(){
-                console.log('');
-                console.log('================================================');
-                console.log('loading external xml:', source);
-                console.log('================================================');
+                logFn('================================================\nsource\n================================================');
                 if (source){
                     loadExternalXML( source );
                 }

@@ -185,7 +185,6 @@
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
-                                console.log('safeDelete', child.nodeType);
                                 lola.safeDelete( child );
                             }
                             switch ( lola.type.get( content ) ) {
@@ -252,13 +251,25 @@
             },
 
             /**
-             *  inserts node before first element in DOM
+             *  inserts node before first selected element
              * @param {Element} node
              * @return {lola.Selector}
              */
             insertBefore: function( node ) {
-                if ( this.length > 0 ) {
-                    this.get().insertBefore( node );
+                if ( this.length == 1 ) {
+                    this.parent().insertBefore( node, this[0] );
+                }
+                return this;
+            },
+
+            /**
+             *  inserts node after first selected element
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            insertAfter: function( node ) {
+                if ( this.length == 1 ) {
+                    this.parent().insertAfter( node, this[0] );
                 }
                 return this;
             },
@@ -346,6 +357,26 @@
                     } );
                     return lola.__(values);
                 }
+            },
+
+            /**
+             * gets index of elements
+             */
+            nodeIndex: function(){
+                var values = [];
+                this.forEach( function( item, index ) {
+                    if (item.hasOwnProperty('previousSibling')){
+                        var i = 0;
+                        while( (item = item.previousSibling) != null )
+                            i++;
+                        values.push( i );
+                    }
+                    else{
+                        values.push( -1 );
+                    }
+
+                } );
+                return lola.__(values);
             },
 
             /**

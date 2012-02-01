@@ -1695,7 +1695,6 @@ if ( !String.prototype.trim ) {
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
-                                console.log('safeDelete', child.nodeType);
                                 lola.safeDelete( child );
                             }
                             switch ( lola.type.get( content ) ) {
@@ -1762,13 +1761,25 @@ if ( !String.prototype.trim ) {
             },
 
             /**
-             *  inserts node before first element in DOM
+             *  inserts node before first selected element
              * @param {Element} node
              * @return {lola.Selector}
              */
             insertBefore: function( node ) {
-                if ( this.length > 0 ) {
-                    this.get().insertBefore( node );
+                if ( this.length == 1 ) {
+                    this.parent().insertBefore( node, this[0] );
+                }
+                return this;
+            },
+
+            /**
+             *  inserts node after first selected element
+             * @param {Element} node
+             * @return {lola.Selector}
+             */
+            insertAfter: function( node ) {
+                if ( this.length == 1 ) {
+                    this.parent().insertAfter( node, this[0] );
                 }
                 return this;
             },
@@ -1856,6 +1867,26 @@ if ( !String.prototype.trim ) {
                     } );
                     return lola.__(values);
                 }
+            },
+
+            /**
+             * gets index of elements
+             */
+            nodeIndex: function(){
+                var values = [];
+                this.forEach( function( item, index ) {
+                    if (item.hasOwnProperty('previousSibling')){
+                        var i = 0;
+                        while( (item = item.previousSibling) != null )
+                            i++;
+                        values.push( i );
+                    }
+                    else{
+                        values.push( -1 );
+                    }
+
+                } );
+                return lola.__(values);
             },
 
             /**
@@ -2037,7 +2068,7 @@ if ( !String.prototype.trim ) {
          * @param {String} namespace the namespace to get from data cache
          */
         this.getNamespaceData = function( namespace ) {
-            return cache[namespace];
+            return cache[ namespace ];
         };
 
         /**
@@ -2299,6 +2330,28 @@ if ( !String.prototype.trim ) {
 
             return check;
         };
+
+        /**
+         * gets and sets an inline property for client
+         * @private
+         * @param {*} scope
+         * @param {String} name
+         * @param {String} type
+         * @param {*} defaultValue
+         * @return {*}
+         */
+        this.getInlineValue = function( scope, name, type, defaultValue ){
+            var $inline = $('script[type="text/x-lola-'+name+'"]', scope );
+            if ( $inline.length ){
+                //inline property was found
+                var value = eval( $inline[0].innerHTML );
+                if ( lola.type.get( value ) === type.toLowerCase() ){
+                    return value;
+                }
+            }
+            return defaultValue;
+        };
+
 
         //==================================================================
         // Selection Methods
@@ -2639,7 +2692,6 @@ if ( !String.prototype.trim ) {
             return dependencies;
         };
 
-
         //==================================================================
         // Methods
         //==================================================================
@@ -2806,14 +2858,14 @@ if ( !String.prototype.trim ) {
         }
 
         /**
-         * internal capture listener
+         * internal listener
          * @private
          * @param {Object} event
          * @param {String} phase
          */
         function handler( event, phase ) {
-            //console.info( 'lola.event.handler: '+event.type+' '+phase );
-            var e = (event.hasOwnProperty( 'originalEvent' )) ? event : new LolaEvent( event, {} );
+            //console.log( 'lola.event.handler: '+event.type+' '+phase );
+            var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
             var data = lola.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
                 //console.info('    found event');
@@ -2844,13 +2896,12 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            /*console.group('lola.event.trigger: '+type);
-             lola.debug(object);
-             console.groupEnd();*/
+            //console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
             if ( lola.util.checkArgs(args, names, group) ){
+                //console.log('   valid');
                 if ( bubbles == undefined )
                     bubbles = true;
                 if ( cancelable == undefined )
@@ -2858,19 +2909,22 @@ if ( !String.prototype.trim ) {
 
                 var event = type;
                 if ( lola.type.get( event ) === 'string' ) {
+                    //console.log('   event is string');
                     event = document.createEvent( "Event" );
                     event.initEvent( type, bubbles, cancelable );
                     event.data = data;
                 }
 
-                if ( object.hasOwnProperty( 'dispatchEvent' ) ) {
+                if ( object.dispatchEvent ) {
+                    //console.log('   dispatching object event');
                     object.dispatchEvent( event );
                 }
                 else {
+                    //console.log('   dispatching lola event');
                     event = new LolaEvent( event, object );
-                    handler( event,  'capture' );
+                    handler( event, 'capture' );
                     if (bubbles)
-                        handler( event,  'bubble' );
+                        handler( event, 'bubble' );
                 }
             }
         };
@@ -5694,7 +5748,7 @@ if ( !String.prototype.trim ) {
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            console.info('register agent: '+ns);
+            lola.debug('register agent: '+ns);
             if ( ns && lola.hasFn( agent,"sign" ) && lola.hasFn( agent,"drop" ) ) {
                 //setup module
                 var pkg = lola.getPackage( lola.agent, ns, agent );

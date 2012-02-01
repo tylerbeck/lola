@@ -110,6 +110,28 @@
             return check;
         };
 
+        /**
+         * gets and sets an inline property for client
+         * @private
+         * @param {*} scope
+         * @param {String} name
+         * @param {String} type
+         * @param {*} defaultValue
+         * @return {*}
+         */
+        this.getInlineValue = function( scope, name, type, defaultValue ){
+            var $inline = $('script[type="text/x-lola-'+name+'"]', scope );
+            if ( $inline.length ){
+                //inline property was found
+                var value = eval( $inline[0].innerHTML );
+                if ( lola.type.get( value ) === type.toLowerCase() ){
+                    return value;
+                }
+            }
+            return defaultValue;
+        };
+
+
         //==================================================================
         // Selection Methods
         //==================================================================

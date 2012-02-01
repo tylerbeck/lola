@@ -84,7 +84,6 @@
             return dependencies;
         };
 
-
         //==================================================================
         // Methods
         //==================================================================
@@ -251,14 +250,14 @@
         }
 
         /**
-         * internal capture listener
+         * internal listener
          * @private
          * @param {Object} event
          * @param {String} phase
          */
         function handler( event, phase ) {
-            //console.info( 'lola.event.handler: '+event.type+' '+phase );
-            var e = (event.hasOwnProperty( 'originalEvent' )) ? event : new LolaEvent( event, {} );
+            //console.log( 'lola.event.handler: '+event.type+' '+phase );
+            var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
             var data = lola.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
                 //console.info('    found event');
@@ -289,13 +288,12 @@
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            /*console.group('lola.event.trigger: '+type);
-             lola.debug(object);
-             console.groupEnd();*/
+            //console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
             if ( lola.util.checkArgs(args, names, group) ){
+                //console.log('   valid');
                 if ( bubbles == undefined )
                     bubbles = true;
                 if ( cancelable == undefined )
@@ -303,19 +301,22 @@
 
                 var event = type;
                 if ( lola.type.get( event ) === 'string' ) {
+                    //console.log('   event is string');
                     event = document.createEvent( "Event" );
                     event.initEvent( type, bubbles, cancelable );
                     event.data = data;
                 }
 
-                if ( object.hasOwnProperty( 'dispatchEvent' ) ) {
+                if ( object.dispatchEvent ) {
+                    //console.log('   dispatching object event');
                     object.dispatchEvent( event );
                 }
                 else {
+                    //console.log('   dispatching lola event');
                     event = new LolaEvent( event, object );
-                    handler( event,  'capture' );
+                    handler( event, 'capture' );
                     if (bubbles)
-                        handler( event,  'bubble' );
+                        handler( event, 'bubble' );
                 }
             }
         };

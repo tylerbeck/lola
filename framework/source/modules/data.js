@@ -155,7 +155,7 @@
          * @param {String} namespace the namespace to get from data cache
          */
         this.getNamespaceData = function( namespace ) {
-            return cache[namespace];
+            return cache[ namespace ];
         };
 
         /**

@@ -110,7 +110,7 @@
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            console.info('register agent: '+ns);
+            lola.debug('register agent: '+ns);
             if ( ns && lola.hasFn( agent,"sign" ) && lola.hasFn( agent,"drop" ) ) {
                 //setup module
                 var pkg = lola.getPackage( lola.agent, ns, agent );

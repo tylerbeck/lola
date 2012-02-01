@@ -65,7 +65,7 @@
             $client.identify();
             if ( clients[ client.id ] == null) {
 
-                //not a client yet
+                //setup client
                 clients[ client.id ] = client;
                 $client.putData( {}, namespace );
 
@@ -81,13 +81,21 @@
         this.drop = function( client ) {
             var $client = $(client);
             if (clients[ client.id ] ) {
-                $client.removeData( namespace );
-
                 //remove listeners
 
-                //remove client
+                //teardown client
+                $client.removeData( namespace );
                 delete clients[ client.id ];
             }
+        };
+
+        /**
+         * checks if client exists
+         * @param {*} client
+         * @return {Boolean}
+         */
+        this.clientExists = function( client ){
+            return ( client.id && clients[ client.id ] );
         };
 
         /**

@@ -115,10 +115,10 @@
                 self.setValueFn( client, g( client, 'value-fn', 'function', defaultValueFn ) );
                 self.setDataProvider( client, g( client, 'data-provider', 'array', [] ) );
 
-
                 //add listeners
-
-
+                $client.addListener('focus', handleClientFocus, false, lola.event.PRIORITY_NORMAL, self );
+                $client.addListener('blur', handleClientBlur, false, lola.event.PRIORITY_NORMAL, self );
+                $client.addListener('keydown', handleClientKeyDown, false, lola.event.PRIORITY_BEFORE, self );
             }
         };
 
@@ -156,6 +156,43 @@
         this.initialize = function(){
             lola(".ui-list").assignAgent( namespace );
         };
+
+        function handleClientFocus( event ){
+
+        }
+        function handleClientBlur( event ){
+
+        }
+        function handleClientKeyDown( event ){
+            event.preventDefault();
+            var client = event.currentTarget;
+            var $client = $(client);
+            var data = $client.getData( namespace );
+            var $ctrl = $(data.control);
+
+            if ( event.keyCode == 40 ){
+                //down
+
+            }
+            else if ( event.keyCode == 38 ){
+                //up
+
+            }
+            else {
+
+            }
+            
+            console.log(event.key);
+            if ( data.multi ){
+
+            }
+            else{
+               // if (!event.shiftKey)
+                //    data.lastClick = index;
+            }
+
+            return false;
+        }
 
         /**
          * sets data provider on a client

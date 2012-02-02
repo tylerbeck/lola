@@ -7,6 +7,7 @@
     <style>
         body { background-color: #EFEFEF; }
         label{ display: block; }
+        /*.ui-list-psuedo-input{ position: absolute !important; top:-999999px; left:-999999px; }*/
         .ui-list-psuedo-input{ position: absolute !important; margin-left: 300px; }
         .ui-list-ctrl{ overflow: scroll; }
         .ui-list-ctrl a{
@@ -21,8 +22,9 @@
     </style>
 </head>
 <body>
-    <label for="the-list">The List</label>
-    <select id="the-list" class="ui-list name-list" size="10" multiple >
+
+    <label for="list-a">The List</label>
+    <select id="list-a" class="ui-list name-list" size="10"  >
         <script type="text/x-lola-data-provider">
             [
                 {fn:"John",ln:"Smith"},
@@ -40,7 +42,6 @@
             (function(){ return function( item ){ return item.ln+", "+item.fn; }; })();
         </script>
     </select>
-    <div id="selected-indices"></div>
 
     <input type="text" name="one"/>
     <input type="text" name="two"/>

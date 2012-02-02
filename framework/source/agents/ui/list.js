@@ -8,9 +8,24 @@
  ***********************************************************************/
 (function( lola ) {
     var $ = lola;
+    /**
+     * UI LIST AGENT
+     *
+     * supported styles
+     * .ui-list-input - this class is assigned to the select tag to move it off screen
+     * .ui-list-ctrl - this is the class assigned to the ui control
+     * .ui-list-ctrl.focused - the 'focused' class is added when input is focused
+     * .ui-list-ctrl a - each row in the control
+     * .ui-list-ctrl a.selected - selected rows get the 'selected' class
+     *
+     * client events
+     * selectionChanged: triggered whenever the client selection changes
+     *
+     * @namespace lola.agent.ui.list
+     *
+     */
     var Agent = function(){
         var self = this;
-
         //==================================================================
         // Attributes
         //==================================================================
@@ -26,7 +41,7 @@
          * @type {Object}
          * @private
          */
-        var dependencies = [];
+        var dependencies = ['math','css','dom'];
 
         /**
          * map of agent's clients
@@ -83,7 +98,7 @@
 
             var $client = $(client);
             $client.identify();
-            console.log('agent.ui.list::sign', client.id );
+            //console.log('agent.ui.list::sign', client.id );
             if ( clients[ client.id ] == null) {
                 //console.log('   not a client' );
 
@@ -95,19 +110,21 @@
                 $control.addClass("ui-list-ctrl");
                 $control.removeClass("ui-list");
                 $client.insertBefore( control );
-                $client.addClass('ui-list-psuedo-input');
+                $client.addClass('ui-list-input');
                 $control.putData( {client:client}, namespace );
 
 
                 var multi = (["yes","true",""]).indexOf( String($client.attr('multiple')) ) >= 0;
-                console.log('multi', $client.attr('multiple'));
+                //console.log('multi', $client.attr('multiple'));
 
                 clients[ client.id ] = client;
                 $client.putData( {
                     control:control,
                     multi:multi,
                     selectedIndices:[],
-                    lastClick: -1
+                    lastStart: -1,
+                    lastEnd: -1,
+                    lastSelection: -1
                 }, namespace );
 
                 var g = lola.util.getInlineValue;
@@ -119,6 +136,7 @@
                 $client.addListener('focus', handleClientFocus, false, lola.event.PRIORITY_NORMAL, self );
                 $client.addListener('blur', handleClientBlur, false, lola.event.PRIORITY_NORMAL, self );
                 $client.addListener('keydown', handleClientKeyDown, false, lola.event.PRIORITY_BEFORE, self );
+                $control.addListener('mousedown', handleControlMouseDown, false, lola.event.PRIORITY_BEFORE, self );
             }
         };
 
@@ -127,14 +145,21 @@
          * @param {*} client
          */
         this.drop = function( client ) {
-            var $client = $(client);
             if (clients[ client.id ] ) {
+                var $client = $(client);
                 var data = $client.getData( namespace );
+                var $control = $(data.control);
+
                 //remove listeners
+                $client.removeListener('focus', handleClientFocus, false );
+                $client.removeListener('blur', handleClientBlur, false );
+                $client.removeListener('keydown', handleClientKeyDown, false );
+                $control.removeListener('mousedown', handleControlMouseDown, false );
+
 
                 //teardown client
-                $client.appendChild( data.input );
-                $client.removeChild( data.input );
+                $control.parent().removeChild( data.control );
+                $client.removeClass('ui-list-psuedo-input');
                 $client.removeData( namespace );
                 delete clients[ client.id ];
             }
@@ -156,43 +181,6 @@
         this.initialize = function(){
             lola(".ui-list").assignAgent( namespace );
         };
-
-        function handleClientFocus( event ){
-
-        }
-        function handleClientBlur( event ){
-
-        }
-        function handleClientKeyDown( event ){
-            event.preventDefault();
-            var client = event.currentTarget;
-            var $client = $(client);
-            var data = $client.getData( namespace );
-            var $ctrl = $(data.control);
-
-            if ( event.keyCode == 40 ){
-                //down
-
-            }
-            else if ( event.keyCode == 38 ){
-                //up
-
-            }
-            else {
-
-            }
-            
-            console.log(event.key);
-            if ( data.multi ){
-
-            }
-            else{
-               // if (!event.shiftKey)
-                //    data.lastClick = index;
-            }
-
-            return false;
-        }
 
         /**
          * sets data provider on a client
@@ -271,19 +259,15 @@
             client.options.length = 0;
             data.selectedIndices = [];
             dp.forEach( function(item,index){
-                var row = self.updateClientRow( client, index, item, lblFn, valFn, $ctrl[0] );
+                self.updateClientRow( client, index, item, lblFn, valFn, $ctrl[0] );
                 if (item.selected){
-                    if (data.multi){
+                    if (data.multi)
                         data.selectedIndices.push( index );
-                    }
-                    else{
-                        setSelections( client, data.selectedIndices, false );
+                    else
                         data.selectedIndices = [index];
-                    }
                 }
             });
-
-            setSelections( client, data.selectedIndices, true );
+            setSelections( client, data.selectedIndices, true, true );
         }
 
         /**
@@ -292,15 +276,24 @@
          * @param list
          * @param selected
          */
-        function setSelections( client, list, selected ){
+        function setSelections( client, list, selected, clear ){
             var data = $(client).getData(namespace);
             var ctrl = data.control;
-            var mthd = selected?"addClass":"removeClass";
+
+            var setFn = function( index, slct ){
+                $(ctrl.childNodes[ index ])[ slct?"addClass":"removeClass"]('selected');
+                data.dataProvider[ index ].selected = slct;
+                client.options[ index ].selected = slct;
+            };
+
+            if (clear){
+                for (var i=0; i<ctrl.childNodes.length; i++){
+                    setFn(i,false);
+                }
+            }
 
             list.forEach( function(item){
-                $(ctrl.childNodes[ item ])[mthd]('selected');
-                data.dataProvider[ item ].selected = selected;
-                client.options[ item ].selected = selected;
+                setFn(item,selected);
             });
         }
 
@@ -337,7 +330,7 @@
             //create row node
             var a = document.createElement('a');
             a.className = "list-item";
-            a.href = "#";
+            a.href = "javascript:false";
             a.innerHTML = labelFn( obj );
             addListeners( a );
 
@@ -368,15 +361,66 @@
             $(row).addListener( 'click', handleClientRowClick, false, lola.event.PRIORITY_NORMAL, self );
         }
 
+        /**
+         * steps a value based on a keycode
+         * @private
+         * @param key
+         * @param value
+         * @param min
+         * @param max
+         * @return {Number}
+         */
+        function doKeyStep( key, value, min, max ){
+
+            value = (value == undefined) ? 0 : value;
+            min = (min == undefined) ? Number.MIN_VALUE : min;
+            max = (max == undefined) ? Number.MAX_VALUE : max;
+
+            //increment / decrement value
+            if ( key == 40 )
+                value++;
+            else if ( key == 38 )
+                value--;
+
+            return lola.math.normalizeRange( min, value, max );
+        }
+
+        /**
+         * gets indices in range
+         * @private
+         * @param a
+         * @param b
+         * @return {Array}
+         */
+        function getRangeIndexes( a,b ){
+            var from = Math.min( a,b );
+            var to = Math.max( a,b );
+            var range = [];
+            for (var i = from; i <= to; i++){
+                range.push(i);
+            }
+
+            return range;
+        }
+
+        /**
+         * row click handler
+         * @private
+         * @param event
+         */
         function handleClientRowClick( event ){
             var $row = $( event.currentTarget );
             var ctrl = $row.parent();
             var client = $(ctrl).getData( namespace ).client;
             var data = $(client).getData( namespace );
             var index = $row.nodeIndex();
-            //console.log('agent.ui.list::handleClientRowClick', client );
 
+            //reset clickedIndices
+            data.clickedIndices = null;
+
+            //console.log('agent.ui.list::handleClientRowClick', client );
             if ( (event.metaKey && data.multi) || (event.metaKey && data.dataProvider[index].selected===true) ){
+
                 //toggle row's selected class
                 var selected = !(data.dataProvider[index].selected===true);
                 setSelections( client, [index], selected );
@@ -389,40 +433,213 @@
                     var i = data.selectedIndices.indexOf(index);
                     data.selectedIndices.splice(i,1);
                 }
-
-                //update last click value
-                data.lastClick = index;
-
             }
             else if( event.shiftKey && data.multi ){
 
-                if (data.lastClick < 0)
-                    data.lastClick = index;
+                if (data.lastSelection < 0)
+                    data.lastSelection = index;
 
                 //console.log('    shift select');
-                setSelections( client, data.selectedIndices, false );
-                data.selectedIndices = [];
-                var from = Math.min( data.lastClick, index );
-                var to = Math.max( data.lastClick, index );
-                for (var n=from; n<=to; n++){
-                    data.selectedIndices.push(n);
-                }
-                setSelections( client, data.selectedIndices, true );
+                data.selectedIndices = getRangeIndexes( data.lastSelection, index );
+                setSelections( client, data.selectedIndices, true, true );
             }
             else {
-                setSelections( client, data.selectedIndices, false );
                 data.selectedIndices = [index];
-                setSelections( client, data.selectedIndices, true );
-
-                //update last click value
-                data.lastClick = index;
+                setSelections( client, data.selectedIndices, true, true );
             }
-            data.selectedIndices = data.selectedIndices.sort();
-            $(client).trigger('selectionChanged', false, false, [].concat(data.selectedIndices));
-            //console.log('    indices', data.selectedIndices );
 
+            //update last click value
+            data.lastSelection = index;
+            data.selectedIndices = data.selectedIndices.sort();
+            selectionChanged( client );
         }
 
+        /**
+         * dispatches selectionChanged event
+         * @private
+         * @param client
+         */
+        function selectionChanged(client){
+            $(client).trigger('selectionChanged', false, false, {
+                selectedIndices: self.getSelectedIndices(client),
+                selectedValues: self.getSelectedValues(client)
+            });
+        }
+
+        /**
+         * key press handler
+         * @private
+         * @param event
+         */
+        function handleClientKeyDown( event ){
+
+            //TODO: Add key jumpto functionality
+            //TODO: Add scrollto functionality
+
+            //keep tabbing behavior
+            if ( event.keyCode != 9 )
+                event.preventDefault();
+
+            //only execute handler if keycode expected
+            if ( ([38,40]).indexOf(event.keyCode) >= 0 ){
+
+                var client = event.currentTarget;
+                var $client = $(client);
+                var data = $client.getData( namespace );
+                var $ctrl = $(data.control);
+
+                //console.log('data.lastSelection:',data.lastSelection);
+                if (data.multi && event.shiftKey){
+                    //set clicked selections for concatenation with keyed selections and initial ranges
+                    if (!data.clickedIndices){
+                        data.clickedIndices = [].concat( data.selectedIndices );
+                        data.selectStart = Math.max(data.lastSelection,0);
+                        data.selectEnd = data.lastSelection;
+                    }
+
+                    data.selectEnd = doKeyStep( event.keyCode, data.selectEnd, 0, data.dataProvider.length-1 );
+                    var keyIndices = getRangeIndexes (data.selectStart, data.selectEnd);
+                    //console.log( data.selectStart, data.selectEnd );
+                    data.lastSelection = data.selectEnd;
+                    //update selections
+                    data.selectedIndices = lola.array.unique( [].concat( keyIndices, data.clickedIndices ) );
+                    setSelections( client, data.selectedIndices, true, true );
+                }
+                else {
+                    var index = doKeyStep( event.keyCode, data.lastSelection, 0, data.dataProvider.length-1 );
+                    //console.log(index);
+
+                    //update selected indices
+                    data.selectedIndices = [ index ];
+                    setSelections( client, data.selectedIndices, true, true );
+                    data.lastSelection = index;
+                    data.clickedIndices = null;
+                }
+
+
+                data.selectedIndices = data.selectedIndices.sort();
+                selectionChanged( client );
+            }
+
+            return false;
+        }
+
+        /**
+         * control mousedown handler
+         * @private
+         * @param event
+         */
+        function handleControlMouseDown( event ){
+            event.preventDefault();
+            var client = $(event.currentTarget).getData(namespace).client;
+            client.focus();
+        }
+
+        /**
+         * client focus handler
+         * @private
+         * @param event
+         */
+        function handleClientFocus( event ){
+            $ctrl = $( $(event.currentTarget).getData(namespace).control );
+            $ctrl.addClass('focused');
+        }
+
+        /**
+         * client blur handler
+         * @private
+         * @param event
+         */
+        function handleClientBlur( event ){
+            $ctrl = $( $(event.currentTarget).getData(namespace).control );
+            $ctrl.removeClass('focused');
+        }
+
+        /**
+         * returns the client's selected indices
+         * @param client
+         * @return {Array}
+         */
+        this.getSelectedIndices = function( client ){
+            var data = $(client).getData(namespace);
+            return [].concat( data.selectedIndices );
+        };
+
+        /**
+         * returns the client's selected values
+         * @param client
+         * @return {Array}
+         */
+        this.getSelectedValues = function( client ){
+            var data = $(client).getData(namespace);
+            var values = [];
+            data.selectedIndices.forEach( function(index){
+                values.push( data.valueFn( data.dataProvider[index]) );
+            });
+
+            return values;
+        };
+
+        /**
+         * returns the value at specified index
+         * @param client
+         * @param index
+         * @param data
+         * @return {*}
+         */
+        this.getValueAtIndex = function( client, index, data ){
+            data = data?data:$(client).getData(namespace);
+            return data.valueFn( data.dataProvider[index] );
+        };
+
+        /**
+         * returns the index of specified value
+         * @param client
+         * @param value
+         * @param data
+         * @return {*}
+         */
+        this.getIndexOfValue = function( client, value, data ){
+            data = data?data:$(client).getData(namespace);
+            var index = -1;
+            var l = data.dataProvider.length;
+            for (var i = 0; i<l; i++){
+                if (value == self.getValueAtIndex(client, i, data) ){
+                    index = i;
+                    break;
+                }
+            }
+            return index;
+        };
+
+
+        /**
+         * returns the client's selected indices
+         * @param client
+         * @param indices
+         */
+        this.setSelectedIndices = function( client, indices ){
+            var data = $(client).getData(namespace);
+            data.selectedIndices = indices;
+            setSelections( client, indices, true, true );
+        };
+
+        /**
+         * returns the client's selected values
+         * @param client
+         * @param values
+         */
+        this.setSelectedValues = function( client, values ){
+            var data = $(client).getData(namespace);
+            var indices = [];
+            values.forEach( function(item){
+                var index = self.getIndexOfValue( client, item, data );
+                if (index > -1)
+                    indices.push( index );
+            });
+
+            self.setSelectedIndices( client, indices );
+        };
     };
 
 	//register module

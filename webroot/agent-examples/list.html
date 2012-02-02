@@ -7,9 +7,10 @@
     <style>
         body { background-color: #EFEFEF; }
         label{ display: block; }
-        /*.ui-list-psuedo-input{ position: absolute !important; top:-999999px; left:-999999px; }*/
-        .ui-list-psuedo-input{ position: absolute !important; margin-left: 300px; }
-        .ui-list-ctrl{ overflow: scroll; }
+        .ui-list-input{ position: absolute !important; top:-999999px; left:-999999px; }
+        /*.ui-list-input{ position: absolute !important; margin-left: 300px; }*/
+        .ui-list-ctrl{ overflow: scroll; margin: 3px; }
+        .ui-list-ctrl.focused{ -webkit-box-shadow:0 0 10px #4270aa; border: 2px solid #4270aa; margin: 2px; }
         .ui-list-ctrl a{
             display: block; text-decoration: none !important; padding: 5px; color:#333;
         }
@@ -18,13 +19,24 @@
         .ui-list-ctrl a.selected:active{ background-color: #BBBBBB; }
         .ui-list-ctrl a:hover,
         .ui-list-ctrl a:active{ background-color: #DDDDDD;}
-        .name-list{ width: 150px; height: 200px; border: 1px solid #CCC; background-color: #FFFFFF; }
+        .name-list{ width: 150px; height: 150px; border: 1px solid #CCC; background-color: #FFFFFF; }
+
+        .test:after{
+            display: inline-block;
+            width: 0;
+            height: 0;
+            content: " ";
+            margin-left: 5px;
+            border-left: 5px solid blue;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
     </style>
 </head>
 <body>
-
+    <a href="#" class="test">This is a test</a>
     <label for="list-a">The List</label>
-    <select id="list-a" class="ui-list name-list" size="10"  >
+    <select id="list-a" class="ui-list name-list" size="10" multiple  >
         <script type="text/x-lola-data-provider">
             [
                 {fn:"John",ln:"Smith"},
@@ -48,12 +60,19 @@
     <input type="text" name="three"/>
     <input type="text" name="four"/>
 
+    <div id="selected-indices"></div>
+
     <script>
         (function(){
-            $('#the-list').addListener('selectionChanged',function(event){
-                $("#selected-indices").html('selected: '+event.data.join(', '));
+
+            $('#list-a').addListener('selectionChanged',function(event){
+                $("#selected-indices").html('selected: <br/>'+ event.data.selectedValues.join('<br/>'));
+                //console.log(event.data);
             },false);
+
         })();
+
+
     </script>
 
 </body>

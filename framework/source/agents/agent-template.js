@@ -79,8 +79,9 @@
          * @param {*} client
          */
         this.drop = function( client ) {
-            var $client = $(client);
             if (clients[ client.id ] ) {
+                var $client = $(client);
+                var data = $client.getData( namespace );
                 //remove listeners
 
                 //teardown client

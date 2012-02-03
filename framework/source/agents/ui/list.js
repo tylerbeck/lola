@@ -41,7 +41,7 @@
          * @type {Object}
          * @private
          */
-        var dependencies = ['math','css','dom'];
+        var dependencies = ['math','css','event','data','dom','geometry'];
 
         /**
          * map of agent's clients
@@ -281,7 +281,7 @@
             var ctrl = data.control;
 
             var setFn = function( index, slct ){
-                $(ctrl.childNodes[ index ])[ slct?"addClass":"removeClass"]('selected');
+                $(ctrl.children[ index ])[ slct?"addClass":"removeClass"]('selected');
                 data.dataProvider[ index ].selected = slct;
                 client.options[ index ].selected = slct;
             };
@@ -330,7 +330,7 @@
             //create row node
             var a = document.createElement('a');
             a.className = "list-item";
-            a.href = "javascript:false";
+            a.href = "javascript:lola.event.preventDefault(event);";
             a.innerHTML = labelFn( obj );
             addListeners( a );
 
@@ -504,6 +504,8 @@
                     //update selections
                     data.selectedIndices = lola.array.unique( [].concat( keyIndices, data.clickedIndices ) );
                     setSelections( client, data.selectedIndices, true, true );
+                    self.scrollToRow( client, data.selectEnd );
+
                 }
                 else {
                     var index = doKeyStep( event.keyCode, data.lastSelection, 0, data.dataProvider.length-1 );
@@ -514,6 +516,8 @@
                     setSelections( client, data.selectedIndices, true, true );
                     data.lastSelection = index;
                     data.clickedIndices = null;
+                    self.scrollToRow( client, index );
+
                 }
 
 
@@ -554,6 +558,37 @@
             $ctrl = $( $(event.currentTarget).getData(namespace).control );
             $ctrl.removeClass('focused');
         }
+
+        /**
+         * scrolls to row of specified client
+         * @param {Node} client
+         * @param {int} row
+         */
+        this.scrollToRow = function( client, row ){
+            var $client = $(client);
+            var data = $client.getData( namespace );
+            var ctrl = data.control;
+
+            if ( row < data.dataProvider.length ){
+                var $r = $(ctrl.childNodes[ row ]);
+                var o = $r.offset( ctrl );
+                var h = $r.height();
+                var ch = $(ctrl).height();
+                var cst = ctrl.scrollTop;
+
+                console.log('ctrl.offsetTop: '+ctrl.offsetTop, ctrl.offsetParent );
+                console.log('row.offsetTop: '+$r[0].offsetTop, $r[0].offsetParent );
+
+                console.log( o.y+h, ch+cst,' | ', o.y , cst );
+
+                /*if ( o.y+h > ch+cst ){
+                    ctrl.scrollTop = o.y+h - ch;
+                }
+                else if ( o.y < cst){
+                    ctrl.scrollTop = o.y;
+                }*/
+            }
+        };
 
         /**
          * returns the client's selected indices

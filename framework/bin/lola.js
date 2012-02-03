@@ -874,6 +874,7 @@ if ( !String.prototype.trim ) {
                 }
                 return this;
             }
+
         };
 
         //==================================================================
@@ -6580,35 +6581,19 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         /**
-         * returns offset of object
+         * returns offset of object relative to descendant or root
          * @param {Element} elem
-         * @param {Boolean|undefined} absolute if true returns absolute position
+         * @param {Element|undefined} descendant get offset relative to descendant
+         *
          */
-        this.getOffset = function( elem, absolute ) {
-            if ( !absolute )
-                absolute = false;
+        this.getOffset = function( elem, descendant ) {
             var point = new self.Point( elem.offsetLeft, elem.offsetTop );
-            if ( absolute && elem.offsetParent ) {
-                var parent = self.getOffset( elem.offsetParent, true );
+            /*if ( elem.offsetParent && elem.offsetParent != descendant ) {
+                var parent = self.getOffset( elem.offsetParent, descendant );
                 point = point.add( parent );
-            }
+            }*/
+            console.log('getOffset: '+point, elem);
             return point;
-        };
-
-        /**
-         * gets position relative to root
-         * @param {Element} elem
-         */
-        this.absolutePosition = function( elem ){
-            return self.getOffset( elem, true );
-        };
-
-        /**
-         * get position relative to offsetParent
-         * @param {Element} elem
-         */
-        this.relativePosition = function( elem ){
-            return self.getOffset( elem, false );
         };
 
         /**
@@ -6617,7 +6602,7 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
-            if (value){
+            if ( value != undefined ){
                 //setting
                 var bl = lola.css.style(elem,"borderLeft");
                 var br = lola.css.style(elem,"borderRight");
@@ -6642,7 +6627,7 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.height = function( elem, value ) {
-            if (value){
+            if ( value != undefined ){
                 //setting
                 var bl = lola.css.style(elem,"borderTop");
                 var br = lola.css.style(elem,"borderBottom");
@@ -6659,6 +6644,60 @@ if ( !String.prototype.trim ) {
                 else
                     return elem.clientHeight;
             }
+        };
+
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+            /**
+             * returns offset of elements
+             * @param {Element|undefined} descendant get offset relative to descendant
+             */
+            offset: function( descendant ){
+                var values = [];
+                this.forEach( function(obj){
+                    values.push( self.getOffset( obj, descendant ));
+                });
+                return lola.__(values);
+            },
+
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            width: function( value ){
+                var values = [];
+                this.forEach(function(elem){
+                    values.push( self.width( elem ) );
+                });
+                if ( value != undefined )
+                    return this;
+
+                return lola.__(values);
+            },
+
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            height: function( value ){
+                var values = [];
+                this.forEach(function(elem){
+                    values.push( self.height( elem ) );
+                });
+                if ( value != undefined )
+                    return this;
+
+                return lola.__(values);
+            }
+
         };
 
 

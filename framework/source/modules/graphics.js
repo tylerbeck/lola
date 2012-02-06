@@ -247,11 +247,7 @@
          */
         this.selectorMethods = {
             registerContext: function(){
-                this.forEach( function(item){
-                    lola.graphics.registerContext( item );
-                });
-
-                return this;
+                return this.s( self.registerContext );
             }
         };
 

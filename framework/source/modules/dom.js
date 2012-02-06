@@ -181,7 +181,7 @@
                 }
                 else {
                     this.forEach( function( item ) {
-                        if (item.hasOwnProperty('childNodes')){
+                        if (item.childNodes){
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
@@ -365,14 +365,14 @@
             nodeIndex: function(){
                 var values = [];
                 this.forEach( function( item, index ) {
-                    if (item.hasOwnProperty('previousSibling')){
+                    if (item.previousSibling){
                         var i = 0;
                         while( (item = item.previousSibling) != null )
                             i++;
                         values.push( i );
                     }
                     else{
-                        values.push( -1 );
+                        values.push( 0 );
                     }
 
                 } );
@@ -385,10 +385,7 @@
              * @return {lola.Selector}
              */
             deleteExpando: function( name ) {
-                this.forEach( function( item ) {
-                    lola.deleteExpando( item, name );
-                } );
-                return this;
+                return this.s( lola.deleteExpando, name );
             }
         };
 

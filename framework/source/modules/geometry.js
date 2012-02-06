@@ -64,16 +64,25 @@
         /**
          * returns offset of object relative to descendant or root
          * @param {Element} elem
-         * @param {Element|undefined} descendant get offset relative to descendant
+         * @param {Element|undefined} relativeTo get offset relative to this element
          *
          */
-        this.getOffset = function( elem, descendant ) {
+        this.getOffset = function( elem, relativeTo ) {
+            //console.groupCollapsed( 'get offset' );
             var point = new self.Point( elem.offsetLeft, elem.offsetTop );
-            /*if ( elem.offsetParent && elem.offsetParent != descendant ) {
-                var parent = self.getOffset( elem.offsetParent, descendant );
+            //console.log('element offset '+point);
+            if ( elem.offsetParent ) {
+                var parent = self.getOffset( elem.offsetParent );
+                //console.log('adding parent offset '+parent);
                 point = point.add( parent );
-            }*/
-            console.log('getOffset: '+point, elem);
+            }
+            if ( relativeTo ){
+                var relative = self.getOffset( relativeTo );
+                //console.log('subtracting relative offset '+relative);
+                point = point.subtract( relative );
+            }
+            //console.log('result: '+point);
+            //console.groupEnd();
             return point;
         };
 
@@ -83,6 +92,7 @@
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
+            //console.log('lola.geometry.width', arguments );
             if ( value != undefined ){
                 //setting
                 var bl = lola.css.style(elem,"borderLeft");
@@ -95,10 +105,38 @@
             }
             else{
                 //getting
-                if ( elem.offsetWidth )
+               if ( elem.offsetWidth )
                     return elem.offsetWidth;
                 else
                     return elem.clientWidth;
+            }
+        };
+
+        /**
+         * gets or sets the inner width of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        this.innerWidth = function( elem, value ) {
+            if ( value != undefined ){
+                //setting
+                return lola.css.style( elem, 'width', value);
+            }
+            else{
+                //getting
+                var w;
+                if ( elem.offsetWidth )
+                    w = elem.offsetWidth;
+                else
+                    w = elem.clientWidth;
+
+                var bl = lola.css.style(elem,"borderLeft");
+                var br = lola.css.style(elem,"borderRight");
+                var pl = lola.css.style(elem,"paddingLeft");
+                var pr = lola.css.style(elem,"paddingRight");
+                w -= bl+br+pl+pr;
+
+                return w;
             }
         };
 
@@ -108,13 +146,14 @@
          * @param {Number|undefined} value
          */
         this.height = function( elem, value ) {
+            //console.log('lola.geometry.height', elem, value );
             if ( value != undefined ){
                 //setting
-                var bl = lola.css.style(elem,"borderTop");
-                var br = lola.css.style(elem,"borderBottom");
-                var pl = lola.css.style(elem,"paddingTop");
-                var pr = lola.css.style(elem,"paddingBottom");
-                value -= bl+br+pl+pr;
+                var bt = lola.css.style(elem,"borderTop");
+                var bb = lola.css.style(elem,"borderBottom");
+                var pt = lola.css.style(elem,"paddingTop");
+                var pb = lola.css.style(elem,"paddingBottom");
+                value -= bt+bb+pt+pb;
 
                 return lola.css.style( elem, 'height', value);
             }
@@ -124,6 +163,36 @@
                     return elem.offsetHeight;
                 else
                     return elem.clientHeight;
+            }
+        };
+
+        /**
+         * gets or sets the inner height of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        this.innerHeight = function( elem, value ) {
+            if ( value != undefined ){
+                //setting
+
+                return lola.css.style( elem, 'height', value);
+            }
+            else{
+                //getting
+                var h;
+                if ( elem.offsetHeight )
+                    h = elem.offsetHeight;
+                else
+                    h = elem.clientHeight;
+
+                var bt = lola.css.style(elem,"borderTop");
+                var bb = lola.css.style(elem,"borderBottom");
+                var pt = lola.css.style(elem,"paddingTop");
+                var pb = lola.css.style(elem,"paddingBottom");
+                h -= bt+bb+pt+pb;
+
+                return h;
+
             }
         };
 
@@ -141,12 +210,8 @@
              * returns offset of elements
              * @param {Element|undefined} descendant get offset relative to descendant
              */
-            offset: function( descendant ){
-                var values = [];
-                this.forEach( function(obj){
-                    values.push( self.getOffset( obj, descendant ));
-                });
-                return lola.__(values);
+            offset: function( relativeTo ){
+                return this.g( self.getOffset, relativeTo );
             },
 
             /**
@@ -154,14 +219,7 @@
              * @param value
              */
             width: function( value ){
-                var values = [];
-                this.forEach(function(elem){
-                    values.push( self.width( elem ) );
-                });
-                if ( value != undefined )
-                    return this;
-
-                return lola.__(values);
+                return this._( self.width, value );
             },
 
             /**
@@ -169,14 +227,23 @@
              * @param value
              */
             height: function( value ){
-                var values = [];
-                this.forEach(function(elem){
-                    values.push( self.height( elem ) );
-                });
-                if ( value != undefined )
-                    return this;
+                return this._( self.height, value );
+            },
 
-                return lola.__(values);
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            innerWidth: function( value ){
+                return this._( self.innerWidth, value );
+            },
+
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            innerHeight: function( value ){
+                return this._( self.innerHeight, value );
             }
 
         };
@@ -240,20 +307,26 @@
              * @param args
              */
             operate: function( fn, args ){
+                //console.groupCollapsed( 'operate' );
                 var r = this.copy();
+                //console.log('start with: ', r);
                 var len =  args.length;
-                for (var i=1; i<len; i++) {
-                    var arg = arguments[i];
+                //console.log('there are',len,'arguments');
+                for (var i=0; i<len; i++) {
+                    var arg = args[i];
                     if (typeof arg == "number") {
+                        //console.log('arg is number: ', arg);
                         r.x = fn(r.x,arg);
                         r.y = fn(r.y,arg);
                     }
                     else {
+                        //console.log('arg is point: ', arg);
                         r.x = fn(r.x,arg.x);
                         r.y = fn(r.y,arg.y);
                     }
                 }
-
+                //console.log('end with: ', r);
+                //console.groupEnd();
                 return r;
             },
 

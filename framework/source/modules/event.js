@@ -121,7 +121,7 @@
                     }
 
                     var phase = self.phaseString( target, useCapture );
-                    priority = priority || this.PRIORITY_NORMAL;
+                    priority = priority || self.PRIORITY_NORMAL;
                     scope = scope || target;
 
                     //assign handler a uid so it can be easily referenced
@@ -504,11 +504,7 @@
              * @param {Object|undefined} scope
              */
             addListener: function( type, handler, useCapture, priority, scope ) {
-                this.forEach( function( item ) {
-                    self.addListener( item, type, handler, useCapture, priority, scope );
-                } );
-
-                return this;
+                return this.s( self.addListener, type, handler, useCapture, priority, scope );
             },
 
             /**
@@ -518,11 +514,7 @@
              * @param {Boolean|undefined} useCapture
              */
             removeListener: function( type, handler, useCapture ) {
-                this.forEach( function( item ) {
-                    self.removeListener( item, type, handler, useCapture );
-                } );
-
-                return this;
+                return this.s( self.removeListener, type, handler, useCapture );
             },
 
             /**
@@ -532,11 +524,7 @@
              * @param {String|undefined} phase
              */
             removeHandler: function( handler, types, phase ) {
-                this.forEach( function( item ) {
-                    self.removeHandler( item, handler, types, phase );
-                } );
-
-                return this;
+                return this.s( self.removeHandler, handler, types, phase );
             },
 
             /**
@@ -547,11 +535,7 @@
              * @param {Object|undefined} data
              */
             trigger: function( type, bubbles, cancelable, data ) {
-                this.forEach( function( item ) {
-                    self.trigger( item, type, bubbles, cancelable, data );
-                } );
-
-                return this;
+                return this.s( self.trigger, type, bubbles, cancelable, data );
             }
         };
 
@@ -694,7 +678,7 @@
             }
 
             function mouseOver( event ){
-                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, this );
+                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, self );
                 var data = getData( event.currentTarget );
                 data.hasIntent = true;
                 if (data.timeout < 0)
@@ -708,7 +692,7 @@
             }
 
             function confirm( target ){
-                self.removeListener( target, 'mouseout', mouseOut, false, 0, this );
+                self.removeListener( target, 'mouseout', mouseOut, false, 0, self );
                 var data = getData( target );
                 data.timeout = -1;
                 if (data.hasIntent){
@@ -719,7 +703,7 @@
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
                 var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope );
                 getData( target );
-                self.addListener( target, 'mouseover', mouseOver, false, 0, this );
+                self.addListener( target, 'mouseover', mouseOver, false, 0, self );
                 return uid;
             };
 

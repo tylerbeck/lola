@@ -3,7 +3,7 @@
     <!-- Type Module Tests -->
     <script name="Setup Type Module Tests"><![CDATA[
         var tags = "a abbr acronym address applet area article aside audio "+
-                "b base basefont bdi bdo big blockquote body br button "+
+                "b base bdi bdo big body br button "+
                 "canvas caption center cite code col colgroup command "+
                 "datalist dd del details dfn dir div dl dt "+
                 "em embed "+
@@ -65,10 +65,10 @@
     <test name="$().isAudio: check" equals="true" type="bool"><![CDATA[ $( map['Audio'] ).isAudio(); ]]></test>
     <test name="lola.type.get: Base" equals="base" type="string"><![CDATA[ lola.type.get( map['Base'] ); ]]></test>
     <test name="$().isBase: check" equals="true" type="bool"><![CDATA[ $( map['Base'] ).isBase(); ]]></test>
-    <test name="lola.type.get: BaseFont" equals="basefont" type="string"><![CDATA[ lola.type.get( map['BaseFont'] ); ]]></test>
+    <!--<test name="lola.type.get: BaseFont" equals="basefont" type="string"><![CDATA[ lola.type.get( map['BaseFont'] ); ]]></test>
     <test name="$().isBaseFont: check" equals="true" type="bool"><![CDATA[ $( map['BaseFont'] ).isBaseFont(); ]]></test>
     <test name="lola.type.get: Blockquote" equals="blockquote" type="string"><![CDATA[ lola.type.get( map['Blockquote'] ); ]]></test>
-    <test name="$().isBlockquote: check" equals="true" type="bool"><![CDATA[ $( map['Blockquote'] ).isBlockquote(); ]]></test>
+    <test name="$().isBlockquote: check" equals="true" type="bool"><![CDATA[ $( map['Blockquote'] ).isBlockquote(); ]]></test>-->
     <test name="lola.type.get: Body" equals="body" type="string"><![CDATA[ lola.type.get( map['Body'] ); ]]></test>
     <test name="$().isBody: check" equals="true" type="bool"><![CDATA[ $( map['Body'] ).isBody(); ]]></test>
     <test name="lola.type.get: BR" equals="br" type="string"><![CDATA[ lola.type.get( map['BR'] ); ]]></test>
@@ -121,8 +121,8 @@
     <test name="$().isInput: check" equals="true" type="bool"><![CDATA[ $( map['Input'] ).isInput(); ]]></test>
     <test name="lola.type.get: Mod" equals="mod" type="string"><![CDATA[ lola.type.get( map['Mod'] ); ]]></test>
     <test name="$().isMod: check" equals="true" type="bool"><![CDATA[ $( map['Mod'] ).isMod(); ]]></test>
-    <test name="lola.type.get: Keygen" equals="keygen" type="string"><![CDATA[ lola.type.get( map['Keygen'] ); ]]></test>
-    <test name="$().isKeygen: check" equals="true" type="bool"><![CDATA[ $( map['Keygen'] ).isKeygen(); ]]></test>
+    <!--<test name="lola.type.get: Keygen" equals="keygen" type="string"><![CDATA[ lola.type.get( map['Keygen'] ); ]]></test>
+    <test name="$().isKeygen: check" equals="true" type="bool"><![CDATA[ $( map['Keygen'] ).isKeygen(); ]]></test>-->
     <test name="lola.type.get: Label" equals="label" type="string"><![CDATA[ lola.type.get( map['Label'] ); ]]></test>
     <test name="$().isLabel: check" equals="true" type="bool"><![CDATA[ $( map['Label'] ).isLabel(); ]]></test>
     <test name="lola.type.get: Legend" equals="legend" type="string"><![CDATA[ lola.type.get( map['Legend'] ); ]]></test>

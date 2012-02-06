@@ -87,6 +87,18 @@
             return dependencies;
         };
 
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+        }
+
 
 
     };

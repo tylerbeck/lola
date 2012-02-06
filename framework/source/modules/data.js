@@ -236,52 +236,37 @@
              * @return {Array}
              */
             getData: function( namespace, create ) {
-                var data = [];
-                this.forEach( function( item ) {
-                    data.push( self.get( item, namespace, create ) )
-                } );
-                return lola.__(data);
+                return this.g( self.get, namespace, create );
             },
 
             /**
              * put data for elements
              * @param {Object} data data to put in cache for elements (overwrites)
              * @param {String} namespace
-             * @return {lola.Selector}
+             * @return {*}
              */
             putData: function( data, namespace ) {
-                this.forEach( function( item ) {
-                    self.set( item, data, namespace, true );
-                } );
-                return this;
+                return this.s( self.set, data, namespace );
             },
 
             /**
              * updates data for elements
              * @param {Object} data
              * @param {String} namespace
-             * @return {lola.Selector}
+             * @return {*}
              */
             updateData: function( data, namespace ) {
-                this.forEach( function( item ) {
-                    //clear data
-                    self.set( item, data, namespace, false );
-                } );
-                return this;
+                return this.s( self.set, data, namespace, false );
             },
 
             /**
              * remove specified namespaces from data cache
              * @param {Array|String|undefined} namespace
              * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
-             * @return {lola.Selector}
+             * @return {*}
              */
             removeData: function( namespace, recurse ) {
-                this.forEach( function( item ) {
-                    //clear data
-                    self.remove( item, namespace, recurse );
-                } );
-                return this;
+                return this.s( self.remove, namespace, recurse );
             },
 
             /**

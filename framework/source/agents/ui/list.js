@@ -95,7 +95,7 @@
          * @param {*} client
          */
         this.sign = function( client ) {
-
+            console.log(' agent.ui.list.sign =',client);
             var $client = $(client);
             $client.identify();
             //console.log('agent.ui.list::sign', client.id );
@@ -109,6 +109,7 @@
                 $control.classes( $client.classes() );
                 $control.addClass("ui-list-ctrl");
                 $control.removeClass("ui-list");
+
                 $client.insertBefore( control );
                 $client.addClass('ui-list-input');
                 $control.putData( {client:client}, namespace );
@@ -127,6 +128,8 @@
                     lastSelection: -1
                 }, namespace );
 
+
+
                 var g = lola.util.getInlineValue;
                 self.setLabelFn( client, g( client, 'label-fn', 'function', defaultLabelFn ) );
                 self.setValueFn( client, g( client, 'value-fn', 'function', defaultValueFn ) );
@@ -137,6 +140,7 @@
                 $client.addListener('blur', handleClientBlur, false, lola.event.PRIORITY_NORMAL, self );
                 $client.addListener('keydown', handleClientKeyDown, false, lola.event.PRIORITY_BEFORE, self );
                 $control.addListener('mousedown', handleControlMouseDown, false, lola.event.PRIORITY_BEFORE, self );
+
             }
         };
 
@@ -257,26 +261,26 @@
             //reset client
             $ctrl.html( "" );
             client.options.length = 0;
-            data.selectedIndices = [];
+            var indices = [];
             dp.forEach( function(item,index){
                 self.updateClientRow( client, index, item, lblFn, valFn, $ctrl[0] );
                 if (item.selected){
                     if (data.multi)
-                        data.selectedIndices.push( index );
+                        indices.push( index );
                     else
-                        data.selectedIndices = [index];
+                        indices = [index];
                 }
             });
-            setSelections( client, data.selectedIndices, true, true );
+            setSelections( client, indices );
         }
 
         /**
          * sets the selected class on selected rows
          * @param client
          * @param list
-         * @param selected
          */
-        function setSelections( client, list, selected, clear ){
+        function setSelections( client, list ){
+            //console.log('setSelections',lola.now());
             var data = $(client).getData(namespace);
             var ctrl = data.control;
 
@@ -286,16 +290,21 @@
                 client.options[ index ].selected = slct;
             };
 
-            if (clear){
-                for (var i=0; i<ctrl.childNodes.length; i++){
-                    setFn(i,false);
-                }
-            }
-
-            list.forEach( function(item){
-                setFn(item,selected);
+            //clear previous selections
+            data.selectedIndices.forEach( function( index ){
+                setFn( index, false );
             });
-        }
+
+            //set current selections
+            list.forEach( function( index ){
+                setFn( index, true );
+            });
+
+            //update data
+            data.selectedIndices = list;
+
+            //console.log('   complete',lola.now());
+       }
 
         /**
          * updates client data provider with provided object and re-renders row
@@ -330,21 +339,20 @@
             //create row node
             var a = document.createElement('a');
             a.className = "list-item";
-            a.href = "javascript:lola.event.preventDefault(event);";
             a.innerHTML = labelFn( obj );
             addListeners( a );
 
             //create shadow option
             var opt = new Option( labelFn( obj ), valueFn( obj ) );
 
-            if (ctrl.childNodes.length <= row){
+            if (ctrl.children.length <= row){
                 //add child
                 $(ctrl).appendChild( a );
                 client.options.add( opt );
             }
             else {
                 //replace child
-                var old = ctrl.childNodes[row];
+                var old = ctrl.children[row];
                 $(ctrl).replaceChild( a, old);
                 client.options[row] = opt;
 
@@ -358,7 +366,9 @@
          * @param row
          */
         function addListeners( row ){
-            $(row).addListener( 'click', handleClientRowClick, false, lola.event.PRIORITY_NORMAL, self );
+            $r = $(row);
+            $r.addListener( 'mousedown', lola.event.preventDefault, false, lola.event.PRIORITY_BEFORE, self );
+            $r.addListener( 'click', handleClientRowClick, false, lola.event.PRIORITY_NORMAL, self );
         }
 
         /**
@@ -409,48 +419,55 @@
          * @param event
          */
         function handleClientRowClick( event ){
+            //console.log('agent.ui.list::handleClientRowClick' );
             var $row = $( event.currentTarget );
             var ctrl = $row.parent();
             var client = $(ctrl).getData( namespace ).client;
             var data = $(client).getData( namespace );
             var index = $row.nodeIndex();
+            var indices = [];
+            client.focus();
 
             //reset clickedIndices
             data.clickedIndices = null;
 
-            //console.log('agent.ui.list::handleClientRowClick', client );
             if ( (event.metaKey && data.multi) || (event.metaKey && data.dataProvider[index].selected===true) ){
 
-                //toggle row's selected class
-                var selected = !(data.dataProvider[index].selected===true);
-                setSelections( client, [index], selected );
+                //start with current selections
+                //console.log('metaclick: '+index);
+                indices = indices.concat( data.selectedIndices );
+                //console.log('start indices', indices);
 
-                //update selected indices
-                if (selected){
-                    data.selectedIndices.push(index);
+                //toggle row's selected class
+                var toggleIndex = indices.indexOf(index);
+                console.log('toggle', toggleIndex );
+                if ( toggleIndex >= 0 ){
+                    //console.log('remove index:', index );
+                    indices.splice( toggleIndex, 1 );
                 }
                 else{
-                    var i = data.selectedIndices.indexOf(index);
-                    data.selectedIndices.splice(i,1);
+                    //console.log('add index:', index );
+                    indices.push(index);
                 }
+                data.lastSelection = index;
+                //console.log('end indices', indices)
+
+
             }
             else if( event.shiftKey && data.multi ){
 
                 if (data.lastSelection < 0)
                     data.lastSelection = index;
-
-                //console.log('    shift select');
-                data.selectedIndices = getRangeIndexes( data.lastSelection, index );
-                setSelections( client, data.selectedIndices, true, true );
+                indices = getRangeIndexes( data.lastSelection, index );
             }
             else {
-                data.selectedIndices = [index];
-                setSelections( client, data.selectedIndices, true, true );
+                indices = [index];
+                data.lastSelection = index;
+
             }
 
-            //update last click value
-            data.lastSelection = index;
-            data.selectedIndices = data.selectedIndices.sort();
+            indices = indices.sort();
+            setSelections( client, indices );
             selectionChanged( client );
         }
 
@@ -460,10 +477,14 @@
          * @param client
          */
         function selectionChanged(client){
+            //console.log('selectionChanged',lola.now());
+
             $(client).trigger('selectionChanged', false, false, {
                 selectedIndices: self.getSelectedIndices(client),
                 selectedValues: self.getSelectedValues(client)
             });
+            //console.log('selectionChanged complete',lola.now());
+
         }
 
         /**
@@ -472,6 +493,7 @@
          * @param event
          */
         function handleClientKeyDown( event ){
+            //console.log('handleClientKeyDown',lola.now());
 
             //TODO: Add key jumpto functionality
             //TODO: Add scrollto functionality
@@ -487,6 +509,7 @@
                 var $client = $(client);
                 var data = $client.getData( namespace );
                 var $ctrl = $(data.control);
+                var indices = [];
 
                 //console.log('data.lastSelection:',data.lastSelection);
                 if (data.multi && event.shiftKey){
@@ -502,8 +525,7 @@
                     //console.log( data.selectStart, data.selectEnd );
                     data.lastSelection = data.selectEnd;
                     //update selections
-                    data.selectedIndices = lola.array.unique( [].concat( keyIndices, data.clickedIndices ) );
-                    setSelections( client, data.selectedIndices, true, true );
+                    indices = lola.array.unique( [].concat( keyIndices, data.clickedIndices ) );
                     self.scrollToRow( client, data.selectEnd );
 
                 }
@@ -512,16 +534,15 @@
                     //console.log(index);
 
                     //update selected indices
-                    data.selectedIndices = [ index ];
-                    setSelections( client, data.selectedIndices, true, true );
+                    indices = [ index ];
                     data.lastSelection = index;
                     data.clickedIndices = null;
                     self.scrollToRow( client, index );
 
                 }
 
-
-                data.selectedIndices = data.selectedIndices.sort();
+                indices = indices.sort();
+                setSelections( client, indices, true, true );
                 selectionChanged( client );
             }
 
@@ -534,9 +555,10 @@
          * @param event
          */
         function handleControlMouseDown( event ){
-            event.preventDefault();
+            console.log('handleControlMouseDown');
             var client = $(event.currentTarget).getData(namespace).client;
             client.focus();
+            event.preventDefault();
         }
 
         /**
@@ -570,23 +592,20 @@
             var ctrl = data.control;
 
             if ( row < data.dataProvider.length ){
-                var $r = $(ctrl.childNodes[ row ]);
+                var $r = $(ctrl.children[ row ]);
                 var o = $r.offset( ctrl );
+
+                o.y -= parseInt( $(ctrl).style('border-top-width') );
                 var h = $r.height();
-                var ch = $(ctrl).height();
+                var ch = $(ctrl).innerHeight();
                 var cst = ctrl.scrollTop;
 
-                console.log('ctrl.offsetTop: '+ctrl.offsetTop, ctrl.offsetParent );
-                console.log('row.offsetTop: '+$r[0].offsetTop, $r[0].offsetParent );
-
-                console.log( o.y+h, ch+cst,' | ', o.y , cst );
-
-                /*if ( o.y+h > ch+cst ){
+                if ( o.y+h > ch+cst ){
                     ctrl.scrollTop = o.y+h - ch;
                 }
                 else if ( o.y < cst){
                     ctrl.scrollTop = o.y;
-                }*/
+                }
             }
         };
 
@@ -654,9 +673,7 @@
          * @param indices
          */
         this.setSelectedIndices = function( client, indices ){
-            var data = $(client).getData(namespace);
-            data.selectedIndices = indices;
-            setSelections( client, indices, true, true );
+            setSelections( client, indices );
         };
 
         /**

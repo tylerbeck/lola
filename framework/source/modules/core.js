@@ -396,7 +396,61 @@
                     })
                 }
                 return this;
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns values
+             * @private
+             */
+            g: function( /*arguments*/ ){
+                return lola.__( this.i.apply( this, arguments ) );
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns this
+             * @private
+             */
+            s: function( /*arguments*/ ){
+                this.i.apply( this, arguments );
+                return this;
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns
+             * this if the last argument is undefined, otherwise returns
+             * values
+             *
+             * @private
+             */
+            _: function( /*arguments*/ ){
+                //console.log('_: ', arguments);
+                var result = this.i.apply( this, arguments );
+                return ( arguments[arguments.length - 1] == undefined ) ? lola.__( result ) : this;
+            },
+
+
+            i: function( ){
+                //console.log('_iterate: ', arguments);
+                var values = [];
+                var selector = this;
+                var l = arguments.length;
+                //console.log(l);
+                if (l){
+                    var fn = arguments[0];
+                    var args = [];
+                    for (var i=1; i<l; i++){
+                        args.push( arguments[i] );
+                    }
+                    this.forEach( function( item ){
+                        //console.log('args', [ item ].concat(args));
+                        values.push( fn.apply( selector, [ item ].concat(args) ) );
+                    });
+
+                }
+                return values;
             }
+
+
 
         };
 

@@ -77,14 +77,14 @@
 
             var objTypes = "String Number Date Array Boolean RegExp Function Object Undefined Null";
             var tagTypes =  "a abbr acronym address applet area article aside audio "+
-                "b base basefont bdi bdo big blockquote body br button "+
+                "b base bdi bdo big body br button "+
                 "canvas caption center cite code col colgroup command "+
                 "datalist dd del details dfn dir div dl dt "+
                 "em embed "+
                 "fieldset figcaption figure font footer form frame frameset "+
                 "h1 h2 h3 h4 h5 h6 head header hgroup hr html "+
                 "i iframe img input ins "+
-                "keygen kbd "+
+                "kbd "+
                 "label legend li link "+
                 "map mark menu meta meter "+
                 "nav noframes noscript "+
@@ -110,8 +110,8 @@
             var cntype = Object.prototype.toString.call( cn );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
-
             //TODO: add isTextNode and isCommentNode selector functions
+            //TODO: add support for blockquote
         }
 
         /**
@@ -191,11 +191,7 @@
              * @return {Array}
              */
             getType: function() {
-                var values = [];
-                this.forEach( function( item ) {
-                    values.push( self.get(item) );
-                } );
-                return lola.__(values);
+                return this.g( self.get );
             },
 
             /**

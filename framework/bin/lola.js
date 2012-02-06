@@ -873,7 +873,61 @@ if ( !String.prototype.trim ) {
                     })
                 }
                 return this;
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns values
+             * @private
+             */
+            g: function( /*arguments*/ ){
+                return lola.__( this.i.apply( this, arguments ) );
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns this
+             * @private
+             */
+            s: function( /*arguments*/ ){
+                this.i.apply( this, arguments );
+                return this;
+            },
+
+            /**
+             * iterates over elements and applys argument 0 and returns
+             * this if the last argument is undefined, otherwise returns
+             * values
+             *
+             * @private
+             */
+            _: function( /*arguments*/ ){
+                //console.log('_: ', arguments);
+                var result = this.i.apply( this, arguments );
+                return ( arguments[arguments.length - 1] == undefined ) ? lola.__( result ) : this;
+            },
+
+
+            i: function( ){
+                //console.log('_iterate: ', arguments);
+                var values = [];
+                var selector = this;
+                var l = arguments.length;
+                //console.log(l);
+                if (l){
+                    var fn = arguments[0];
+                    var args = [];
+                    for (var i=1; i<l; i++){
+                        args.push( arguments[i] );
+                    }
+                    this.forEach( function( item ){
+                        //console.log('args', [ item ].concat(args));
+                        values.push( fn.apply( selector, [ item ].concat(args) ) );
+                    });
+
+                }
+                return values;
             }
+
+
 
         };
 
@@ -1341,14 +1395,14 @@ if ( !String.prototype.trim ) {
 
             var objTypes = "String Number Date Array Boolean RegExp Function Object Undefined Null";
             var tagTypes =  "a abbr acronym address applet area article aside audio "+
-                "b base basefont bdi bdo big blockquote body br button "+
+                "b base bdi bdo big body br button "+
                 "canvas caption center cite code col colgroup command "+
                 "datalist dd del details dfn dir div dl dt "+
                 "em embed "+
                 "fieldset figcaption figure font footer form frame frameset "+
                 "h1 h2 h3 h4 h5 h6 head header hgroup hr html "+
                 "i iframe img input ins "+
-                "keygen kbd "+
+                "kbd "+
                 "label legend li link "+
                 "map mark menu meta meter "+
                 "nav noframes noscript "+
@@ -1374,8 +1428,8 @@ if ( !String.prototype.trim ) {
             var cntype = Object.prototype.toString.call( cn );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
-
             //TODO: add isTextNode and isCommentNode selector functions
+            //TODO: add support for blockquote
         }
 
         /**
@@ -1455,11 +1509,7 @@ if ( !String.prototype.trim ) {
              * @return {Array}
              */
             getType: function() {
-                var values = [];
-                this.forEach( function( item ) {
-                    values.push( self.get(item) );
-                } );
-                return lola.__(values);
+                return this.g( self.get );
             },
 
             /**
@@ -1692,7 +1742,7 @@ if ( !String.prototype.trim ) {
                 }
                 else {
                     this.forEach( function( item ) {
-                        if (item.hasOwnProperty('childNodes')){
+                        if (item.childNodes){
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
@@ -1876,14 +1926,14 @@ if ( !String.prototype.trim ) {
             nodeIndex: function(){
                 var values = [];
                 this.forEach( function( item, index ) {
-                    if (item.hasOwnProperty('previousSibling')){
+                    if (item.previousSibling){
                         var i = 0;
                         while( (item = item.previousSibling) != null )
                             i++;
                         values.push( i );
                     }
                     else{
-                        values.push( -1 );
+                        values.push( 0 );
                     }
 
                 } );
@@ -1896,10 +1946,7 @@ if ( !String.prototype.trim ) {
              * @return {lola.Selector}
              */
             deleteExpando: function( name ) {
-                this.forEach( function( item ) {
-                    lola.deleteExpando( item, name );
-                } );
-                return this;
+                return this.s( lola.deleteExpando, name );
             }
         };
 
@@ -2150,52 +2197,37 @@ if ( !String.prototype.trim ) {
              * @return {Array}
              */
             getData: function( namespace, create ) {
-                var data = [];
-                this.forEach( function( item ) {
-                    data.push( self.get( item, namespace, create ) )
-                } );
-                return lola.__(data);
+                return this.g( self.get, namespace, create );
             },
 
             /**
              * put data for elements
              * @param {Object} data data to put in cache for elements (overwrites)
              * @param {String} namespace
-             * @return {lola.Selector}
+             * @return {*}
              */
             putData: function( data, namespace ) {
-                this.forEach( function( item ) {
-                    self.set( item, data, namespace, true );
-                } );
-                return this;
+                return this.s( self.set, data, namespace );
             },
 
             /**
              * updates data for elements
              * @param {Object} data
              * @param {String} namespace
-             * @return {lola.Selector}
+             * @return {*}
              */
             updateData: function( data, namespace ) {
-                this.forEach( function( item ) {
-                    //clear data
-                    self.set( item, data, namespace, false );
-                } );
-                return this;
+                return this.s( self.set, data, namespace, false );
             },
 
             /**
              * remove specified namespaces from data cache
              * @param {Array|String|undefined} namespace
              * @param {Boolean|undefined} recurse recurse childNodes, defaults to false
-             * @return {lola.Selector}
+             * @return {*}
              */
             removeData: function( namespace, recurse ) {
-                this.forEach( function( item ) {
-                    //clear data
-                    self.remove( item, namespace, recurse );
-                } );
-                return this;
+                return this.s( self.remove, namespace, recurse );
             },
 
             /**
@@ -2597,6 +2629,18 @@ if ( !String.prototype.trim ) {
             return dependencies;
         };
 
+        //==================================================================
+        // Selector Methods
+        //==================================================================
+
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+        }
+
 
 
     };
@@ -2730,7 +2774,7 @@ if ( !String.prototype.trim ) {
                     }
 
                     var phase = self.phaseString( target, useCapture );
-                    priority = priority || this.PRIORITY_NORMAL;
+                    priority = priority || self.PRIORITY_NORMAL;
                     scope = scope || target;
 
                     //assign handler a uid so it can be easily referenced
@@ -3113,11 +3157,7 @@ if ( !String.prototype.trim ) {
              * @param {Object|undefined} scope
              */
             addListener: function( type, handler, useCapture, priority, scope ) {
-                this.forEach( function( item ) {
-                    self.addListener( item, type, handler, useCapture, priority, scope );
-                } );
-
-                return this;
+                return this.s( self.addListener, type, handler, useCapture, priority, scope );
             },
 
             /**
@@ -3127,11 +3167,7 @@ if ( !String.prototype.trim ) {
              * @param {Boolean|undefined} useCapture
              */
             removeListener: function( type, handler, useCapture ) {
-                this.forEach( function( item ) {
-                    self.removeListener( item, type, handler, useCapture );
-                } );
-
-                return this;
+                return this.s( self.removeListener, type, handler, useCapture );
             },
 
             /**
@@ -3141,11 +3177,7 @@ if ( !String.prototype.trim ) {
              * @param {String|undefined} phase
              */
             removeHandler: function( handler, types, phase ) {
-                this.forEach( function( item ) {
-                    self.removeHandler( item, handler, types, phase );
-                } );
-
-                return this;
+                return this.s( self.removeHandler, handler, types, phase );
             },
 
             /**
@@ -3156,11 +3188,7 @@ if ( !String.prototype.trim ) {
              * @param {Object|undefined} data
              */
             trigger: function( type, bubbles, cancelable, data ) {
-                this.forEach( function( item ) {
-                    self.trigger( item, type, bubbles, cancelable, data );
-                } );
-
-                return this;
+                return this.s( self.trigger, type, bubbles, cancelable, data );
             }
         };
 
@@ -3303,7 +3331,7 @@ if ( !String.prototype.trim ) {
             }
 
             function mouseOver( event ){
-                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, this );
+                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, self );
                 var data = getData( event.currentTarget );
                 data.hasIntent = true;
                 if (data.timeout < 0)
@@ -3317,7 +3345,7 @@ if ( !String.prototype.trim ) {
             }
 
             function confirm( target ){
-                self.removeListener( target, 'mouseout', mouseOut, false, 0, this );
+                self.removeListener( target, 'mouseout', mouseOut, false, 0, self );
                 var data = getData( target );
                 data.timeout = -1;
                 if (data.hasIntent){
@@ -3328,7 +3356,7 @@ if ( !String.prototype.trim ) {
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
                 var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope );
                 getData( target );
-                self.addListener( target, 'mouseover', mouseOver, false, 0, this );
+                self.addListener( target, 'mouseover', mouseOver, false, 0, self );
                 return uid;
             };
 
@@ -4044,7 +4072,7 @@ if ( !String.prototype.trim ) {
          */
         function canStyle( obj ) {
             //TODO: Implement canStyle function
-            return true
+            return true;
         }
 
         /**
@@ -4086,9 +4114,9 @@ if ( !String.prototype.trim ) {
                 }
                 else {
                     if ( value == undefined )
-                        self.getRawStyle( node, prop );
+                        return self.getRawStyle( node, prop );
                     else
-                        self.setRawStyle( node, prop, value );
+                        return self.setRawStyle( node, prop, value );
                 }
             }
 
@@ -4247,7 +4275,7 @@ if ( !String.prototype.trim ) {
          */
         this.getRules = function( selector, media ) {
             var rules = [];
-            this.performRuleAction( selector, function( si, ri ) {
+            self.performRuleAction( selector, function( si, ri ) {
                 if ( lola.support.cssRules )
                     rules.push( document.styleSheets[ si ].cssRules[ ri ] );
                 else
@@ -4264,11 +4292,11 @@ if ( !String.prototype.trim ) {
          * @return {Array}
          */
         this.updateRules = function( selector, styles, media ) {
-            var rules = this.getRules( selector, media );
+            var rules = self.getRules( selector, media );
             var props = styles.keys();
             props.forEach( function( item ){
                 rules.forEach( function( rule ){
-                    this.style( rule, item, styles[item] );
+                    self.style( rule, item, styles[item] );
                 });
             });
 
@@ -4281,7 +4309,7 @@ if ( !String.prototype.trim ) {
          * @param media
          */
         this.deleteRules = function( selector, media ) {
-            this.performRuleAction( selector, function( si, ri ) {
+            self.performRuleAction( selector, function( si, ri ) {
                 if ( lola.support.cssRules )
                     document.styleSheets[ si ].deleteRule( ri );
                 else
@@ -4297,13 +4325,13 @@ if ( !String.prototype.trim ) {
          */
         this.classes = function( obj, classes ) {
             if ( classes != undefined ) {
+                //console.log('setting classes:', classes);
                 if ( lola.type.get( classes ) != 'array' ) {
                     if ( lola.type.get( classes ) == 'string' )
                         classes = [classes];
                     else
                         classes = [];
                 }
-
                 obj.className = classes.join( " " );
                 return classes;
 
@@ -4320,7 +4348,7 @@ if ( !String.prototype.trim ) {
          * @param className
          */
         this.hasClass = function( obj, className ) {
-            var names = this.classes( obj );
+            var names = self.classes( obj );
             return lola.array.isIn( names, className );
         };
 
@@ -4330,7 +4358,8 @@ if ( !String.prototype.trim ) {
          * @param {String} className
          */
         this.addClass = function( obj, className ) {
-            var names = this.classes( obj );
+            //console.log('$.addClass: ',obj, className);
+            var names = self.classes( obj );
             if ( !lola.array.isIn( names, className ) ) {
                 names.push( className );
                 self.classes( obj, names );
@@ -4343,7 +4372,8 @@ if ( !String.prototype.trim ) {
          * @param {String} className
          */
         this.removeClass = function( obj, className ) {
-            var names = this.classes( obj );
+            var names = self.classes( obj );
+            //console.log('$.removeClass: ', className);
             var index = names.indexOf( className );
             if ( index >= 0 ) {
                 names.splice( index, 1 );
@@ -4376,19 +4406,7 @@ if ( !String.prototype.trim ) {
              * @param {*} value
              */
             style: function( property, value ) {
-                if ( value != undefined ) {
-                    this.forEach( function( item ) {
-                        self.style( item, property, value );
-                    } );
-                    return this;
-                }
-                else {
-                    var values = [];
-                    this.forEach( function(item){
-                        values.push( self.style( item, property ) )
-                    });
-                    return lola.__(values);
-                }
+                return this._( self.style, property, value );
             },
 
             /**
@@ -4396,23 +4414,7 @@ if ( !String.prototype.trim ) {
              * @param {String|Array|undefined} values
              */
             classes: function( values ) {
-                if ( values != undefined ) {
-                    //set class names
-                    this.forEach( function( item ) {
-                        self.classes( item, values );
-                    } );
-                    return this;
-
-                }
-                else {
-                    //get class names
-                    var names = [];
-                    this.forEach( function( item ) {
-                        names.push( self.classes( item ) );
-                    } );
-
-                    return lola.__(names);
-                }
+                return this._( self.classes, values );
             },
 
             /**
@@ -4420,13 +4422,9 @@ if ( !String.prototype.trim ) {
              * @param {String} name
              */
             hasClass: function( name ) {
-                var check = true;
-                this.forEach( function( item ) {
-                    if (!self.hasClass( item, name )){
-                        check = false;
-                    }
+                return this.every( function( item ) {
+                    return self.hasClass( item, name )
                 } );
-                return check;
             },
 
             /**
@@ -4434,10 +4432,7 @@ if ( !String.prototype.trim ) {
              * @param {String} name
              */
             addClass: function( name ) {
-                this.forEach( function( item ) {
-                    self.addClass( item, name );
-                } );
-                return this;
+                return this.s( self.addClass, name );
             },
 
             /**
@@ -4445,10 +4440,7 @@ if ( !String.prototype.trim ) {
              * @param {String} name
              */
             removeClass: function( name ) {
-                this.forEach( function( item ) {
-                    self.removeClass( item, name );
-                } );
-                return this;
+                return this.s( self.removeClass, name );
             }
 
         };
@@ -5828,10 +5820,7 @@ if ( !String.prototype.trim ) {
              * @param {String} agentName name of registered agent
              */
             assignAgent: function( agentName ) {
-                this.forEach( function(item){
-                    self.assign( item, agentName );
-                });
-                return this;
+                return this.s( self.assign, agentName );
             },
 
             /**
@@ -5839,9 +5828,7 @@ if ( !String.prototype.trim ) {
              * @param {String} agentName name of registered agent
              */
             dropAgent: function( agentName ) {
-                this.forEach( function(item){
-                    self.drop( item, agentName );
-                })
+                return this.s( self.drop, agentName );
             }
 
         };
@@ -6583,16 +6570,25 @@ if ( !String.prototype.trim ) {
         /**
          * returns offset of object relative to descendant or root
          * @param {Element} elem
-         * @param {Element|undefined} descendant get offset relative to descendant
+         * @param {Element|undefined} relativeTo get offset relative to this element
          *
          */
-        this.getOffset = function( elem, descendant ) {
+        this.getOffset = function( elem, relativeTo ) {
+            //console.groupCollapsed( 'get offset' );
             var point = new self.Point( elem.offsetLeft, elem.offsetTop );
-            /*if ( elem.offsetParent && elem.offsetParent != descendant ) {
-                var parent = self.getOffset( elem.offsetParent, descendant );
+            //console.log('element offset '+point);
+            if ( elem.offsetParent ) {
+                var parent = self.getOffset( elem.offsetParent );
+                //console.log('adding parent offset '+parent);
                 point = point.add( parent );
-            }*/
-            console.log('getOffset: '+point, elem);
+            }
+            if ( relativeTo ){
+                var relative = self.getOffset( relativeTo );
+                //console.log('subtracting relative offset '+relative);
+                point = point.subtract( relative );
+            }
+            //console.log('result: '+point);
+            //console.groupEnd();
             return point;
         };
 
@@ -6602,6 +6598,7 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
+            //console.log('lola.geometry.width', arguments );
             if ( value != undefined ){
                 //setting
                 var bl = lola.css.style(elem,"borderLeft");
@@ -6614,10 +6611,38 @@ if ( !String.prototype.trim ) {
             }
             else{
                 //getting
-                if ( elem.offsetWidth )
+               if ( elem.offsetWidth )
                     return elem.offsetWidth;
                 else
                     return elem.clientWidth;
+            }
+        };
+
+        /**
+         * gets or sets the inner width of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        this.innerWidth = function( elem, value ) {
+            if ( value != undefined ){
+                //setting
+                return lola.css.style( elem, 'width', value);
+            }
+            else{
+                //getting
+                var w;
+                if ( elem.offsetWidth )
+                    w = elem.offsetWidth;
+                else
+                    w = elem.clientWidth;
+
+                var bl = lola.css.style(elem,"borderLeft");
+                var br = lola.css.style(elem,"borderRight");
+                var pl = lola.css.style(elem,"paddingLeft");
+                var pr = lola.css.style(elem,"paddingRight");
+                w -= bl+br+pl+pr;
+
+                return w;
             }
         };
 
@@ -6627,13 +6652,14 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.height = function( elem, value ) {
+            //console.log('lola.geometry.height', elem, value );
             if ( value != undefined ){
                 //setting
-                var bl = lola.css.style(elem,"borderTop");
-                var br = lola.css.style(elem,"borderBottom");
-                var pl = lola.css.style(elem,"paddingTop");
-                var pr = lola.css.style(elem,"paddingBottom");
-                value -= bl+br+pl+pr;
+                var bt = lola.css.style(elem,"borderTop");
+                var bb = lola.css.style(elem,"borderBottom");
+                var pt = lola.css.style(elem,"paddingTop");
+                var pb = lola.css.style(elem,"paddingBottom");
+                value -= bt+bb+pt+pb;
 
                 return lola.css.style( elem, 'height', value);
             }
@@ -6643,6 +6669,36 @@ if ( !String.prototype.trim ) {
                     return elem.offsetHeight;
                 else
                     return elem.clientHeight;
+            }
+        };
+
+        /**
+         * gets or sets the inner height of an element
+         * @param {Element} elem
+         * @param {Number|undefined} value
+         */
+        this.innerHeight = function( elem, value ) {
+            if ( value != undefined ){
+                //setting
+
+                return lola.css.style( elem, 'height', value);
+            }
+            else{
+                //getting
+                var h;
+                if ( elem.offsetHeight )
+                    h = elem.offsetHeight;
+                else
+                    h = elem.clientHeight;
+
+                var bt = lola.css.style(elem,"borderTop");
+                var bb = lola.css.style(elem,"borderBottom");
+                var pt = lola.css.style(elem,"paddingTop");
+                var pb = lola.css.style(elem,"paddingBottom");
+                h -= bt+bb+pt+pb;
+
+                return h;
+
             }
         };
 
@@ -6660,12 +6716,8 @@ if ( !String.prototype.trim ) {
              * returns offset of elements
              * @param {Element|undefined} descendant get offset relative to descendant
              */
-            offset: function( descendant ){
-                var values = [];
-                this.forEach( function(obj){
-                    values.push( self.getOffset( obj, descendant ));
-                });
-                return lola.__(values);
+            offset: function( relativeTo ){
+                return this.g( self.getOffset, relativeTo );
             },
 
             /**
@@ -6673,14 +6725,7 @@ if ( !String.prototype.trim ) {
              * @param value
              */
             width: function( value ){
-                var values = [];
-                this.forEach(function(elem){
-                    values.push( self.width( elem ) );
-                });
-                if ( value != undefined )
-                    return this;
-
-                return lola.__(values);
+                return this._( self.width, value );
             },
 
             /**
@@ -6688,14 +6733,23 @@ if ( !String.prototype.trim ) {
              * @param value
              */
             height: function( value ){
-                var values = [];
-                this.forEach(function(elem){
-                    values.push( self.height( elem ) );
-                });
-                if ( value != undefined )
-                    return this;
+                return this._( self.height, value );
+            },
 
-                return lola.__(values);
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            innerWidth: function( value ){
+                return this._( self.innerWidth, value );
+            },
+
+            /**
+             * returns widths of elements
+             * @param value
+             */
+            innerHeight: function( value ){
+                return this._( self.innerHeight, value );
             }
 
         };
@@ -6759,20 +6813,26 @@ if ( !String.prototype.trim ) {
              * @param args
              */
             operate: function( fn, args ){
+                //console.groupCollapsed( 'operate' );
                 var r = this.copy();
+                //console.log('start with: ', r);
                 var len =  args.length;
-                for (var i=1; i<len; i++) {
-                    var arg = arguments[i];
+                //console.log('there are',len,'arguments');
+                for (var i=0; i<len; i++) {
+                    var arg = args[i];
                     if (typeof arg == "number") {
+                        //console.log('arg is number: ', arg);
                         r.x = fn(r.x,arg);
                         r.y = fn(r.y,arg);
                     }
                     else {
+                        //console.log('arg is point: ', arg);
                         r.x = fn(r.x,arg.x);
                         r.y = fn(r.y,arg.y);
                     }
                 }
-
+                //console.log('end with: ', r);
+                //console.groupEnd();
                 return r;
             },
 
@@ -7393,11 +7453,7 @@ if ( !String.prototype.trim ) {
          */
         this.selectorMethods = {
             registerContext: function(){
-                this.forEach( function(item){
-                    lola.graphics.registerContext( item );
-                });
-
-                return this;
+                return this.s( self.registerContext );
             }
         };
 
@@ -8828,7 +8884,8 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function complete(){
-            logFn('lola.test.complete');
+            console.log('lola.test.complete');
+
         }
 
         //==================================================================

@@ -189,10 +189,7 @@
              * @param {String} agentName name of registered agent
              */
             assignAgent: function( agentName ) {
-                this.forEach( function(item){
-                    self.assign( item, agentName );
-                });
-                return this;
+                return this.s( self.assign, agentName );
             },
 
             /**
@@ -200,9 +197,7 @@
              * @param {String} agentName name of registered agent
              */
             dropAgent: function( agentName ) {
-                this.forEach( function(item){
-                    self.drop( item, agentName );
-                })
+                return this.s( self.drop, agentName );
             }
 
         };

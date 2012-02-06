@@ -201,7 +201,8 @@
          * @private
          */
         function complete(){
-            logFn('lola.test.complete');
+            console.log('lola.test.complete');
+
         }
 
         //==================================================================

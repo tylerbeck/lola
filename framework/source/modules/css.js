@@ -114,7 +114,7 @@
          */
         function canStyle( obj ) {
             //TODO: Implement canStyle function
-            return true
+            return true;
         }
 
         /**
@@ -156,9 +156,9 @@
                 }
                 else {
                     if ( value == undefined )
-                        self.getRawStyle( node, prop );
+                        return self.getRawStyle( node, prop );
                     else
-                        self.setRawStyle( node, prop, value );
+                        return self.setRawStyle( node, prop, value );
                 }
             }
 
@@ -317,7 +317,7 @@
          */
         this.getRules = function( selector, media ) {
             var rules = [];
-            this.performRuleAction( selector, function( si, ri ) {
+            self.performRuleAction( selector, function( si, ri ) {
                 if ( lola.support.cssRules )
                     rules.push( document.styleSheets[ si ].cssRules[ ri ] );
                 else
@@ -334,11 +334,11 @@
          * @return {Array}
          */
         this.updateRules = function( selector, styles, media ) {
-            var rules = this.getRules( selector, media );
+            var rules = self.getRules( selector, media );
             var props = styles.keys();
             props.forEach( function( item ){
                 rules.forEach( function( rule ){
-                    this.style( rule, item, styles[item] );
+                    self.style( rule, item, styles[item] );
                 });
             });
 
@@ -351,7 +351,7 @@
          * @param media
          */
         this.deleteRules = function( selector, media ) {
-            this.performRuleAction( selector, function( si, ri ) {
+            self.performRuleAction( selector, function( si, ri ) {
                 if ( lola.support.cssRules )
                     document.styleSheets[ si ].deleteRule( ri );
                 else
@@ -367,13 +367,13 @@
          */
         this.classes = function( obj, classes ) {
             if ( classes != undefined ) {
+                //console.log('setting classes:', classes);
                 if ( lola.type.get( classes ) != 'array' ) {
                     if ( lola.type.get( classes ) == 'string' )
                         classes = [classes];
                     else
                         classes = [];
                 }
-
                 obj.className = classes.join( " " );
                 return classes;
 
@@ -390,7 +390,7 @@
          * @param className
          */
         this.hasClass = function( obj, className ) {
-            var names = this.classes( obj );
+            var names = self.classes( obj );
             return lola.array.isIn( names, className );
         };
 
@@ -400,7 +400,8 @@
          * @param {String} className
          */
         this.addClass = function( obj, className ) {
-            var names = this.classes( obj );
+            //console.log('$.addClass: ',obj, className);
+            var names = self.classes( obj );
             if ( !lola.array.isIn( names, className ) ) {
                 names.push( className );
                 self.classes( obj, names );
@@ -413,7 +414,8 @@
          * @param {String} className
          */
         this.removeClass = function( obj, className ) {
-            var names = this.classes( obj );
+            var names = self.classes( obj );
+            //console.log('$.removeClass: ', className);
             var index = names.indexOf( className );
             if ( index >= 0 ) {
                 names.splice( index, 1 );
@@ -446,19 +448,7 @@
              * @param {*} value
              */
             style: function( property, value ) {
-                if ( value != undefined ) {
-                    this.forEach( function( item ) {
-                        self.style( item, property, value );
-                    } );
-                    return this;
-                }
-                else {
-                    var values = [];
-                    this.forEach( function(item){
-                        values.push( self.style( item, property ) )
-                    });
-                    return lola.__(values);
-                }
+                return this._( self.style, property, value );
             },
 
             /**
@@ -466,23 +456,7 @@
              * @param {String|Array|undefined} values
              */
             classes: function( values ) {
-                if ( values != undefined ) {
-                    //set class names
-                    this.forEach( function( item ) {
-                        self.classes( item, values );
-                    } );
-                    return this;
-
-                }
-                else {
-                    //get class names
-                    var names = [];
-                    this.forEach( function( item ) {
-                        names.push( self.classes( item ) );
-                    } );
-
-                    return lola.__(names);
-                }
+                return this._( self.classes, values );
             },
 
             /**
@@ -490,13 +464,9 @@
              * @param {String} name
              */
             hasClass: function( name ) {
-                var check = true;
-                this.forEach( function( item ) {
-                    if (!self.hasClass( item, name )){
-                        check = false;
-                    }
+                return this.every( function( item ) {
+                    return self.hasClass( item, name )
                 } );
-                return check;
             },
 
             /**
@@ -504,10 +474,7 @@
              * @param {String} name
              */
             addClass: function( name ) {
-                this.forEach( function( item ) {
-                    self.addClass( item, name );
-                } );
-                return this;
+                return this.s( self.addClass, name );
             },
 
             /**
@@ -515,10 +482,7 @@
              * @param {String} name
              */
             removeClass: function( name ) {
-                this.forEach( function( item ) {
-                    self.removeClass( item, name );
-                } );
-                return this;
+                return this.s( self.removeClass, name );
             }
 
         };

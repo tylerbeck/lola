@@ -110,7 +110,7 @@
         }
 
         function log(){
-            output( 'info', [].splice.call(arguments,0).join(' ') );
+            //output( 'info', [].splice.call(arguments,0).join(' ') );
         }
 
         function error(){

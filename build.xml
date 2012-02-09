@@ -46,6 +46,7 @@
             <file file="framework/source/modules/event.js" />
             <file file="framework/source/modules/math.js" />
             <file file="framework/source/modules/math/color.js" />
+            <file file="framework/source/modules/animation.js" />
             <file file="framework/source/modules/css.js" />
             <file file="framework/source/modules/http.js" />
             <file file="framework/source/modules/json.js" />

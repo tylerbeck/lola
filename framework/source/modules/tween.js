@@ -28,7 +28,7 @@
          * @type {Object}
          * @private
          */
-        var dependencies = ['css','event','easing'];
+        var dependencies = ['animation','css','event','easing'];
 
         /**
          * map of active tween targets
@@ -72,19 +72,6 @@
          */
         var types = {};
 
-        /**
-         * frame type
-         * @private
-         */
-        var getFrameType = 0;
-
-        /**
-         * timeout for browsers that don't support animationFrame
-         * @private
-         */
-        var timeout = 1000 / 30;
-
-
         //==================================================================
         // Getters & Setters
         //==================================================================
@@ -117,45 +104,18 @@
         // Methods
         //==================================================================
         /**
-         * start ticking
+         * module initializer
          */
-        this.startTicking =function(){
-            if (!active){
-                active = true;
-                requestTick();
-            }
+        this.initialize = function(){
+            var anim = new lola.animation.Animation( tick, self );
+            lola.animation.registerAnimation(namespace, anim);
         };
 
         /**
-         * set callback for animation frame
-         * @private
+         * start ticking
          */
-        function requestTick(){
-            requestFrame( tick );
-        }
-
-        /**
-         * set callback for animation frame
-         * @param {Function} callback
-         */
-        function requestFrame(callback){
-            switch ( getFrameType ) {
-                case 1:
-                    lola.window.requestAnimationFrame( callback );
-                    break;
-                case 2:
-                    lola.window.mozRequestAnimationFrame( callback );
-                    break;
-                case 3:
-                    lola.window.webkitRequestAnimationFrame( callback );
-                    break;
-                case 4:
-                    lola.window.oRequestAnimationFrame( callback );
-                    break;
-                default:
-                    setTimeout( callback, timeout );
-                    break;
-            }
+        function startTicking(){
+            lola.animation.start( namespace );
         }
 
         /**
@@ -175,9 +135,9 @@
          * @private
          */
         this.start = function( id ){
+            //console.log('lola.tween.start',id,tweens[ id ])
             if (tweens[ id ]){
-                tweens[id].start();
-                lola.event.trigger(tweens[id],'tweenstart',false,false);
+                tweens[ id ].start();
             }
         };
 
@@ -188,7 +148,6 @@
         this.stop = function( id ){
             if (tweens[ id ]){
                 tweens[id].stop();
-                lola.event.trigger(tweens[id],'tweenstop',false,false);
             }
         };
 
@@ -199,7 +158,6 @@
         this.pause = function( id ){
             if (tweens[ id ]){
                 tweens[id].pause();
-                lola.event.trigger(tweens[id],'tweenpause',false,false);
             }
         };
 
@@ -210,7 +168,6 @@
         this.resume = function( id ){
             if (tweens[ id ]){
                 tweens[id].resume();
-                lola.event.trigger(tweens[id],'tweenresume',false,false);
             }
         };
 
@@ -241,6 +198,7 @@
                                     if (!properties[p][s].from && !obj.style[s]){
                                         //try to get "from" value
                                         var f = lola.css.style( obj, s );
+                                        //console.log('  getting initial style')
                                         if (typeof properties[p][s] == "object" ){
                                             properties[p][s].from = f;
                                         }
@@ -255,7 +213,6 @@
                                         targets[id]['style:'+s].push( getTweenObject( tweenId, obj.style, s, properties[p][s] ));
                                     else
                                         targets[id]['style:'+s] = [ getTweenObject( tweenId, obj.style, s, properties[p][s] )];
-
                                 }
                             }
                         }
@@ -276,7 +233,7 @@
             else{
                 throw new Error("tween not found");
             }
-        }
+        };
 
         /**
          * gets a TweenObject for specified target and property
@@ -299,7 +256,7 @@
             else{
                 from = target[ property ];
             }
-            //console.log('from', from);
+            //console.log('    from', from);
             //we can only tween if there's a from value
             var deltaMethod = 0;
             if (from != null && from != undefined) {
@@ -323,7 +280,7 @@
             else{
                 throw new Error('invalid tween parameters')
             }
-            //console.log('to', to);
+            //console.log('    to', to);
 
             //break down from and to values to tweenable values
             //and determine how to tween values
@@ -357,8 +314,7 @@
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            //console.log('type', type);
-
+            //console.log('    type', type);
 
             return new self.TweenObject( tweenId, target, property, from, delta, proxy );
         }
@@ -367,11 +323,11 @@
          * executes a frame tick for tweening engine
          * @private
          */
-        function tick(){
+        function tick( now, delta, elapsed ){
+            //console.log('lola.tween.tick', now, lola.now(), delta, elapsed );
             //iterate through tweens and check for active state
             //if active, run position calculation on tweens
             var activityCheck = false;
-            var now = lola.now();
             //console.log('tick: '+now);
 
             for (var k in tweens){
@@ -390,7 +346,7 @@
 
             //apply tween position to targets
             for (var t in targets){
-                //console.log(t);
+                //console.log('target:',t);
                 var c1 = 0;
                 for ( var p in targets[t] ){
                     //console.log("    ",p);
@@ -398,7 +354,7 @@
                     var to;
                     while (to = targets[t][p].shift()){
                         //console.log("        ",to);
-                        //console.log("        ",twn[to.tweenId])
+                        //console.log("        ",tweens[to.tweenId])
                         if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
                             to.apply( tweens[to.tweenId].value );
                             tmp.push( to );
@@ -418,12 +374,7 @@
 
             }
 
-            if (activityCheck){
-                requestTick();
-            }
-            else {
-                active = false;
-            }
+            return activityCheck;
         }
 
         /**
@@ -541,7 +492,7 @@
          * @type {Object}
          */
         this.selectorMethods = {
-            tweenStyle: function( properties, duration, delay, easing, collisions ){
+            /*tweenStyle: function( properties, duration, delay, easing, collisions ){
                 var targets = [];
                 this.forEach( function(item){
                     targets.push( item.style );
@@ -549,7 +500,7 @@
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
                 self.addTarget( tweenId, targets, properties, collisions );
                 self.start(tweenId);
-            },
+            },*/
 
             tween: function( properties, duration, delay, easing, collisions ){
                 var targets = [];
@@ -597,27 +548,38 @@
                     this.complete = true;
                     this.active = true;
                 }
+                //console.log('value', this.value);
                 this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
             },
 
             start: function(){
-                //console.log('Tween.start');
-                this.active = true;
-                this.startTime = lola.now();
-                self.startTicking();
+                //console.log('Tween.start', this.active);
+                if (!this.active){
+                    this.active = true;
+                    this.startTime = lola.now();
+                    startTicking();
+                    lola.event.trigger(this,'tweenstart',false,false);
+                }
             },
             stop: function(){
                 this.active = false;
                 this.complete = true;
+                lola.event.trigger(this,'tweenstop',false,false);
             },
             pause: function(){
-                this.active = false;
-                this.pauseTime = lola.now();
+                if (this.active){
+                    this.active = false;
+                    this.pauseTime = lola.now();
+                    lola.event.trigger(this,'tweenpause',false,false);
+                }
             },
             resume: function(){
-                this.active = false;
-                this.startTime += lola.now() - this.pauseTime;
-                self.startTicking();
+                if (!this.active){
+                    this.active = true;
+                    this.startTime += lola.now() - this.pauseTime;
+                    startTicking();
+                    lola.event.trigger(this,'tweenresume',false,false);
+                }
             }
 
 

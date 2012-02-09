@@ -2533,6 +2533,22 @@ if ( !String.prototype.trim ) {
             return parts.join("");
         };
 
+        /**
+         * converts hyphenated strings to camelCase
+         * @param {String} str
+         */
+        this.dashed = function ( str ) {
+            var chars = str.split('');
+            var char;
+            var parts = [];
+            while ( char = chars.shift() ){
+                if (char == char.toUpperCase())
+                    parts.push( "-" );
+                parts.push( char.toLowerCase() );
+            }
+            return parts.join("");
+        };
+
     };
 
 
@@ -3959,6 +3975,334 @@ if ( !String.prototype.trim ) {
 /***********************************************************************
  * Lola JavaScript Framework
  *
+ *       Module: Animation
+ *  Description: Animation module
+ *       Author: Copyright 2011-2012, Tyler Beck
+ *
+ ***********************************************************************/
+(function( lola ) {
+    /**
+     * Animation Module
+     * @namespace lola.animation
+     */
+    var Module = function(){
+        var self = this;
+        //==================================================================
+        // Attributes
+        //==================================================================
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "animation";
+
+        /**
+         * module's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = ['event'];
+
+        /**
+         * map of active animation targets
+         * @private
+         */
+        var targets = {};
+
+        /**
+         * animation uid generator
+         * @private
+         */
+        var animationUid = 0;
+
+        /**
+         * animation uid generator
+         * @private
+         */
+        var freeAnimationIds = [];
+
+        /**
+         * map of animations
+         * @private
+         */
+        var animations = {};
+
+        /**
+         * indicates whether module is ticking
+         * @private
+         */
+        var active = false;
+
+        /**
+         * frame type
+         * @private
+         */
+        var getFrameType = 0;
+
+        /**
+         * timeout for browsers that don't support animationFrame
+         * @private
+         */
+        var timeout = 1000 / 30;
+
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function() {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function() {
+            return dependencies;
+        };
+
+        /**
+         * get next animation id
+         * @return {int}
+         */
+        function nextAID() {
+            return animationUid++;
+        }
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        this.initialize = function(){
+            getFrameType = lola.support.animationFrameType;
+        };
+
+        /**
+         * start ticking
+         */
+        function startTicking(){
+            if (!active){
+                active = true;
+                requestTick();
+            }
+        };
+
+        /**
+         * set callback for animation frame
+         * @private
+         */
+        function requestTick(){
+            requestFrame( tick );
+        }
+
+        /**
+         * set callback for animation frame
+         * @param {Function} callback
+         */
+        function requestFrame(callback){
+            switch ( getFrameType ) {
+                case 1:
+                    lola.window.requestAnimationFrame( callback );
+                    break;
+                case 2:
+                    lola.window.mozRequestAnimationFrame( callback );
+                    break;
+                case 3:
+                    lola.window.webkitRequestAnimationFrame( callback );
+                    break;
+                case 4:
+                    lola.window.oRequestAnimationFrame( callback );
+                    break;
+                default:
+                    setTimeout( callback, timeout );
+                    break;
+            }
+        }
+
+        /**
+         * registers a animation with the framework
+         * @param {lola.animation.Animation} animation
+         * @return {uint} animation identifier
+         */
+        this.registerAnimation = function( name, animation ){
+            //console.log('lola.animation.registerAnimation', name, animation );
+            animations[ name ] = animation;
+        };
+
+        /**
+         * starts the referenced animation
+         * @param {uint} name
+         * @private
+         */
+        this.start = function( name ){
+            //console.log('lola.animation.start', name, animations[ name ].isActive()  );
+            if (animations[ name ]){
+
+                animations[ name ].start();
+            }
+        };
+
+        /**
+         * stops the referenced animation
+         * @param {uint} name
+         */
+        this.stop = function( name ){
+            //console.log('lola.animation.stop', name );
+            if (animations[ name ]){
+                animations[ name ].stop();
+            }
+        };
+
+        /**
+         * pauses the referenced animation
+         * @param {uint} name
+         */
+        this.pause = function( name ){
+            //console.log('lola.animation.pause', name );
+            if (animations[ name ]){
+                animations[ name ].pause();
+            }
+        };
+
+        /**
+         * resumes the referenced animation
+         * @param {uint} name
+         */
+        this.resume = function( name ){
+            //console.log('lola.animation.resume', name );
+            if (animations[ name ]){
+                animations[ name ].resume();
+            }
+        };
+
+
+        /**
+         * executes a frame tick for animationing engine
+         * @private
+         */
+        function tick(){
+           //iterate through animations and check for active state
+            //if active, run position calculation on animations
+            var activityCheck = false;
+            var now = lola.now();
+            //console.log('lola.animation.tick', now );
+
+            for (var k in animations){
+                //console.log('   ',k,animations[k].isActive());
+                if (animations[k].isActive()){
+                    activityCheck = true;
+                    if ( !animations[k].isComplete() ){
+                        //console.log('   ','not complete');
+                        animations[k].enterFrame( now );
+                    }
+                    else{
+                        //console.log('   ','complete');
+                        //catch complete on next tick
+                        lola.event.trigger(animations[k],'animationcomplete',false,false);
+                        delete animations[k];
+                        freeAnimationIds.push( parseInt(k) );
+                    }
+                }
+            }
+
+            if (activityCheck){
+                requestTick();
+            }
+            else {
+                active = false;
+            }
+        }
+
+        //==================================================================
+        // Selection Methods
+        //==================================================================
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+        };
+
+
+        //==================================================================
+        // Classes
+        //==================================================================
+        this.Animation = function( tickFn, tickScope ) {
+            var startTime = -1;
+            var pauseTime = -1;
+            var delay = 0;
+            var lastTime = -1;
+            var active = false;
+            var complete = false;
+            var tick = (typeof tickFn === "function")?tickFn:function(){ return false;};
+
+            this.enterFrame = function( now ){
+                var delta = now - lastTime;
+                var elapsed = now - startTime;
+                lastTime = now;
+                active = tick.call( tickScope, now, delta, elapsed );
+            };
+
+            this.isActive = function(){
+                return active;
+            };
+            this.isComplete = function(){
+                return complete;
+            };
+
+            this.start = function(){
+                if (!active){
+                    active = true;
+                    complete = false;
+                    startTime = lastTime = lola.now();
+                    startTicking();
+                    lola.event.trigger( self, 'animationstart',false,false);
+                }
+            };
+
+            this.pause = function(){
+                if (active){
+                    active = false;
+                    pauseTime = lola.now();
+                    lola.event.trigger( self, 'animationpause',false,false);
+                }
+            };
+
+            this.resume = function(){
+                if (!active){
+                    active = true;
+                    startTime += lola.now() - pauseTime;
+                    startTicking();
+                    lola.event.trigger( self, 'animationresume',false,false);
+                }
+            };
+
+            this.stop = function(){
+                active = false;
+                complete = true;
+                lola.event.trigger( self, 'animationstop',false,false);
+            };
+
+            return this;
+        };
+
+
+    };
+
+	//register module
+	lola.registerModule( new Module() );
+
+})( lola );
+
+/***********************************************************************
+ * Lola JavaScript Framework
+ *
  *       Module: CSS
  *  Description: CSS module
  *       Author: Copyright 2011-2012, Tyler Beck
@@ -4062,6 +4406,23 @@ if ( !String.prototype.trim ) {
             //add default mappings
             propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
+            //register default hooks
+            var getOffsetStyle = function( node, style, value, type ){
+                var result = self.style( node, style, value, false );
+                if (result == "auto"){
+                    //get actual value
+                    var offset = lola.geometry.getOffset( node, node.offsetParent );
+                    return offset[type]+'px';
+                }
+                return result;
+            };
+            self.registerStyleHook( 'top', function( node, style, value ){
+                return getOffsetStyle(node, style, value, 'y');
+            });
+            self.registerStyleHook( 'left', function( node, style, value ){
+                return getOffsetStyle(node, style, value, 'x');
+            });
+
             //remove initialization method
             delete self.initialize;
         };
@@ -4103,13 +4464,14 @@ if ( !String.prototype.trim ) {
          * @param {Node} node styleable object
          * @param {String} style style property
          * @param {*} value leave undefined to get style
+         * @param {Boolean} useHooks set to
          * @return {*}
          */
-        this['style'] = function( node, style, value ) {
+        this['style'] = function( node, style, value, useHooks ) {
             //make sure style can be set
             var prop = getProperty( style );
             if ( canStyle( node ) ) {
-                if ( propertyHooks[ prop ] != null ) {
+                if ( propertyHooks[ prop ] != null && useHooks !== false ) {
                     return propertyHooks[prop].apply( node, arguments );
                 }
                 else {
@@ -4133,7 +4495,7 @@ if ( !String.prototype.trim ) {
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
             if (document.defaultView && document.defaultView.getComputedStyle) {
-                return document.defaultView.getComputedStyle( node, undefined )[ prop ];
+                return document.defaultView.getComputedStyle( node, undefined ).getPropertyValue( lola.string.dashed(prop) );
             }
             else if ( typeof(document.body.currentStyle) !== "undefined") {
                 return node["currentStyle"][prop];
@@ -7771,7 +8133,7 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          * @private
          */
-        var dependencies = ['css','event','easing'];
+        var dependencies = ['animation','css','event','easing'];
 
         /**
          * map of active tween targets
@@ -7815,19 +8177,6 @@ if ( !String.prototype.trim ) {
          */
         var types = {};
 
-        /**
-         * frame type
-         * @private
-         */
-        var getFrameType = 0;
-
-        /**
-         * timeout for browsers that don't support animationFrame
-         * @private
-         */
-        var timeout = 1000 / 30;
-
-
         //==================================================================
         // Getters & Setters
         //==================================================================
@@ -7860,45 +8209,18 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         /**
-         * start ticking
+         * module initializer
          */
-        this.startTicking =function(){
-            if (!active){
-                active = true;
-                requestTick();
-            }
+        this.initialize = function(){
+            var anim = new lola.animation.Animation( tick, self );
+            lola.animation.registerAnimation(namespace, anim);
         };
 
         /**
-         * set callback for animation frame
-         * @private
+         * start ticking
          */
-        function requestTick(){
-            requestFrame( tick );
-        }
-
-        /**
-         * set callback for animation frame
-         * @param {Function} callback
-         */
-        function requestFrame(callback){
-            switch ( getFrameType ) {
-                case 1:
-                    lola.window.requestAnimationFrame( callback );
-                    break;
-                case 2:
-                    lola.window.mozRequestAnimationFrame( callback );
-                    break;
-                case 3:
-                    lola.window.webkitRequestAnimationFrame( callback );
-                    break;
-                case 4:
-                    lola.window.oRequestAnimationFrame( callback );
-                    break;
-                default:
-                    setTimeout( callback, timeout );
-                    break;
-            }
+        function startTicking(){
+            lola.animation.start( namespace );
         }
 
         /**
@@ -7918,9 +8240,9 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.start = function( id ){
+            //console.log('lola.tween.start',id,tweens[ id ])
             if (tweens[ id ]){
-                tweens[id].start();
-                lola.event.trigger(tweens[id],'tweenstart',false,false);
+                tweens[ id ].start();
             }
         };
 
@@ -7931,7 +8253,6 @@ if ( !String.prototype.trim ) {
         this.stop = function( id ){
             if (tweens[ id ]){
                 tweens[id].stop();
-                lola.event.trigger(tweens[id],'tweenstop',false,false);
             }
         };
 
@@ -7942,7 +8263,6 @@ if ( !String.prototype.trim ) {
         this.pause = function( id ){
             if (tweens[ id ]){
                 tweens[id].pause();
-                lola.event.trigger(tweens[id],'tweenpause',false,false);
             }
         };
 
@@ -7953,7 +8273,6 @@ if ( !String.prototype.trim ) {
         this.resume = function( id ){
             if (tweens[ id ]){
                 tweens[id].resume();
-                lola.event.trigger(tweens[id],'tweenresume',false,false);
             }
         };
 
@@ -7984,6 +8303,7 @@ if ( !String.prototype.trim ) {
                                     if (!properties[p][s].from && !obj.style[s]){
                                         //try to get "from" value
                                         var f = lola.css.style( obj, s );
+                                        //console.log('  getting initial style')
                                         if (typeof properties[p][s] == "object" ){
                                             properties[p][s].from = f;
                                         }
@@ -7998,7 +8318,6 @@ if ( !String.prototype.trim ) {
                                         targets[id]['style:'+s].push( getTweenObject( tweenId, obj.style, s, properties[p][s] ));
                                     else
                                         targets[id]['style:'+s] = [ getTweenObject( tweenId, obj.style, s, properties[p][s] )];
-
                                 }
                             }
                         }
@@ -8019,7 +8338,7 @@ if ( !String.prototype.trim ) {
             else{
                 throw new Error("tween not found");
             }
-        }
+        };
 
         /**
          * gets a TweenObject for specified target and property
@@ -8042,7 +8361,7 @@ if ( !String.prototype.trim ) {
             else{
                 from = target[ property ];
             }
-            //console.log('from', from);
+            //console.log('    from', from);
             //we can only tween if there's a from value
             var deltaMethod = 0;
             if (from != null && from != undefined) {
@@ -8066,7 +8385,7 @@ if ( !String.prototype.trim ) {
             else{
                 throw new Error('invalid tween parameters')
             }
-            //console.log('to', to);
+            //console.log('    to', to);
 
             //break down from and to values to tweenable values
             //and determine how to tween values
@@ -8100,8 +8419,7 @@ if ( !String.prototype.trim ) {
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            //console.log('type', type);
-
+            //console.log('    type', type);
 
             return new self.TweenObject( tweenId, target, property, from, delta, proxy );
         }
@@ -8110,11 +8428,11 @@ if ( !String.prototype.trim ) {
          * executes a frame tick for tweening engine
          * @private
          */
-        function tick(){
+        function tick( now, delta, elapsed ){
+            //console.log('lola.tween.tick', now, lola.now(), delta, elapsed );
             //iterate through tweens and check for active state
             //if active, run position calculation on tweens
             var activityCheck = false;
-            var now = lola.now();
             //console.log('tick: '+now);
 
             for (var k in tweens){
@@ -8133,7 +8451,7 @@ if ( !String.prototype.trim ) {
 
             //apply tween position to targets
             for (var t in targets){
-                //console.log(t);
+                //console.log('target:',t);
                 var c1 = 0;
                 for ( var p in targets[t] ){
                     //console.log("    ",p);
@@ -8141,7 +8459,7 @@ if ( !String.prototype.trim ) {
                     var to;
                     while (to = targets[t][p].shift()){
                         //console.log("        ",to);
-                        //console.log("        ",twn[to.tweenId])
+                        //console.log("        ",tweens[to.tweenId])
                         if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
                             to.apply( tweens[to.tweenId].value );
                             tmp.push( to );
@@ -8161,12 +8479,7 @@ if ( !String.prototype.trim ) {
 
             }
 
-            if (activityCheck){
-                requestTick();
-            }
-            else {
-                active = false;
-            }
+            return activityCheck;
         }
 
         /**
@@ -8284,7 +8597,7 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-            tweenStyle: function( properties, duration, delay, easing, collisions ){
+            /*tweenStyle: function( properties, duration, delay, easing, collisions ){
                 var targets = [];
                 this.forEach( function(item){
                     targets.push( item.style );
@@ -8292,7 +8605,7 @@ if ( !String.prototype.trim ) {
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
                 self.addTarget( tweenId, targets, properties, collisions );
                 self.start(tweenId);
-            },
+            },*/
 
             tween: function( properties, duration, delay, easing, collisions ){
                 var targets = [];
@@ -8340,27 +8653,38 @@ if ( !String.prototype.trim ) {
                     this.complete = true;
                     this.active = true;
                 }
+                //console.log('value', this.value);
                 this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
             },
 
             start: function(){
-                //console.log('Tween.start');
-                this.active = true;
-                this.startTime = lola.now();
-                self.startTicking();
+                //console.log('Tween.start', this.active);
+                if (!this.active){
+                    this.active = true;
+                    this.startTime = lola.now();
+                    startTicking();
+                    lola.event.trigger(this,'tweenstart',false,false);
+                }
             },
             stop: function(){
                 this.active = false;
                 this.complete = true;
+                lola.event.trigger(this,'tweenstop',false,false);
             },
             pause: function(){
-                this.active = false;
-                this.pauseTime = lola.now();
+                if (this.active){
+                    this.active = false;
+                    this.pauseTime = lola.now();
+                    lola.event.trigger(this,'tweenpause',false,false);
+                }
             },
             resume: function(){
-                this.active = false;
-                this.startTime += lola.now() - this.pauseTime;
-                self.startTicking();
+                if (!this.active){
+                    this.active = true;
+                    this.startTime += lola.now() - this.pauseTime;
+                    startTicking();
+                    lola.event.trigger(this,'tweenresume',false,false);
+                }
             }
 
 

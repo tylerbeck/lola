@@ -104,6 +104,23 @@
             //add default mappings
             propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
+            //register default hooks
+            var getOffsetStyle = function( node, style, value, type ){
+                var result = self.style( node, style, value, false );
+                if (result == "auto"){
+                    //get actual value
+                    var offset = lola.geometry.getOffset( node, node.offsetParent );
+                    return offset[type]+'px';
+                }
+                return result;
+            };
+            self.registerStyleHook( 'top', function( node, style, value ){
+                return getOffsetStyle(node, style, value, 'y');
+            });
+            self.registerStyleHook( 'left', function( node, style, value ){
+                return getOffsetStyle(node, style, value, 'x');
+            });
+
             //remove initialization method
             delete self.initialize;
         };
@@ -145,13 +162,14 @@
          * @param {Node} node styleable object
          * @param {String} style style property
          * @param {*} value leave undefined to get style
+         * @param {Boolean} useHooks set to
          * @return {*}
          */
-        this['style'] = function( node, style, value ) {
+        this['style'] = function( node, style, value, useHooks ) {
             //make sure style can be set
             var prop = getProperty( style );
             if ( canStyle( node ) ) {
-                if ( propertyHooks[ prop ] != null ) {
+                if ( propertyHooks[ prop ] != null && useHooks !== false ) {
                     return propertyHooks[prop].apply( node, arguments );
                 }
                 else {
@@ -175,7 +193,7 @@
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
             if (document.defaultView && document.defaultView.getComputedStyle) {
-                return document.defaultView.getComputedStyle( node, undefined )[ prop ];
+                return document.defaultView.getComputedStyle( node, undefined ).getPropertyValue( lola.string.dashed(prop) );
             }
             else if ( typeof(document.body.currentStyle) !== "undefined") {
                 return node["currentStyle"][prop];

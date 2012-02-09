@@ -103,6 +103,22 @@
             return parts.join("");
         };
 
+        /**
+         * converts hyphenated strings to camelCase
+         * @param {String} str
+         */
+        this.dashed = function ( str ) {
+            var chars = str.split('');
+            var char;
+            var parts = [];
+            while ( char = chars.shift() ){
+                if (char == char.toUpperCase())
+                    parts.push( "-" );
+                parts.push( char.toLowerCase() );
+            }
+            return parts.join("");
+        };
+
     };
 
 

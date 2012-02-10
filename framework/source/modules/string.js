@@ -108,13 +108,13 @@
          * @param {String} str
          */
         this.dashed = function ( str ) {
-            var chars = str.split('');
-            var char;
+            var chs = str.split('');
+            var ch;
             var parts = [];
-            while ( char = chars.shift() ){
-                if (char == char.toUpperCase())
+            while ( ch = chs.shift() ){
+                if (ch == ch.toUpperCase())
                     parts.push( "-" );
-                parts.push( char.toLowerCase() );
+                parts.push( ch.toLowerCase() );
             }
             return parts.join("");
         };

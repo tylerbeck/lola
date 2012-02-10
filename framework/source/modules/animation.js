@@ -155,7 +155,7 @@
          * @param {lola.animation.Animation} animation
          * @return {uint} animation identifier
          */
-        this.registerAnimation = function( name, animation ){
+        this.register = function( name, animation ){
             //console.log('lola.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
         };

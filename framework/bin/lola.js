@@ -2538,13 +2538,13 @@ if ( !String.prototype.trim ) {
          * @param {String} str
          */
         this.dashed = function ( str ) {
-            var chars = str.split('');
-            var char;
+            var chs = str.split('');
+            var ch;
             var parts = [];
-            while ( char = chars.shift() ){
-                if (char == char.toUpperCase())
+            while ( ch = chs.shift() ){
+                if (ch == ch.toUpperCase())
                     parts.push( "-" );
-                parts.push( char.toLowerCase() );
+                parts.push( ch.toLowerCase() );
             }
             return parts.join("");
         };
@@ -4129,7 +4129,7 @@ if ( !String.prototype.trim ) {
          * @param {lola.animation.Animation} animation
          * @return {uint} animation identifier
          */
-        this.registerAnimation = function( name, animation ){
+        this.register = function( name, animation ){
             //console.log('lola.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
         };
@@ -7546,6 +7546,19 @@ if ( !String.prototype.trim ) {
             this.angle = angle;
 
             /**
+             * returns a copy of this vector
+             */
+            this.copy = function(){
+                return new self.Vector( this.velocity, this.angle );
+            };
+
+
+            this.add = function( v ){
+                this.velocity += v.velocity;
+                this.angle += v.angle;
+            };
+
+            /**
              * converts a vector to a (0,0) based point
              * @return {lola.geometry.Point}
              */
@@ -8213,7 +8226,7 @@ if ( !String.prototype.trim ) {
          */
         this.initialize = function(){
             var anim = new lola.animation.Animation( tick, self );
-            lola.animation.registerAnimation(namespace, anim);
+            lola.animation.register(namespace, anim);
         };
 
         /**

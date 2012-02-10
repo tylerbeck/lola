@@ -678,6 +678,19 @@
             this.angle = angle;
 
             /**
+             * returns a copy of this vector
+             */
+            this.copy = function(){
+                return new self.Vector( this.velocity, this.angle );
+            };
+
+
+            this.add = function( v ){
+                this.velocity += v.velocity;
+                this.angle += v.angle;
+            };
+
+            /**
              * converts a vector to a (0,0) based point
              * @return {lola.geometry.Point}
              */

@@ -108,7 +108,7 @@
          */
         this.initialize = function(){
             var anim = new lola.animation.Animation( tick, self );
-            lola.animation.registerAnimation(namespace, anim);
+            lola.animation.register(namespace, anim);
         };
 
         /**

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lola Command Test</title>
+    <script src="../bin/lola.js"></script>
+    <script>
+        (function(){
+            lola.cmd.register('scripts/cmd/test1.js','test1');
+            lola.cmd.register('scripts/cmd/test2.js','test2');
+            lola.cmd.register('scripts/cmd/test3.js','test3');
+
+            function handleResult( event ){
+                console.log( 'handleResult', event.data );
+            }
+
+            function handleFault( event ){
+                console.log( 'handleFault', event.data );
+            }
+
+            function handleStatus( event ){
+                console.log( 'handleStatus', event.data );
+            }
+
+            window.testCommand = function( type, a, b ){
+                lola.cmd.call( 'test'+type, {a:a,b:b}, handleResult, handleFault, handleStatus );
+            };
+
+            window.runTest = function( event ){
+                var type = event.currentTarget.value;
+                console.log('runTest:',type);
+                var a = parseFloat( $('#a').attr('value') );
+                var b = parseFloat( $('#b').attr('value') );
+                window.testCommand( type, a, b );
+            }
+
+        })();
+    </script>
+    <style>
+        input,
+        button{ display: block; margin: 5px;}
+    </style>
+
+</head>
+<body>
+    <input type="text" id="a" value="3"/>
+    <input type="text" id="b" value="5"/>
+    <button value="1" onclick="runTest(event)">add</button>
+    <button value="2" onclick="runTest(event)">multiply</button>
+    <button value="3" onclick="runTest(event)">divide</button>
+
+
+</body>
+</html>

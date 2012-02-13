@@ -180,6 +180,8 @@
             }
         };
 
+        //TODO: add lazy loading of unloaded dependent modules
+
         /**
          * checks if modules are registered and returns missing modules
          * @private

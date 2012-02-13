@@ -2957,7 +2957,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            console.log('lola.event.trigger:',type);
+            //console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -6298,6 +6298,11 @@ if ( !String.prototype.trim ) {
             lola.event.addListener( self, name, executeCommand  );
         };
 
+        this.call = function( name, params, onResult, onFault, onStatus ){
+            var responder = new self.Responder( onResult, onFault, onStatus );
+            self.execute( name, params, responder );
+        };
+
         /**
          * executes a registered command
          * @param {String} name registered command name
@@ -6306,11 +6311,6 @@ if ( !String.prototype.trim ) {
          */
         this.execute = function( name, params, responder ){
             if (registry[name]) {
-
-                //if (!responder) {
-                //    responder = new self.Responder();
-                //}
-
                 if ( typeof registry[name] == "string" ) {
                     //add execution params to call later queue for the unloaded command
                     if ( !callLater[ name ] ){
@@ -6395,34 +6395,36 @@ if ( !String.prototype.trim ) {
              * @private
              * @param {Object} event
              */
-            function handleStatus( event ){
+            this.handleStatus = function( event ){
                 if (!lastResponse || lastResponse.type == 'status' )
                     lastResponse = event;
                 if (typeof statusHandler == 'function')
                     statusHandler.apply( lola.window, [event] );
-            }
+            };
 
             /**
              * handle result events from command
              * @private
              * @param {Object} event
              */
-            function handleResult( event ){
+            this.handleResult = function( event ){
                 lastResponse = event;
                 if (typeof resultHandler == 'function')
                     resultHandler.apply(lola.window, [event] );
-            }
+            };
 
             /**
              * handle fault events from command
              * @private
              * @param {Object} event
              */
-            function handleFault( event ){
+            this.handleFault = function( event ){
                 lastResponse = event;
                 if (typeof faultHandler == 'function')
                     faultHandler.apply(lola.window, [event] );
-            }
+            };
+
+            return this;
 
         };
 

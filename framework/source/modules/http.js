@@ -340,7 +340,7 @@
                             break;
                         case 4:
                             //complete
-                            lola.event.trigger( self, 'stateComplete', true, true, request );
+                            lola.event.trigger( self, 'statecomplete', true, true, request );
                             if ( request.status == 200 && !ready ) {
                                 ready = true;
                                 lola.event.trigger( self, 'result', true, true, request );

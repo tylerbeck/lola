@@ -2957,7 +2957,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type);
+            console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -4140,7 +4140,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.start = function( name ){
-            //console.log('lola.animation.start', name, animations[ name ].isActive()  );
+            //console.log('lola.animation.start', name );
             if (animations[ name ]){
 
                 animations[ name ].start();
@@ -5353,7 +5353,7 @@ if ( !String.prototype.trim ) {
                             break;
                         case 4:
                             //complete
-                            lola.event.trigger( self, 'stateComplete', true, true, request );
+                            lola.event.trigger( self, 'statecomplete', true, true, request );
                             if ( request.status == 200 && !ready ) {
                                 ready = true;
                                 lola.event.trigger( self, 'result', true, true, request );
@@ -6279,12 +6279,14 @@ if ( !String.prototype.trim ) {
         //==================================================================
         /**
          * registers command with the module
-         * @param {Class|String} cmd the comman ./d b class or url of the class' js file
-         * @param {String} name the name with which tobv register the command
+         * @param {Class|String} cmd the command class or url of the class' js file
+         * @param {String} name the name with which to register the command
          */
         this.register = function( cmd, name ) {
-            if ( typeof cmd != "string" && name == undefined  )
-                name = cmd.name;
+            if ( typeof cmd != "string" && name == undefined  ){
+                var tmp = new cmd();
+                name = tmp.getName();
+            }
 
             lola.debug('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
@@ -6305,9 +6307,9 @@ if ( !String.prototype.trim ) {
         this.execute = function( name, params, responder ){
             if (registry[name]) {
 
-                if (!responder) {
-                    responder = new self.Responder();
-                }
+                //if (!responder) {
+                //    responder = new self.Responder();
+                //}
 
                 if ( typeof registry[name] == "string" ) {
                     //add execution params to call later queue for the unloaded command
@@ -6321,7 +6323,7 @@ if ( !String.prototype.trim ) {
                                     var o = callLater[ name ][i];
                                     self.execute( o.name, o.params, o.responder );
                                 }
-                                delete lola.cmd.callLater[ name ];
+                                delete callLater[ name ];
                             }
                             else {
                                 throw new Error('The command loaded from "'+registry[name]+'" is not named "'+name+'"');
@@ -6519,9 +6521,9 @@ if ( !String.prototype.trim ) {
 
             //get all predefined templates
             var start = lola.now();
-            /*lola('script[type="text/x-lola-template"]').forEach( function( item ){
+            lola('script[type="text/x-lola-template"]').forEach( function( item ){
                 self.add( item.id, item.innerHTML );
-            });*/
+            });
             var complete = lola.now();
             lola.debug( "templates parsed in "+(complete-start)+" ms" );
 
@@ -7918,6 +7920,14 @@ if ( !String.prototype.trim ) {
         };
 
         /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.methods = function() {
+            return methods;
+        };
+
+        /**
          * get module's dependencies
          * @return {Array}
          */
@@ -7932,6 +7942,7 @@ if ( !String.prototype.trim ) {
         this.setDefaultEase = function( id ){
             if (methods[ id ]){
                 defaultEase = id;
+                methods['default'] = methods[id];
             }
         };
 
@@ -7940,12 +7951,12 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         /**
-         * initializes module
-         * @public
+         * preinitializes module
+         * @private
          * @return {void}
          */
-        this.initialize = function() {
-            lola.debug( 'lola.easing::initialize' );
+        function preinitialize() {
+            lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
             self.registerSimpleEasing("none", 0, 0, 1, 1);
@@ -7955,9 +7966,22 @@ if ( !String.prototype.trim ) {
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
-            //remove initialization method
-            delete self.initialize;
-        };
+
+            //create easeInOut functions for types with easeIn and easeOut
+            for ( var k in optimized ) {
+                if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
+                    var ei = optimized[ k ]["easeIn"];
+                    var eo = optimized[ k ]["easeOut"];
+                    var eio = function( t, v, c, d ){ return (t < d / 2) ? (ei(t,v,c/2,d/2)) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2)); };
+
+                    self.registerEasingFn(k+'-ease-in', ei );
+                    self.registerEasingFn(k+'-ease-out', eo );
+                    self.registerEasingFn(k+'-ease-in-out', eio );
+                }
+            }
+
+            self.setDefaultEase('ease-in-out');
+        }
 
         /**
          * calculates a point on a cubic bezier curve given time and an array of points.
@@ -8031,7 +8055,7 @@ if ( !String.prototype.trim ) {
          * @param resolution
          * @param overwrite
          */
-        this.register = function( id, spline, resolution, overwrite  ){
+        this.registerEasingSpline = function( id, spline, resolution, overwrite  ){
             resolution = resolution?resolution:defaultResolution;
             overwrite = overwrite === true;
 
@@ -8090,7 +8114,21 @@ if ( !String.prototype.trim ) {
             var v2 = c2.toVector();
             spline.addPoint( new geo.SplinePoint( 0, 0, 0, 0, v1.velocity, v1.angle ) );
             spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 1, 1 ) );
-            self.register( id, spline );
+            self.registerEasingSpline( id, spline );
+        };
+
+        /**
+         * registers an easing function
+         * @param {String} id
+         * @param {Function} fn
+         */
+        this.registerEasingFn = function( id, fn ){
+            var Ease = function(){
+                this.exec = fn
+                return this;
+            };
+
+            methods[ id ] = Ease;
         };
 
         /**
@@ -8107,6 +8145,136 @@ if ( !String.prototype.trim ) {
                 return new methods[ defaultEase ]();
             }
         };
+
+
+        //------------------------------------------------------------------
+        // optimised easing functions
+        //------------------------------------------------------------------
+        /*
+         t - time in millis
+         v - initial value
+         c - value change
+         d - duration in millis
+         */
+        //---------------------------------
+        this.params = {
+            back: { a: 2.7, b: 1.7 }
+        };
+
+        var optimized = {
+            back: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * (self.params.back.a * t - self.params.back.b) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * (self.params.back.a * t + self.params.back.b) + 1) + v;
+                }
+            },
+            //---------------------------------
+            bounce: {
+                easeIn: function( t, v, c, d ) {
+                    return c - optimized.bounce.easeOut( d - t, 0, c, d ) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return ((t /= d) < (1 / 2.75)) ?
+                        (c * (7.5625 * t * t) + v) :
+                        ( (t < (2 / 2.75)) ?
+                            (c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + v) :
+                            ( (t < (2.5 / 2.75)) ?
+                                (c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + v) :
+                                (c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + v)));
+                }
+            },
+            //---------------------------------
+            circular: {
+                easeIn: function( t, v, c, d ) {
+                    return -c * (Math.sqrt( 1 - (t /= d) * t ) - 1) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * Math.sqrt( 1 - (t = t/d - 1) * t ) + v;
+                }
+            },
+            //---------------------------------
+            cubic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
+            elastic: {
+                easeIn: function( t, v, c, d ) {
+                    if ( t == 0 ) return v;
+                    if ( (t /= d) == 1 ) return v + c;
+                    var p,a,s;
+                    p = d * 0.3;
+                    a = c;
+                    s = p / 4;
+                    return -(a * Math.pow( 2, 10 * (t -= 1) ) * Math.sin( (t * d - s) * (2 * Math.PI) / p )) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    if ( t == 0 ) return v;
+                    if ( (t /= d) == 1 ) return v + c;
+                    var s,a,p;
+                    p = d * 0.3;
+                    a = c;
+                    s = p / 4;
+                    return a * Math.pow( 2, -10 * t ) * Math.sin( (t * d - s) * (2 * Math.PI) / p ) + c + v;
+                }
+            },
+            //---------------------------------
+            exponential: {
+                easeIn: function( t, v, c, d ) {
+                    return (t == 0) ? v : (c * Math.pow( 2, 10 * (t / d - 1) ) + v);
+                },
+                easeOut: function( t, v, c, d ) {
+                    return (t == d) ? (v + c) : (c * (-Math.pow( 2, -10 * t / d ) + 1) + v);
+                }
+            },
+            //---------------------------------
+            quadratic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return -c * (t /= d) * (t - 2) + v;
+                }
+            },
+            //---------------------------------
+            quartic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return -c * ((t = t / d - 1) * t * t * t - 1) + v;
+                }
+            },
+            //---------------------------------
+            quintic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
+            sine: {
+                easeIn: function( t, v, c, d ) {
+                    return -c * Math.cos( t / d * (Math.PI / 2) ) + c + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * Math.sin( t / d * (Math.PI / 2) ) + v;
+                }
+            }
+        };
+
+
+        preinitialize();
+
+        return this;
 
     };
 
@@ -8227,6 +8395,9 @@ if ( !String.prototype.trim ) {
         this.initialize = function(){
             var anim = new lola.animation.Animation( tick, self );
             lola.animation.register(namespace, anim);
+            if ( Object.keys( tweens ).length > 0 ){
+                startTicking();
+            }
         };
 
         /**
@@ -8253,7 +8424,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.start = function( id ){
-            //console.log('lola.tween.start',id,tweens[ id ])
+            //console.log('lola.tween.start',id,tweens[ id ]);
             if (tweens[ id ]){
                 tweens[ id ].start();
             }
@@ -8311,6 +8482,7 @@ if ( !String.prototype.trim ) {
                         targets[id] = {};
                     for (var p in properties){
                         if (p == "style"){
+                            //TODO: use CSS3 transitions if available
                             for (var s in properties[p] ){
                                 if (collisions || targets[id]['style:'+s] == null ){
                                     if (!properties[p][s].from && !obj.style[s]){
@@ -8328,9 +8500,9 @@ if ( !String.prototype.trim ) {
                                     if (!targets[id]['style:'+s])
                                         targets[id]['style:'+s] = [];
                                     if (collisions)
-                                        targets[id]['style:'+s].push( getTweenObject( tweenId, obj.style, s, properties[p][s] ));
+                                        targets[id]['style:'+s].push( getTweenObject( tweenId, obj.style, s, properties[p][s], obj ));
                                     else
-                                        targets[id]['style:'+s] = [ getTweenObject( tweenId, obj.style, s, properties[p][s] )];
+                                        targets[id]['style:'+s] = [ getTweenObject( tweenId, obj.style, s, properties[p][s], obj )];
                                 }
                             }
                         }
@@ -8339,9 +8511,9 @@ if ( !String.prototype.trim ) {
                             if (!this.targets[id][p])
                                 this.targets[id][p] = [];
                             if (collisions)
-                                this.targets[id][p].push( getTweenObject( tweenId, obj, p, properties[p] ));
+                                this.targets[id][p].push( getTweenObject( tweenId, obj, p, properties[p], obj ));
                             else
-                                this.targets[id][p] = [ getTweenObject( tweenId, obj, p, properties[p] )];
+                                this.targets[id][p] = [ getTweenObject( tweenId, obj, p, properties[p], obj )];
 
                         }
 
@@ -8359,9 +8531,10 @@ if ( !String.prototype.trim ) {
          * @param {Object} target
          * @param {String} property
          * @param {*} value
+         * @param {*} dispatcher element that dispatches complete event
          * @private
          */
-        function getTweenObject( tweenId, target, property, value ){
+        function getTweenObject( tweenId, target, property, value, dispatcher ){
             //console.log("getTweenObject", tweenId, target, property, value );
             //get initial value
             var from,to,delta;
@@ -8374,7 +8547,7 @@ if ( !String.prototype.trim ) {
             else{
                 from = target[ property ];
             }
-            //console.log('    from', from);
+            //console.log('    from',  String(from));
             //we can only tween if there's a from value
             var deltaMethod = 0;
             if (from != null && from != undefined) {
@@ -8398,7 +8571,7 @@ if ( !String.prototype.trim ) {
             else{
                 throw new Error('invalid tween parameters')
             }
-            //console.log('    to', to);
+            //console.log('    to',  String(to));
 
             //break down from and to values to tweenable values
             //and determine how to tween values
@@ -8409,6 +8582,7 @@ if ( !String.prototype.trim ) {
             else {
                 for ( var i in types ) {
                     type = types[i];
+                    //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
                     if ( type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
                         break;
                     }
@@ -8424,6 +8598,7 @@ if ( !String.prototype.trim ) {
                 from = type.parse( from );
                 delta = type.getDelta( to, from, deltaMethod );
                 proxy = type.proxy;
+                //console.log('   canTween', type.canTween( from, to ) );
                 if ( !type.canTween( from, to ) ) {
                     type = null;
                 }
@@ -8434,7 +8609,7 @@ if ( !String.prototype.trim ) {
             }
             //console.log('    type', type);
 
-            return new self.TweenObject( tweenId, target, property, from, delta, proxy );
+            return new self.TweenObject( tweenId, target, property, from, delta, proxy, dispatcher );
         }
 
         /**
@@ -8455,7 +8630,18 @@ if ( !String.prototype.trim ) {
                         tweens[k].calculate( now );
                     else{
                         //catch complete on next tick
+                        //trigger events
                         lola.event.trigger(tweens[k],'tweencomplete',false,false);
+                        for (var tr in targets){
+                            for ( var pr in targets[tr] ){
+                                var dispatcher = targets[tr][pr][0].dispatcher;
+                                if (dispatcher){
+                                    //console.log( dispatcher );
+                                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                                    break;
+                                }
+                            }
+                        }
                         delete tweens[k];
                         freeTweenIds.push( parseInt(k) );
                     }
@@ -8528,7 +8714,7 @@ if ( !String.prototype.trim ) {
                     return parseFloat( val );
                 },
                 canTween: function(a,b){
-                    return (a && b);
+                    return ( a != undefined && b != undefined  );
                 },
                 getDelta: function( to, from, method) {
                     if( method ){
@@ -8543,7 +8729,7 @@ if ( !String.prototype.trim ) {
 
         this.addTweenType('dimensional', {
                 match: lola.regex.isDimension,
-                    parse: function(val){
+                parse: function(val){
                     var parts = String( val ).match( lola.regex.isDimension );
                     return { value: parseFloat( parts[1] ), units: parts[2] };
                 },
@@ -8628,6 +8814,8 @@ if ( !String.prototype.trim ) {
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
                 self.addTarget( tweenId, targets, properties, collisions );
                 self.start(tweenId);
+
+                return this;
             }
         };
 
@@ -8652,7 +8840,12 @@ if ( !String.prototype.trim ) {
 
             init: function( duration, easing, delay ) {
                 this.duration = duration;
-                this.easing = easing;
+                if (typeof easing == "function")
+                    this.easing = easing;
+                else if (typeof easing == "string")
+                    this.easing = lola.easing.get( easing );
+                else
+                    this.easing = lola.easing.get('default');
                 this.delay = delay;
                 if (!easing){
                     this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
@@ -8704,8 +8897,8 @@ if ( !String.prototype.trim ) {
         };
 
 
-        this.TweenObject = function( tweenId, target, property, initialValue, deltaValue, proxy ){
-            this.init( tweenId, target, property, initialValue, deltaValue, proxy );
+        this.TweenObject = function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
+            this.init( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher );
             return this;
         };
         this.TweenObject.prototype = {
@@ -8716,13 +8909,15 @@ if ( !String.prototype.trim ) {
             deltaValue: null,
             proxy: null,
             units: "",
-            init: function( tweenId, target, property, initialValue, deltaValue, proxy ){
+            dispatcher: null,
+            init: function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
                 this.target = target;
                 this.property = property;
                 this.tweenId = tweenId;
                 this.initialValue = initialValue;
                 this.deltaValue = deltaValue;
                 this.proxy = proxy;
+                this.dispatcher = dispatcher;
             },
 
             apply: function( value ){

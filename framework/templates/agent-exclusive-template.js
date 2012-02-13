@@ -1,11 +1,12 @@
 /***********************************************************************
- * Lola JavaScript Framework
+ * Lola JavaScript Framework Exclusive Agent
  *
- *       Agent: AGENT
- *  Description:
- *       Author: Copyright 2011-2012, Tyler Beck
+ *       Agent: $name
+ *  Description: $description
+ *       Author: Copyright ${YEAR}, ${USER}
  *
  ***********************************************************************/
+#set( $client = "$client" )
 (function( lola ) {
     var Agent = function(){
         var self = this;
@@ -18,21 +19,21 @@
          * @type {String}
          * @private
          */
-        var namespace = "AGENT";
+        var namespace = "$namespace";
 
         /**
          * agent's dependencies
          * @type {Object}
          * @private
          */
-        var dependencies = [];
+        var dependencies = [$dependencies];
 
         /**
-         * map of agent's clients
+         * agent's client
          * @private
          * @type {Object}
          */
-        var clients = {};
+        var client = null;
 
         //==================================================================
         // Getters & Setters
@@ -58,15 +59,15 @@
         //==================================================================
         /**
          * signs a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.sign = function( client ) {
-            var $client = $(client);
+        this.sign = function( cl ) {
+            var $client = $(cl);
             $client.identify();
-            if ( clients[ client.id ] == null) {
+            if ( client == null) {
 
-                //setup client
-                clients[ client.id ] = client;
+                //not signed yet
+                client = cl;
                 $client.putData( {}, namespace );
 
                 //add listeners
@@ -76,34 +77,25 @@
 
         /**
          * drops a client
-         * @param {*} client
+         * @param {*} cl
          */
-        this.drop = function( client ) {
-            if (clients[ client.id ] ) {
-                var $client = $(client);
-                var data = $client.getData( namespace );
+        this.drop = function( cl ) {
+            var $client = $(client);
+            if (client == cl ) {
+                $client.removeData( namespace );
+
                 //remove listeners
 
-                //teardown client
-                $client.removeData( namespace );
-                delete clients[ client.id ];
+                //remove client
+                client = null;
             }
-        };
-
-        /**
-         * checks if client exists
-         * @param {*} client
-         * @return {Boolean}
-         */
-        this.clientExists = function( client ){
-            return ( client.id && clients[ client.id ] );
         };
 
         /**
          * agent initializer
          */
         this.initialize = function(){
-            //lola(".AGENT").assignAgent( namespace );
+            lola("$UIselector").assignAgent( namespace );
         };
 
     };

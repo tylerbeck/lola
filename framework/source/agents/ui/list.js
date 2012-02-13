@@ -479,7 +479,7 @@
         function selectionChanged(client){
             //console.log('selectionChanged',lola.now());
 
-            $(client).trigger('selectionChanged', false, false, {
+            $(client).trigger('selectionchanged', false, false, {
                 selectedIndices: self.getSelectedIndices(client),
                 selectedValues: self.getSelectedValues(client)
             });

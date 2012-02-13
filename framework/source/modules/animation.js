@@ -166,7 +166,7 @@
          * @private
          */
         this.start = function( name ){
-            //console.log('lola.animation.start', name, animations[ name ].isActive()  );
+            //console.log('lola.animation.start', name );
             if (animations[ name ]){
 
                 animations[ name ].start();

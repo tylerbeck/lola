@@ -74,9 +74,9 @@
 
             //get all predefined templates
             var start = lola.now();
-            /*lola('script[type="text/x-lola-template"]').forEach( function( item ){
+            lola('script[type="text/x-lola-template"]').forEach( function( item ){
                 self.add( item.id, item.innerHTML );
-            });*/
+            });
             var complete = lola.now();
             lola.debug( "templates parsed in "+(complete-start)+" ms" );
 

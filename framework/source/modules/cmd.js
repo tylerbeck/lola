@@ -68,12 +68,14 @@
         //==================================================================
         /**
          * registers command with the module
-         * @param {Class|String} cmd the comman ./d b class or url of the class' js file
-         * @param {String} name the name with which tobv register the command
+         * @param {Class|String} cmd the command class or url of the class' js file
+         * @param {String} name the name with which to register the command
          */
         this.register = function( cmd, name ) {
-            if ( typeof cmd != "string" && name == undefined  )
-                name = cmd.name;
+            if ( typeof cmd != "string" && name == undefined  ){
+                var tmp = new cmd();
+                name = tmp.getName();
+            }
 
             lola.debug('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
@@ -94,9 +96,9 @@
         this.execute = function( name, params, responder ){
             if (registry[name]) {
 
-                if (!responder) {
-                    responder = new self.Responder();
-                }
+                //if (!responder) {
+                //    responder = new self.Responder();
+                //}
 
                 if ( typeof registry[name] == "string" ) {
                     //add execution params to call later queue for the unloaded command
@@ -110,7 +112,7 @@
                                     var o = callLater[ name ][i];
                                     self.execute( o.name, o.params, o.responder );
                                 }
-                                delete lola.cmd.callLater[ name ];
+                                delete callLater[ name ];
                             }
                             else {
                                 throw new Error('The command loaded from "'+registry[name]+'" is not named "'+name+'"');
@@ -210,6 +212,8 @@
                 if (typeof faultHandler == 'function')
                     faultHandler.apply(lola.window, [event] );
             }
+
+            return this;
 
         };
 

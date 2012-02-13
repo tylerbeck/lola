@@ -60,6 +60,14 @@
         };
 
         /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.methods = function() {
+            return methods;
+        };
+
+        /**
          * get module's dependencies
          * @return {Array}
          */
@@ -74,6 +82,7 @@
         this.setDefaultEase = function( id ){
             if (methods[ id ]){
                 defaultEase = id;
+                methods['default'] = methods[id];
             }
         };
 
@@ -82,12 +91,12 @@
         // Methods
         //==================================================================
         /**
-         * initializes module
-         * @public
+         * preinitializes module
+         * @private
          * @return {void}
          */
-        this.initialize = function() {
-            lola.debug( 'lola.easing::initialize' );
+        function preinitialize() {
+            lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
             self.registerSimpleEasing("none", 0, 0, 1, 1);
@@ -97,9 +106,22 @@
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
-            //remove initialization method
-            delete self.initialize;
-        };
+
+            //create easeInOut functions for types with easeIn and easeOut
+            for ( var k in optimized ) {
+                if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
+                    var ei = optimized[ k ]["easeIn"];
+                    var eo = optimized[ k ]["easeOut"];
+                    var eio = function( t, v, c, d ){ return (t < d / 2) ? (ei(t,v,c/2,d/2)) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2)); };
+
+                    self.registerEasingFn(k+'-ease-in', ei );
+                    self.registerEasingFn(k+'-ease-out', eo );
+                    self.registerEasingFn(k+'-ease-in-out', eio );
+                }
+            }
+
+            self.setDefaultEase('ease-in-out');
+        }
 
         /**
          * calculates a point on a cubic bezier curve given time and an array of points.
@@ -173,7 +195,7 @@
          * @param resolution
          * @param overwrite
          */
-        this.register = function( id, spline, resolution, overwrite  ){
+        this.registerEasingSpline = function( id, spline, resolution, overwrite  ){
             resolution = resolution?resolution:defaultResolution;
             overwrite = overwrite === true;
 
@@ -232,7 +254,21 @@
             var v2 = c2.toVector();
             spline.addPoint( new geo.SplinePoint( 0, 0, 0, 0, v1.velocity, v1.angle ) );
             spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 1, 1 ) );
-            self.register( id, spline );
+            self.registerEasingSpline( id, spline );
+        };
+
+        /**
+         * registers an easing function
+         * @param {String} id
+         * @param {Function} fn
+         */
+        this.registerEasingFn = function( id, fn ){
+            var Ease = function(){
+                this.exec = fn
+                return this;
+            };
+
+            methods[ id ] = Ease;
         };
 
         /**
@@ -249,6 +285,136 @@
                 return new methods[ defaultEase ]();
             }
         };
+
+
+        //------------------------------------------------------------------
+        // optimised easing functions
+        //------------------------------------------------------------------
+        /*
+         t - time in millis
+         v - initial value
+         c - value change
+         d - duration in millis
+         */
+        //---------------------------------
+        this.params = {
+            back: { a: 2.7, b: 1.7 }
+        };
+
+        var optimized = {
+            back: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * (self.params.back.a * t - self.params.back.b) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * (self.params.back.a * t + self.params.back.b) + 1) + v;
+                }
+            },
+            //---------------------------------
+            bounce: {
+                easeIn: function( t, v, c, d ) {
+                    return c - optimized.bounce.easeOut( d - t, 0, c, d ) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return ((t /= d) < (1 / 2.75)) ?
+                        (c * (7.5625 * t * t) + v) :
+                        ( (t < (2 / 2.75)) ?
+                            (c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + v) :
+                            ( (t < (2.5 / 2.75)) ?
+                                (c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + v) :
+                                (c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + v)));
+                }
+            },
+            //---------------------------------
+            circular: {
+                easeIn: function( t, v, c, d ) {
+                    return -c * (Math.sqrt( 1 - (t /= d) * t ) - 1) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * Math.sqrt( 1 - (t = t/d - 1) * t ) + v;
+                }
+            },
+            //---------------------------------
+            cubic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
+            elastic: {
+                easeIn: function( t, v, c, d ) {
+                    if ( t == 0 ) return v;
+                    if ( (t /= d) == 1 ) return v + c;
+                    var p,a,s;
+                    p = d * 0.3;
+                    a = c;
+                    s = p / 4;
+                    return -(a * Math.pow( 2, 10 * (t -= 1) ) * Math.sin( (t * d - s) * (2 * Math.PI) / p )) + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    if ( t == 0 ) return v;
+                    if ( (t /= d) == 1 ) return v + c;
+                    var s,a,p;
+                    p = d * 0.3;
+                    a = c;
+                    s = p / 4;
+                    return a * Math.pow( 2, -10 * t ) * Math.sin( (t * d - s) * (2 * Math.PI) / p ) + c + v;
+                }
+            },
+            //---------------------------------
+            exponential: {
+                easeIn: function( t, v, c, d ) {
+                    return (t == 0) ? v : (c * Math.pow( 2, 10 * (t / d - 1) ) + v);
+                },
+                easeOut: function( t, v, c, d ) {
+                    return (t == d) ? (v + c) : (c * (-Math.pow( 2, -10 * t / d ) + 1) + v);
+                }
+            },
+            //---------------------------------
+            quadratic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return -c * (t /= d) * (t - 2) + v;
+                }
+            },
+            //---------------------------------
+            quartic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return -c * ((t = t / d - 1) * t * t * t - 1) + v;
+                }
+            },
+            //---------------------------------
+            quintic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
+            sine: {
+                easeIn: function( t, v, c, d ) {
+                    return -c * Math.cos( t / d * (Math.PI / 2) ) + c + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * Math.sin( t / d * (Math.PI / 2) ) + v;
+                }
+            }
+        };
+
+
+        preinitialize();
+
+        return this;
 
     };
 

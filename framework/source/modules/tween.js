@@ -560,7 +560,7 @@
                     this.easing = lola.easing.get( easing );
                 else
                     this.easing = lola.easing.get('default');
-                this.delay = delay;
+                this.delay = delay || 0;
                 if (!easing){
                     this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
                 }
@@ -573,7 +573,7 @@
                     this.complete = true;
                     this.active = true;
                 }
-                //console.log('value', this.value);
+                console.log('value', this.value);
                 this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
             },
 

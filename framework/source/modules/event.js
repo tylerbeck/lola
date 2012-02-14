@@ -288,7 +288,7 @@
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type);
+            console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;

@@ -657,6 +657,8 @@ if ( !String.prototype.trim ) {
             }
         };
 
+        //TODO: add lazy loading of unloaded dependent modules
+
         /**
          * checks if modules are registered and returns missing modules
          * @private
@@ -1627,15 +1629,16 @@ if ( !String.prototype.trim ) {
          * @param {Object} object the object on which to access the attribute
          * @param {String} name the name of the attribute
          * @param {*} value (optional) value to set
+         * @param {Boolean} value (optional) value to set
          */
-        this.attr = function( object, name, value ) {
+        this.attr = function( object, name, value, useHooks ) {
             //console.log('dom.attr');
-            if ( attributeHooks[name] ) {
+            if ( useHooks !== false && attributeHooks[name] ) {
                 return attributeHooks[name].apply( object, arguments );
             }
             else if (object) {
                 if ( value || value == "") {   //set value
-                    if (lola(value).isPrimitive()) {
+                    if (lola.type.isPrimitive(value)) {
                         return object[name] = value;
                     }
                     else {
@@ -1647,6 +1650,39 @@ if ( !String.prototype.trim ) {
                 }
             }
         };
+
+        /**
+         * add hook to event hooks
+         * @param {String|Array} attrs
+         * @param {Function} hook
+         */
+        this.addAttrHook = function( attrs, hook ){
+            if (!Array.isArray(attrs)){
+                attrs = [attrs];
+            }
+            attrs.forEach( function(attr){
+                attributeHooks[ attr ] = hook;
+            });
+        };
+
+
+        /**
+         * Attribute hook for dispatching change event on value set
+         * @param object
+         * @param name
+         * @param value
+         */
+        function attrDispatchChange( object, name, value ){
+            var oldValue = self.attr(object, name, undefined, false);
+            if (value != undefined){
+                var result = self.attr(object, name, value, false);
+                if (oldValue != value)
+                    lola.event.trigger( object, 'change', false, false );
+                return result;
+            }
+
+            return oldValue;
+        }
 
         /**
          * deletes expando properties
@@ -1950,6 +1986,7 @@ if ( !String.prototype.trim ) {
             }
         };
 
+        self.addAttrHook(['value','checked','selected'], attrDispatchChange );
 
     };
 
@@ -2383,6 +2420,21 @@ if ( !String.prototype.trim ) {
                 }
             }
             return defaultValue;
+        };
+
+        /**
+         * converts node list to array
+         * @param {NodeList} nl
+         */
+        this.nodeList2Array = function( nl ){
+            try {
+                return Array.prototype.slice.call( nl, 0 );
+            }
+            catch(e){
+                var arr = [];
+                for (var i = nl.length; i--; arr.unshift(nl[i]) );
+                return arr;
+            }
         };
 
 
@@ -3079,14 +3131,15 @@ if ( !String.prototype.trim ) {
          * @return {String}
          */
         this.getDOMKey = function( e ) {
-            var code;
-
-            if ( e.keyCode )
-                code = e.keyCode;
-            else if ( e.which )
-                code = e.which;
-
-            return String.fromCharCode( self.getDOMKeycode(e) );
+            var code = self.getDOMKeycode(e);
+            if (code > 0xFFFF) {
+                code -= 0x10000;
+                return String.fromCharCode(0xD800 + (code >> 10), 0xDC00 +
+                    (code & 0x3FF));
+            }
+            else {
+                return String.fromCharCode(code);
+            }
         };
 
         /**
@@ -7645,8 +7698,6 @@ if ( !String.prototype.trim ) {
          */
         var routines = {};
 
-
-
         //==================================================================
         // Getters & Setters
         //==================================================================
@@ -7818,9 +7869,14 @@ if ( !String.prototype.trim ) {
             ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         };
 
-        function copyContextMethod( prop ){
+        /**
+         * creates methods on context on this
+         * @param prop
+         */
+        function createContextMethod( prop ){
             self[ prop ] = function(){
-                context[prop].apply( context, arguments );
+                var ctx = resolveContext();
+                ctx[prop].apply( ctx, arguments );
             }
         }
         //==================================================================
@@ -7850,7 +7906,7 @@ if ( !String.prototype.trim ) {
                 reset[ prop ] = ctx[ prop ];
             }
             else if (lola.type.get( ctx[prop] ) == 'function'){
-                copyContextMethod( prop );
+                createContextMethod( prop );
             }
         }
 
@@ -7860,7 +7916,7 @@ if ( !String.prototype.trim ) {
 	lola.registerModule( new Module() );
 
 })( lola );
-/***********************************************************************
+ /***********************************************************************
  * Lola JavaScript Framework
  *
  *       Module: Easing
@@ -7958,6 +8014,7 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         function preinitialize() {
+            var start = lola.now();
             lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
@@ -7981,7 +8038,8 @@ if ( !String.prototype.trim ) {
                     self.registerEasingFn(k+'-ease-in-out', eio );
                 }
             }
-
+            var complete = lola.now();
+            console.log('easing preinitialization took:',(complete-start));
             self.setDefaultEase('ease-in-out');
         }
 
@@ -8067,11 +8125,11 @@ if ( !String.prototype.trim ) {
                 //Todo: make sure spline can be fit to cartesian function
 
                 var Ease = function(){
+                    var s = sampleSpline( spline, resolution );
+                    var l = s.length;
                     this.exec = function( t,v,c,d ){
                         t/=d;
-                        var s = sampleSpline( spline, resolution );
                         var i = 1;
-                        var l = s.length;
                         //TODO: use a more efficient time search algorithm
                         while( t>s[i].x && i < l ){
                             i++;
@@ -8089,7 +8147,7 @@ if ( !String.prototype.trim ) {
                 };
 
                 if ( !methods[ id ] || overwrite ){
-                    methods[ id ] = Ease;
+                    methods[ id ] = new Ease();
                 }else{
                     throw new Error("easing id already taken");
                 }
@@ -8126,11 +8184,11 @@ if ( !String.prototype.trim ) {
          */
         this.registerEasingFn = function( id, fn ){
             var Ease = function(){
-                this.exec = fn
+                this.exec = fn;
                 return this;
             };
 
-            methods[ id ] = Ease;
+            methods[ id ] = new Ease();
         };
 
         /**
@@ -8140,13 +8198,15 @@ if ( !String.prototype.trim ) {
         this.get = function( id ){
             //console.log("lola.easing.get: "+id);
             if (methods[ id ]){
-                return new methods[ id ]();
+                return methods[ id ];
             }
             else {
                 console.warn('easing method "'+id+'" not found.');
                 return new methods[ defaultEase ]();
             }
         };
+
+        this.getAll = function(){ return methods; };
 
 
         //------------------------------------------------------------------

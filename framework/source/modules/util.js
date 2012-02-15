@@ -131,6 +131,21 @@
             return defaultValue;
         };
 
+        /**
+         * converts node list to array
+         * @param {NodeList} nl
+         */
+        this.nodeList2Array = function( nl ){
+            try {
+                return Array.prototype.slice.call( nl, 0 );
+            }
+            catch(e){
+                var arr = [];
+                for (var i = nl.length; i--; arr.unshift(nl[i]) );
+                return arr;
+            }
+        };
+
 
         //==================================================================
         // Selection Methods

@@ -410,14 +410,15 @@
          * @return {String}
          */
         this.getDOMKey = function( e ) {
-            var code;
-
-            if ( e.keyCode )
-                code = e.keyCode;
-            else if ( e.which )
-                code = e.which;
-
-            return String.fromCharCode( self.getDOMKeycode(e) );
+            var code = self.getDOMKeycode(e);
+            if (code > 0xFFFF) {
+                code -= 0x10000;
+                return String.fromCharCode(0xD800 + (code >> 10), 0xDC00 +
+                    (code & 0x3FF));
+            }
+            else {
+                return String.fromCharCode(code);
+            }
         };
 
         /**

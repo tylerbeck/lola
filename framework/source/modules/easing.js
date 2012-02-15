@@ -1,4 +1,4 @@
-/***********************************************************************
+ /***********************************************************************
  * Lola JavaScript Framework
  *
  *       Module: Easing
@@ -96,6 +96,7 @@
          * @return {void}
          */
         function preinitialize() {
+            var start = lola.now();
             lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
@@ -119,7 +120,8 @@
                     self.registerEasingFn(k+'-ease-in-out', eio );
                 }
             }
-
+            var complete = lola.now();
+            console.log('easing preinitialization took:',(complete-start));
             self.setDefaultEase('ease-in-out');
         }
 
@@ -205,11 +207,11 @@
                 //Todo: make sure spline can be fit to cartesian function
 
                 var Ease = function(){
+                    var s = sampleSpline( spline, resolution );
+                    var l = s.length;
                     this.exec = function( t,v,c,d ){
                         t/=d;
-                        var s = sampleSpline( spline, resolution );
                         var i = 1;
-                        var l = s.length;
                         //TODO: use a more efficient time search algorithm
                         while( t>s[i].x && i < l ){
                             i++;
@@ -227,7 +229,7 @@
                 };
 
                 if ( !methods[ id ] || overwrite ){
-                    methods[ id ] = Ease;
+                    methods[ id ] = new Ease();
                 }else{
                     throw new Error("easing id already taken");
                 }
@@ -264,11 +266,11 @@
          */
         this.registerEasingFn = function( id, fn ){
             var Ease = function(){
-                this.exec = fn
+                this.exec = fn;
                 return this;
             };
 
-            methods[ id ] = Ease;
+            methods[ id ] = new Ease();
         };
 
         /**
@@ -278,13 +280,15 @@
         this.get = function( id ){
             //console.log("lola.easing.get: "+id);
             if (methods[ id ]){
-                return new methods[ id ]();
+                return methods[ id ];
             }
             else {
                 console.warn('easing method "'+id+'" not found.');
                 return new methods[ defaultEase ]();
             }
         };
+
+        this.getAll = function(){ return methods; };
 
 
         //------------------------------------------------------------------

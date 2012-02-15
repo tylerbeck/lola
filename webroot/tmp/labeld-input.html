@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Labeled Input Test</title>
+    <script src="../bin/lola.js"></script>
+    <script src="../lola/agents/ui/input/labeled.js"></script>
+    <script>
+        (function(){
+
+        })();
+    </script>
+    <style>
+        html{ font-family: Helvetica, Arial, SANS-SERIF }
+        input{ display: block; margin: 5px; font-size: 12px;}
+        label.integrated{
+                position: absolute; padding: 4px 0 0 9px; color: #CCCCCC; font-size: 12px; cursor:text;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                -o-user-select: none;
+                user-select: none;}
+    </style>
+
+</head>
+<body>
+    <p>This is a test spacer</p>
+    <p>This is a test spacer</p>
+    <p>This is a test spacer</p>
+    <p>This is a test spacer</p>
+    <label for="fname" class="integrated">First Name</label>
+    <input id="fname" class="labeled"/>
+    <label for="lname" class="integrated">Last Name</label>
+    <input id="lname" class="labeled"/>
+</body>
+</html>

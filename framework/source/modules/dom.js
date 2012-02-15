@@ -66,15 +66,16 @@
          * @param {Object} object the object on which to access the attribute
          * @param {String} name the name of the attribute
          * @param {*} value (optional) value to set
+         * @param {Boolean} value (optional) value to set
          */
-        this.attr = function( object, name, value ) {
+        this.attr = function( object, name, value, useHooks ) {
             //console.log('dom.attr');
-            if ( attributeHooks[name] ) {
+            if ( useHooks !== false && attributeHooks[name] ) {
                 return attributeHooks[name].apply( object, arguments );
             }
             else if (object) {
                 if ( value || value == "") {   //set value
-                    if (lola(value).isPrimitive()) {
+                    if (lola.type.isPrimitive(value)) {
                         return object[name] = value;
                     }
                     else {
@@ -86,6 +87,39 @@
                 }
             }
         };
+
+        /**
+         * add hook to event hooks
+         * @param {String|Array} attrs
+         * @param {Function} hook
+         */
+        this.addAttrHook = function( attrs, hook ){
+            if (!Array.isArray(attrs)){
+                attrs = [attrs];
+            }
+            attrs.forEach( function(attr){
+                attributeHooks[ attr ] = hook;
+            });
+        };
+
+
+        /**
+         * Attribute hook for dispatching change event on value set
+         * @param object
+         * @param name
+         * @param value
+         */
+        function attrDispatchChange( object, name, value ){
+            var oldValue = self.attr(object, name, undefined, false);
+            if (value != undefined){
+                var result = self.attr(object, name, value, false);
+                if (oldValue != value)
+                    lola.event.trigger( object, 'change', false, false );
+                return result;
+            }
+
+            return oldValue;
+        }
 
         /**
          * deletes expando properties
@@ -389,6 +423,7 @@
             }
         };
 
+        self.addAttrHook(['value','checked','selected'], attrDispatchChange );
 
     };
 

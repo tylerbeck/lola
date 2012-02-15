@@ -60,8 +60,6 @@
          */
         var routines = {};
 
-
-
         //==================================================================
         // Getters & Setters
         //==================================================================
@@ -233,9 +231,14 @@
             ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         };
 
-        function copyContextMethod( prop ){
+        /**
+         * creates methods on context on this
+         * @param prop
+         */
+        function createContextMethod( prop ){
             self[ prop ] = function(){
-                context[prop].apply( context, arguments );
+                var ctx = resolveContext();
+                ctx[prop].apply( ctx, arguments );
             }
         }
         //==================================================================
@@ -265,7 +268,7 @@
                 reset[ prop ] = ctx[ prop ];
             }
             else if (lola.type.get( ctx[prop] ) == 'function'){
-                copyContextMethod( prop );
+                createContextMethod( prop );
             }
         }
 

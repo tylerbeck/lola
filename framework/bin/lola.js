@@ -3009,7 +3009,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type);
+            console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -8908,7 +8908,7 @@ if ( !String.prototype.trim ) {
                     this.easing = lola.easing.get( easing );
                 else
                     this.easing = lola.easing.get('default');
-                this.delay = delay;
+                this.delay = delay || 0;
                 if (!easing){
                     this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
                 }
@@ -8921,7 +8921,7 @@ if ( !String.prototype.trim ) {
                     this.complete = true;
                     this.active = true;
                 }
-                //console.log('value', this.value);
+                console.log('value', this.value);
                 this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
             },
 

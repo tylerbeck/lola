@@ -479,8 +479,7 @@
                     });
                     var pl = p.length;
 
-
-                    if (flgs &  self.Spline.CONTROLS){
+                    if (flgs & self.Spline.CONTROLS){
                         var d = function(q,r){
                             ctx.beginPath();
                             ctx.moveTo(p[q].x, p[q].y);
@@ -488,12 +487,13 @@
                             ctx.stroke();
                             ctx.closePath();
                         };
-                        d(1,2);
-                        for (var n=3; n<pl-3; n+=3){
+                        /*for (var n=0; n<pl-3; n+=3){
                             d(n,n+1);
-                            d(n+1,n+2)
-                        }
-                        d(n,n+1);
+                            d(n+1,n+2);
+                        } */
+                        d(1,2);
+                        d(3,4);
+                        //d(n,n+1);
                     }
 
                     ctx.beginPath();
@@ -506,7 +506,7 @@
                         );
                     }
 
-                    if (flags &  self.Spline.CLOSED){
+                    if (flgs & self.Spline.CLOSED){
                         ctx.bezierCurveTo(
                             p[pl-1].x,p[pl-1].y,
                             p[0].x,p[0].y,
@@ -514,11 +514,11 @@
                         );
                     }
 
-                    if (flags &  self.Spline.FILL){
+                    if (flgs & self.Spline.FILL){
                         ctx.fill();
                     }
 
-                    if (flags &  self.Spline.STROKE){
+                    if (flgs & self.Spline.STROKE){
                         ctx.stroke();
                     }
 
@@ -555,7 +555,7 @@
                     pt = pt.subtract( oldMin ).divide( oldSize );
                     if (flipX) pt.x = 1-pt.x;
                     if (flipY) pt.y = 1-pt.y;
-                    return pt.multiply( newSize );
+                    return pt.multiply( newSize ).add( newMin );
                 };
 
                 for (var i=0; i<l; i++ ){
@@ -568,7 +568,7 @@
                     var nanch = normalizePoint( anch );
                     var ncv1 = nanch.subtract( normalizePoint( cp1 ) ).toVector();
                     var ncv2 = normalizePoint( cp2 ).subtract( nanch ).toVector();
-
+                    //var ncv2 = nanch.subtract( normalizePoint( cp2 ) ).toVector();
 
                     var np = new self.SplinePoint( nanch.x, nanch.y, ncv1.velocity, ncv1.angle, ncv2.velocity, ncv2.angle );
                     norm.addPoint( np );
@@ -617,13 +617,13 @@
 
             /**
              * sets the SplinePont's entry and exit angles
-             * if exitAngle is omitted the same angle is set for both
+             * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
              * @param {Number} entryAngle
              * @param {Number|undefined} exitAngle
              */
             this.setAngle = function( entryAngle, exitAngle) {
                 entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+                exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
             };
 
             /**
@@ -636,24 +636,28 @@
 
             /**
              * gets the spline point's entry control point
+             * @param {Boolean} vector
              * @return {lola.geometry.Point}
              */
-            this.getControl1 = function(){
+            this.getControl1 = function( vector ){
+                if (vector) return entry;
                 return anchor.subtract( entry.toPoint() );
             };
 
             /**
              * gets the spline point's exit control point
+             * @param {Boolean} vector
              * @return {lola.geometry.Point}
              */
-            this.getControl2 = function(){
+            this.getControl2 = function( vector ){
+                if (vector) return exit;
                 return anchor.add( exit.toPoint() );
             };
 
             //initialize
             anchor = new self.Point( anchorX, anchorY );
             entry = new self.Vector( entryStrength, entryAngle );
-            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle:exitAngle );
+            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle+Math.PI:exitAngle );
             return this;
         };
 

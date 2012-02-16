@@ -101,8 +101,8 @@
 
             //do module initialization
             self.registerSimpleEasing("none", 0, 0, 1, 1);
-            self.registerSimpleEasing("ease", .25, .1, .25, 1);
             self.registerSimpleEasing("linear", 0, 0, 1, 1);
+            self.registerSimpleEasing("ease", .25, .1, .25, 1);
             self.registerSimpleEasing("ease-in", .42, 0, 1, 1);
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
@@ -113,16 +113,18 @@
                 if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
                     var ei = optimized[ k ]["easeIn"];
                     var eo = optimized[ k ]["easeOut"];
-                    var eio = function( t, v, c, d ){ return (t < d / 2) ? (ei(t,v,c/2,d/2)) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2)); };
+                    var eio = function( t, v, c, d ){
+                        return (t < d / 2) ? ( ei(t,v,c/2,d/2) ) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2));
+                    };
 
-                    self.registerEasingFn(k+'-ease-in', ei );
-                    self.registerEasingFn(k+'-ease-out', eo );
-                    self.registerEasingFn(k+'-ease-in-out', eio );
+                    self.registerEasingFn(k+'-in', ei );
+                    self.registerEasingFn(k+'-out', eo );
+                    self.registerEasingFn(k+'-in-out', eio );
                 }
             }
             var complete = lola.now();
             console.log('easing preinitialization took:',(complete-start));
-            self.setDefaultEase('ease-in-out');
+            self.setDefaultEase('back-in-out');
         }
 
         /**
@@ -189,6 +191,7 @@
             }
             return samples;
         }
+        this.sampleSpline = sampleSpline;
 
         /**
          * registers the an easing method using the given parameters
@@ -207,6 +210,7 @@
                 //Todo: make sure spline can be fit to cartesian function
 
                 var Ease = function(){
+                    this.getSpline = function(){ return spline; };
                     var s = sampleSpline( spline, resolution );
                     var l = s.length;
                     this.exec = function( t,v,c,d ){
@@ -251,11 +255,11 @@
             var geo = lola.geometry;
             var spline = new geo.Spline();
             var c1 = new geo.Point( p1x, p1y );
-            var c2 = new geo.Point( p2x, p2y );
+            var c2 = new geo.Point( 1-p2x, 1-p2y );
             var v1 = c1.toVector();
             var v2 = c2.toVector();
             spline.addPoint( new geo.SplinePoint( 0, 0, 0, 0, v1.velocity, v1.angle ) );
-            spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 1, 1 ) );
+            spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 0, 0 ) );
             self.registerEasingSpline( id, spline );
         };
 
@@ -283,8 +287,8 @@
                 return methods[ id ];
             }
             else {
-                console.warn('easing method "'+id+'" not found.');
-                return new methods[ defaultEase ]();
+                lola.debug('easing method "'+id+'" not found.');
+                return methods[ defaultEase ];
             }
         };
 
@@ -368,7 +372,7 @@
                     return a * Math.pow( 2, -10 * t ) * Math.sin( (t * d - s) * (2 * Math.PI) / p ) + c + v;
                 }
             },
-            //---------------------------------
+           //---------------------------------
             exponential: {
                 easeIn: function( t, v, c, d ) {
                     return (t == 0) ? v : (c * Math.pow( 2, 10 * (t / d - 1) ) + v);

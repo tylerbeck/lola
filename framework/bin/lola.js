@@ -7404,8 +7404,7 @@ if ( !String.prototype.trim ) {
                     });
                     var pl = p.length;
 
-
-                    if (flgs &  self.Spline.CONTROLS){
+                    if (flgs & self.Spline.CONTROLS){
                         var d = function(q,r){
                             ctx.beginPath();
                             ctx.moveTo(p[q].x, p[q].y);
@@ -7413,12 +7412,13 @@ if ( !String.prototype.trim ) {
                             ctx.stroke();
                             ctx.closePath();
                         };
-                        d(1,2);
-                        for (var n=3; n<pl-3; n+=3){
+                        /*for (var n=0; n<pl-3; n+=3){
                             d(n,n+1);
-                            d(n+1,n+2)
-                        }
-                        d(n,n+1);
+                            d(n+1,n+2);
+                        } */
+                        d(1,2);
+                        d(3,4);
+                        //d(n,n+1);
                     }
 
                     ctx.beginPath();
@@ -7431,7 +7431,7 @@ if ( !String.prototype.trim ) {
                         );
                     }
 
-                    if (flags &  self.Spline.CLOSED){
+                    if (flgs & self.Spline.CLOSED){
                         ctx.bezierCurveTo(
                             p[pl-1].x,p[pl-1].y,
                             p[0].x,p[0].y,
@@ -7439,11 +7439,11 @@ if ( !String.prototype.trim ) {
                         );
                     }
 
-                    if (flags &  self.Spline.FILL){
+                    if (flgs & self.Spline.FILL){
                         ctx.fill();
                     }
 
-                    if (flags &  self.Spline.STROKE){
+                    if (flgs & self.Spline.STROKE){
                         ctx.stroke();
                     }
 
@@ -7480,7 +7480,7 @@ if ( !String.prototype.trim ) {
                     pt = pt.subtract( oldMin ).divide( oldSize );
                     if (flipX) pt.x = 1-pt.x;
                     if (flipY) pt.y = 1-pt.y;
-                    return pt.multiply( newSize );
+                    return pt.multiply( newSize ).add( newMin );
                 };
 
                 for (var i=0; i<l; i++ ){
@@ -7493,7 +7493,7 @@ if ( !String.prototype.trim ) {
                     var nanch = normalizePoint( anch );
                     var ncv1 = nanch.subtract( normalizePoint( cp1 ) ).toVector();
                     var ncv2 = normalizePoint( cp2 ).subtract( nanch ).toVector();
-
+                    //var ncv2 = nanch.subtract( normalizePoint( cp2 ) ).toVector();
 
                     var np = new self.SplinePoint( nanch.x, nanch.y, ncv1.velocity, ncv1.angle, ncv2.velocity, ncv2.angle );
                     norm.addPoint( np );
@@ -7542,13 +7542,13 @@ if ( !String.prototype.trim ) {
 
             /**
              * sets the SplinePont's entry and exit angles
-             * if exitAngle is omitted the same angle is set for both
+             * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
              * @param {Number} entryAngle
              * @param {Number|undefined} exitAngle
              */
             this.setAngle = function( entryAngle, exitAngle) {
                 entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle:exitAngle;
+                exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
             };
 
             /**
@@ -7561,24 +7561,28 @@ if ( !String.prototype.trim ) {
 
             /**
              * gets the spline point's entry control point
+             * @param {Boolean} vector
              * @return {lola.geometry.Point}
              */
-            this.getControl1 = function(){
+            this.getControl1 = function( vector ){
+                if (vector) return entry;
                 return anchor.subtract( entry.toPoint() );
             };
 
             /**
              * gets the spline point's exit control point
+             * @param {Boolean} vector
              * @return {lola.geometry.Point}
              */
-            this.getControl2 = function(){
+            this.getControl2 = function( vector ){
+                if (vector) return exit;
                 return anchor.add( exit.toPoint() );
             };
 
             //initialize
             anchor = new self.Point( anchorX, anchorY );
             entry = new self.Vector( entryStrength, entryAngle );
-            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle:exitAngle );
+            exit = new self.Vector( exitStrength, exitAngle==undefined?entryAngle+Math.PI:exitAngle );
             return this;
         };
 
@@ -8019,8 +8023,8 @@ if ( !String.prototype.trim ) {
 
             //do module initialization
             self.registerSimpleEasing("none", 0, 0, 1, 1);
-            self.registerSimpleEasing("ease", .25, .1, .25, 1);
             self.registerSimpleEasing("linear", 0, 0, 1, 1);
+            self.registerSimpleEasing("ease", .25, .1, .25, 1);
             self.registerSimpleEasing("ease-in", .42, 0, 1, 1);
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
@@ -8031,16 +8035,18 @@ if ( !String.prototype.trim ) {
                 if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
                     var ei = optimized[ k ]["easeIn"];
                     var eo = optimized[ k ]["easeOut"];
-                    var eio = function( t, v, c, d ){ return (t < d / 2) ? (ei(t,v,c/2,d/2)) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2)); };
+                    var eio = function( t, v, c, d ){
+                        return (t < d / 2) ? ( ei(t,v,c/2,d/2) ) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2));
+                    };
 
-                    self.registerEasingFn(k+'-ease-in', ei );
-                    self.registerEasingFn(k+'-ease-out', eo );
-                    self.registerEasingFn(k+'-ease-in-out', eio );
+                    self.registerEasingFn(k+'-in', ei );
+                    self.registerEasingFn(k+'-out', eo );
+                    self.registerEasingFn(k+'-in-out', eio );
                 }
             }
             var complete = lola.now();
             console.log('easing preinitialization took:',(complete-start));
-            self.setDefaultEase('ease-in-out');
+            self.setDefaultEase('back-in-out');
         }
 
         /**
@@ -8107,6 +8113,7 @@ if ( !String.prototype.trim ) {
             }
             return samples;
         }
+        this.sampleSpline = sampleSpline;
 
         /**
          * registers the an easing method using the given parameters
@@ -8125,6 +8132,7 @@ if ( !String.prototype.trim ) {
                 //Todo: make sure spline can be fit to cartesian function
 
                 var Ease = function(){
+                    this.getSpline = function(){ return spline; };
                     var s = sampleSpline( spline, resolution );
                     var l = s.length;
                     this.exec = function( t,v,c,d ){
@@ -8169,11 +8177,11 @@ if ( !String.prototype.trim ) {
             var geo = lola.geometry;
             var spline = new geo.Spline();
             var c1 = new geo.Point( p1x, p1y );
-            var c2 = new geo.Point( p2x, p2y );
+            var c2 = new geo.Point( 1-p2x, 1-p2y );
             var v1 = c1.toVector();
             var v2 = c2.toVector();
             spline.addPoint( new geo.SplinePoint( 0, 0, 0, 0, v1.velocity, v1.angle ) );
-            spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 1, 1 ) );
+            spline.addPoint( new geo.SplinePoint( 1, 1, v2.velocity, v2.angle, 0, 0 ) );
             self.registerEasingSpline( id, spline );
         };
 
@@ -8201,8 +8209,8 @@ if ( !String.prototype.trim ) {
                 return methods[ id ];
             }
             else {
-                console.warn('easing method "'+id+'" not found.');
-                return new methods[ defaultEase ]();
+                lola.debug('easing method "'+id+'" not found.');
+                return methods[ defaultEase ];
             }
         };
 
@@ -8285,8 +8293,8 @@ if ( !String.prototype.trim ) {
                     s = p / 4;
                     return a * Math.pow( 2, -10 * t ) * Math.sin( (t * d - s) * (2 * Math.PI) / p ) + c + v;
                 }
-            },
-            //---------------------------------
+            } /*,
+           //---------------------------------
             exponential: {
                 easeIn: function( t, v, c, d ) {
                     return (t == 0) ? v : (c * Math.pow( 2, 10 * (t / d - 1) ) + v);
@@ -8330,7 +8338,7 @@ if ( !String.prototype.trim ) {
                 easeOut: function( t, v, c, d ) {
                     return c * Math.sin( t / d * (Math.PI / 2) ) + v;
                 }
-            }
+            }*/
         };
 
 

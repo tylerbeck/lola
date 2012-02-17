@@ -93,7 +93,7 @@
             //execute agent initialization stack
             var stackSize = initializers.length;
 
-            for ( i = 0; i < stackSize; i++ ) {
+            for ( var i = 0; i < stackSize; i++ ) {
                 if (lola.hasFn( initializers, i )){
                     initializers[i]();
                     delete initializers[i];

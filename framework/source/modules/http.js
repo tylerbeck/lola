@@ -302,10 +302,10 @@
                         params = temp.join( '&' );
                     }
 
-                    if ( params.length > 0 ) {
-                        //request.setRequestHeader("Content-Length", params.length);
-                        //request.setRequestHeader("Connection", "close");
-                    }
+                    /*if ( params.length > 0 ) {
+                        request.setRequestHeader("Content-Length", params.length);
+                        request.setRequestHeader("Connection", "close");
+                    }*/
                 }
 
                 request.onreadystatechange = function() {

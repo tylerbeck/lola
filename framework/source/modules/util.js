@@ -141,7 +141,9 @@
             }
             catch(e){
                 var arr = [];
-                for (var i = nl.length; i--; arr.unshift(nl[i]) );
+                for (var i = nl.length; i--; arr.unshift(nl[i]) ){
+                    //intentionally empty
+                }
                 return arr;
             }
         };

@@ -5,7 +5,10 @@
  *       Author: Copyright 2011-2012, Tyler Beck
  *
  ***********************************************************************/
+"use strict";
 ( function( window ) {
+
+    var startTime = (new Date()).getTime();
 
     /**
      * @namespace lola
@@ -130,7 +133,10 @@
         //execute initialization stack
         lola.executeInitializers();
 
+        var elapsedTime = (new Date()).getTime() - startTime;
+
         delete lola['initialize'];
+        lola.debug('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;
@@ -360,33 +366,32 @@ if ( !Array.prototype.some ) {
 }
 // reduce ecma-5 -------------------------------------------
 if ( !Array.prototype.reduce ) {
-    Array.prototype.reduce = function( accumlator ) {
+    Array.prototype.reduce = function reduce(accumulator){
         var i, l = this.length, curr;
 
-        if ( typeof accumlator !== "function" ) // ES5 : "If IsCallable(callbackfn) is false, throw a TypeError exception."
-            throw new TypeError( "First argument is not callable" );
+        if(typeof accumulator !== "function") // ES5 : "If IsCallable(callbackfn) is false, throw a TypeError exception."
+            throw new TypeError("First argument is not callable");
 
-        if ( (l == 0 || l === null) && (arguments.length <= 1) )// == on purpose to test 0 and false.
-            throw new TypeError( "Array length is 0 and no second argument" );
+        if((l == 0 || l === null) && (arguments.length <= 1))// == on purpose to test 0 and false.
+            throw new TypeError("Array length is 0 and no second argument");
 
-        if ( arguments.length <= 1 ) {
-            for ( i = 0; i = l; i++ ) // empty array
-                throw new TypeError( "Empty array and no second argument" );
-
-            curr = this[i++]; // Increase i to start searching the secondly defined element in the array
+        if(arguments.length <= 1){
+            curr = this[0]; // Increase i to start searching the secondly defined element in the array
+            i = 1; // start accumulating at the second element
         }
-        else {
+        else{
             curr = arguments[1];
         }
 
-        for ( i = i || 0; i < l; i++ ) {
-            if ( i in this )
-                curr = accumlator.call( undefined, curr, this[i], i, this );
+        for(i = i || 0 ; i < l ; ++i){
+            if(i in this)
+                curr = accumulator.call(undefined, curr, this[i], i, this);
         }
 
         return curr;
     };
 }
+
 // isArray ecma-5 ------------------------------------------
 if ( !Array.isArray ) {
     Array.isArray = function( obj ) {
@@ -717,6 +722,7 @@ if ( !String.prototype.trim ) {
 
             node.insertBefore( script, node.firstChild );
             node.removeChild( script );
+
         };
 
         /**
@@ -2432,7 +2438,9 @@ if ( !String.prototype.trim ) {
             }
             catch(e){
                 var arr = [];
-                for (var i = nl.length; i--; arr.unshift(nl[i]) );
+                for (var i = nl.length; i--; arr.unshift(nl[i]) ){
+                    //intentionally empty
+                }
                 return arr;
             }
         };
@@ -3009,7 +3017,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            console.log('lola.event.trigger:',type);
+            //console.log('lola.event.trigger:',type);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -5368,10 +5376,10 @@ if ( !String.prototype.trim ) {
                         params = temp.join( '&' );
                     }
 
-                    if ( params.length > 0 ) {
-                        //request.setRequestHeader("Content-Length", params.length);
-                        //request.setRequestHeader("Connection", "close");
-                    }
+                    /*if ( params.length > 0 ) {
+                        request.setRequestHeader("Content-Length", params.length);
+                        request.setRequestHeader("Connection", "close");
+                    }*/
                 }
 
                 request.onreadystatechange = function() {
@@ -6139,7 +6147,7 @@ if ( !String.prototype.trim ) {
             //execute agent initialization stack
             var stackSize = initializers.length;
 
-            for ( i = 0; i < stackSize; i++ ) {
+            for ( var i = 0; i < stackSize; i++ ) {
                 if (lola.hasFn( initializers, i )){
                     initializers[i]();
                     delete initializers[i];
@@ -7962,7 +7970,7 @@ if ( !String.prototype.trim ) {
          * spline sampling resolution
          * @private
          */
-        var defaultResolution = 1000;
+        var defaultResolution = 25;
 
         /**
          * default easing method
@@ -8022,6 +8030,7 @@ if ( !String.prototype.trim ) {
             lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
+            //easing that simulates css timing
             self.registerSimpleEasing("none", 0, 0, 1, 1);
             self.registerSimpleEasing("linear", 0, 0, 1, 1);
             self.registerSimpleEasing("ease", .25, .1, .25, 1);
@@ -8029,12 +8038,11 @@ if ( !String.prototype.trim ) {
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
-
             //create easeInOut functions for types with easeIn and easeOut
-            for ( var k in optimized ) {
+            Object.keys(optimized).forEach( function(k){
                 if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
-                    var ei = optimized[ k ]["easeIn"];
-                    var eo = optimized[ k ]["easeOut"];
+                    var ei = optimized[k]["easeIn"];
+                    var eo = optimized[k]["easeOut"];
                     var eio = function( t, v, c, d ){
                         return (t < d / 2) ? ( ei(t,v,c/2,d/2) ) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2));
                     };
@@ -8043,10 +8051,10 @@ if ( !String.prototype.trim ) {
                     self.registerEasingFn(k+'-out', eo );
                     self.registerEasingFn(k+'-in-out', eio );
                 }
-            }
+            } );
             var complete = lola.now();
-            console.log('easing preinitialization took:',(complete-start));
-            self.setDefaultEase('back-in-out');
+            lola.debug('easing preinitialization took',(complete-start), 'ms');
+            self.setDefaultEase('bounce-in-out');
         }
 
         /**
@@ -8134,21 +8142,23 @@ if ( !String.prototype.trim ) {
                 var Ease = function(){
                     this.getSpline = function(){ return spline; };
                     var s = sampleSpline( spline, resolution );
+                    this.getSamples = function(){ return s; };
                     var l = s.length;
                     this.exec = function( t,v,c,d ){
                         t/=d;
-                        var i = 1;
+                        var i = 0;
                         //TODO: use a more efficient time search algorithm
-                        while( t>s[i].x && i < l ){
+                        while( t>=s[i].x && i < l ){
                             i++;
                             if ( t <= s[i].x ){
                                 var low = s[i-1];
                                 var high = s[i];
                                 var p = (t - low.x) / (high.x - low.x);
-                                this.lastIndex = i;
                                 return v+c*(low.y+p*(high.y-low.y));
                             }
                         }
+
+                        return 0;
                     };
 
                     return this;
@@ -8192,6 +8202,7 @@ if ( !String.prototype.trim ) {
          */
         this.registerEasingFn = function( id, fn ){
             var Ease = function(){
+                this.name = id;
                 this.exec = fn;
                 return this;
             };
@@ -8209,7 +8220,7 @@ if ( !String.prototype.trim ) {
                 return methods[ id ];
             }
             else {
-                lola.debug('easing method "'+id+'" not found.');
+                console.log('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };
@@ -8293,7 +8304,7 @@ if ( !String.prototype.trim ) {
                     s = p / 4;
                     return a * Math.pow( 2, -10 * t ) * Math.sin( (t * d - s) * (2 * Math.PI) / p ) + c + v;
                 }
-            } /*,
+            },
            //---------------------------------
             exponential: {
                 easeIn: function( t, v, c, d ) {
@@ -8338,7 +8349,7 @@ if ( !String.prototype.trim ) {
                 easeOut: function( t, v, c, d ) {
                     return c * Math.sin( t / d * (Math.PI / 2) ) + v;
                 }
-            }*/
+            }
         };
 
 
@@ -9690,7 +9701,9 @@ if ( !String.prototype.trim ) {
                 source = node.attributes.getNamedItem("src").nodeValue;
 
             this.execute = function(){
-                logFn('================================================\nsource\n================================================');
+                var ls = lola.string;
+            	var div = ls.padFront( ls.padEnd("\nsource\n",'=',56), '=',104);
+                logFn(div);
                 if (source){
                     loadExternalXML( source );
                 }

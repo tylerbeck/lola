@@ -7,18 +7,9 @@
 	         classpath="assets/ant-tasks/closure-compiler/compiler.jar" />
 
 
-	<target name="build" depends="init,copy-unified,copy-compressed,create-docs,cleanup" />
-
-	<target name="build-docs" depends="init,create-docs,cleanup"/>
-
-
-	<target name="cleanup">
-		<delete dir="tmp"/>
-		<delete dir="out"/>
-	</target>
+	<target name="build" depends="init,unify-framework,compile-framework,cleanup" />
 
 	<target name="init">
-		<mkdir dir="tmp"/>
 		<mkdir dir="framework/bin"/>
 		<delete >
 			<fileset dir="documentation">
@@ -27,10 +18,9 @@
 		</delete>
 	</target>
 
-
 	<!-- unify core and modules -->
-	<target name="unify-scripts" depends="init" >
-		<concat destfile="tmp/unified.js" force="no">
+	<target name="unify-framework" depends="init" >
+		<concat destfile="framework/bin/lola.js" force="no">
             <file file="framework/source/head.js" />
             <file file="framework/source/upgrades.js" />
             <file file="framework/source/selector.js" />
@@ -64,38 +54,56 @@
 		</concat>
 	</target>
 
-
-	<!-- compile unified script -->
-	<target name="compile-lola" depends="unify-scripts">
+	<!-- compile scripts -->
+	<target name="compile-framework" depends="init">
 		<jscomp compilationLevel="simple"
 		        debug="false"
-		        output="tmp/temp.js">
-			<sources dir="tmp">
+		        output="framework/bin/tmp.min.js">
+			<!--<sources dir="tmp">
 				<file name="unified.js"/>
-			</sources>
+			</sources>-->
+            <sources dir="framework/source">
+                <file name="head.js" />
+                <file name="upgrades.js" />
+                <file name="selector.js" />
+                <file name="modules/core.js" />
+                <file name="modules/support.js" />
+                <file name="modules/array.js" />
+                <file name="modules/type.js" />
+                <file name="modules/dom.js" />
+                <file name="modules/data.js" />
+                <file name="modules/util.js" />
+                <file name="modules/string.js" />
+                <file name="modules/regex.js" />
+                <file name="modules/event.js" />
+                <file name="modules/math.js" />
+                <file name="modules/math/color.js" />
+                <file name="modules/animation.js" />
+                <file name="modules/css.js" />
+                <file name="modules/http.js" />
+                <file name="modules/json.js" />
+                <file name="modules/agent.js" />
+                <file name="modules/cmd.js" />
+                <file name="modules/template.js" />
+                <file name="modules/geometry.js" />
+                <file name="modules/graphics.js" />
+                <file name="modules/easing.js" />
+                <file name="modules/tween.js" />
+                <file name="modules/chart.js" />
+                <file name="modules/math/tvm.js" />
+                <file name="modules/test.js" />
+                <file name="tail.js" />
+            </sources>
 		</jscomp>
-		<concat destfile="tmp/compressed.js">
-			<fileset dir="tmp" includes="temp.js"/>
-		</concat>
-	</target>
-
-	<!-- copy and alias unified file -->
-	<target name="copy-unified" depends="unify-scripts">
-		<!-- copy versioned file -->
-		<copy file="tmp/unified.js"
-		      tofile="framework/bin/lola.js"/>
-	</target>
-
-
-	<!-- copy and alias compressed file -->
-	<target name="copy-compressed" depends="compile-lola">
-		<!-- copy versioned file -->
-		<copy file="tmp/compressed.js"
-		      tofile="framework/bin/lola.min.js"/>
+        <concat destfile="framework/bin/header.tmp">"use strict";</concat>
+        <concat destfile="framework/bin/lola.min.js" force="no">
+            <file file="framework/bin/header.tmp" />
+            <file file="framework/bin/tmp.min.js" />
+        </concat>
 	</target>
 
 	<!-- create documentation -->
-	<target name="create-docs" depends="unify-scripts">
+	<target name="create-docs" depends="unify-framework">
 		<!-- copy versioned file -->
 		<!--<exec executable="assets/java-libs/jsdoc/jsdoc" failonerror="true">-->
 			<!--<arg path="framework/source/test.js"/>-->
@@ -106,5 +114,8 @@
 		<!--</copy>-->
 	</target>
 
-
+    <target name="cleanup">
+        <delete file="framework/bin/header.tmp"/>
+        <delete file="framework/bin/tmp.min.js" />
+    </target>
 </project>

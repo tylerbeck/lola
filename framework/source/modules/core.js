@@ -240,6 +240,7 @@
 
             node.insertBefore( script, node.firstChild );
             node.removeChild( script );
+
         };
 
         /**

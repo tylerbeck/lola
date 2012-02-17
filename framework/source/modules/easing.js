@@ -40,7 +40,7 @@
          * spline sampling resolution
          * @private
          */
-        var defaultResolution = 1000;
+        var defaultResolution = 25;
 
         /**
          * default easing method
@@ -100,6 +100,7 @@
             lola.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
+            //easing that simulates css timing
             self.registerSimpleEasing("none", 0, 0, 1, 1);
             self.registerSimpleEasing("linear", 0, 0, 1, 1);
             self.registerSimpleEasing("ease", .25, .1, .25, 1);
@@ -107,12 +108,11 @@
             self.registerSimpleEasing("ease-out", 0, 0, .58, 1);
             self.registerSimpleEasing("ease-in-out", .42, 0, .58, 1);
 
-
             //create easeInOut functions for types with easeIn and easeOut
-            for ( var k in optimized ) {
+            Object.keys(optimized).forEach( function(k){
                 if (optimized[k].hasOwnProperty('easeIn') && optimized[k].hasOwnProperty('easeOut')) {
-                    var ei = optimized[ k ]["easeIn"];
-                    var eo = optimized[ k ]["easeOut"];
+                    var ei = optimized[k]["easeIn"];
+                    var eo = optimized[k]["easeOut"];
                     var eio = function( t, v, c, d ){
                         return (t < d / 2) ? ( ei(t,v,c/2,d/2) ) : (eo( t - d/2, ei(d,v,c/2,d),c/2,d/2));
                     };
@@ -121,10 +121,10 @@
                     self.registerEasingFn(k+'-out', eo );
                     self.registerEasingFn(k+'-in-out', eio );
                 }
-            }
+            } );
             var complete = lola.now();
-            console.log('easing preinitialization took:',(complete-start));
-            self.setDefaultEase('back-in-out');
+            lola.debug('easing preinitialization took',(complete-start), 'ms');
+            self.setDefaultEase('bounce-in-out');
         }
 
         /**
@@ -212,21 +212,23 @@
                 var Ease = function(){
                     this.getSpline = function(){ return spline; };
                     var s = sampleSpline( spline, resolution );
+                    this.getSamples = function(){ return s; };
                     var l = s.length;
                     this.exec = function( t,v,c,d ){
                         t/=d;
-                        var i = 1;
+                        var i = 0;
                         //TODO: use a more efficient time search algorithm
-                        while( t>s[i].x && i < l ){
+                        while( t>=s[i].x && i < l ){
                             i++;
                             if ( t <= s[i].x ){
                                 var low = s[i-1];
                                 var high = s[i];
                                 var p = (t - low.x) / (high.x - low.x);
-                                this.lastIndex = i;
                                 return v+c*(low.y+p*(high.y-low.y));
                             }
                         }
+
+                        return 0;
                     };
 
                     return this;
@@ -270,6 +272,7 @@
          */
         this.registerEasingFn = function( id, fn ){
             var Ease = function(){
+                this.name = id;
                 this.exec = fn;
                 return this;
             };
@@ -287,7 +290,7 @@
                 return methods[ id ];
             }
             else {
-                lola.debug('easing method "'+id+'" not found.');
+                console.log('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };

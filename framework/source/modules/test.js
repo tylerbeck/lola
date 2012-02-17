@@ -405,7 +405,9 @@
                 source = node.attributes.getNamedItem("src").nodeValue;
 
             this.execute = function(){
-                logFn('================================================\nsource\n================================================');
+                var ls = lola.string;
+            	var div = ls.padFront( ls.padEnd("\nsource\n",'=',56), '=',104);
+                logFn(div);
                 if (source){
                     loadExternalXML( source );
                 }

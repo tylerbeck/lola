@@ -5,7 +5,10 @@
  *       Author: Copyright 2011-2012, Tyler Beck
  *
  ***********************************************************************/
+"use strict";
 ( function( window ) {
+
+    var startTime = (new Date()).getTime();
 
     /**
      * @namespace lola
@@ -130,7 +133,10 @@
         //execute initialization stack
         lola.executeInitializers();
 
+        var elapsedTime = (new Date()).getTime() - startTime;
+
         delete lola['initialize'];
+        lola.debug('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;

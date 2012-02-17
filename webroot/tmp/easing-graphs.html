@@ -8,7 +8,7 @@
 
 </head>
 <body>
-    <canvas id="big" width="500" height="500"></canvas>
+    <canvas id="big" width="1000" height="500"></canvas>
 
     <script>
         (function(){
@@ -24,8 +24,8 @@
                     lineWidth: .5,
                     lineCap: "square"
                 });
-                var grid = new c.Grid(.5,.5,500,500,50,c.Grid.HORIZONTAL | c.Grid.VERTICAL);
-                g.strokeRect(.5,.5,499,499);
+                var grid = new c.Grid(.5,.5,1000,500,50,c.Grid.HORIZONTAL | c.Grid.VERTICAL);
+                g.strokeRect(.5,.5,999,499);
                 g.draw( grid );
 
                 var ease = lola.easing.get(type);
@@ -40,7 +40,7 @@
                     var omn = new gm.Point(0,0);
                     var omx = new gm.Point(1,1);
                     var nmn = new gm.Point(0,100);
-                    var nmx = new gm.Point(500,400);
+                    var nmx = new gm.Point(1000,400);
                     var norm = ease.getSpline().normalize( omn, omx, nmn, nmx, false, true );
                     g.draw( norm, 0x4 );
                 }
@@ -50,10 +50,11 @@
                     fillStyle: 'rgba(100,100,200,.75)'
                 });
                 g.moveTo(0,225);
-                for (var x=0; x<=500; x+=5){
-                    var y = ease.exec(x,400,-300,500);
+                for (var x=0; x<=1000; x+=5){
+                    var y = ease.exec(x,400,-300,1000);
                     g.beginPath();
                     g.arc(x,y,2,0,2*Math.PI,false);
+                    //console.log(x,y);
                     g.fill();
                     g.closePath();
                 }

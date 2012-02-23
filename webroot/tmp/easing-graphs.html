@@ -31,7 +31,7 @@
                 var ease = lola.easing.get(type);
 
                 //spline
-                if (ease.getSpline){
+                /*if (ease.getSpline){
                     g.applyStyle({
                         strokeStyle: 'rgba(200,100,100,.75)',
                         lineWidth: 2,
@@ -43,21 +43,24 @@
                     var nmx = new gm.Point(1000,400);
                     var norm = ease.getSpline().normalize( omn, omx, nmn, nmx, false, true );
                     g.draw( norm, 0x4 );
-                }
+                }*/
 
                 //easing function
                 g.applyStyle({
-                    fillStyle: 'rgba(100,100,200,.75)'
+                    strokeStyle: 'rgba(200,100,100,1)',
+                    lineWidth: 2,
+                    lineCap: "square"
                 });
                 g.moveTo(0,225);
-                for (var x=0; x<=1000; x+=5){
+                g.beginPath();
+                for (var x=0; x<=1000; x+=1){
                     var y = ease.exec(x,400,-300,1000);
-                    g.beginPath();
-                    g.arc(x,y,2,0,2*Math.PI,false);
+                    g.lineTo(x,y);
+                    //g.arc(x,y,2,0,2*Math.PI,false);
                     //console.log(x,y);
-                    g.fill();
-                    g.closePath();
                 }
+                g.stroke();
+                g.closePath();
 
 
 

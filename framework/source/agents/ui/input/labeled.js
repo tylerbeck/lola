@@ -8,6 +8,7 @@
  ***********************************************************************/
 (function (lola) {
     var Agent = function () {
+        var $ = lola;
         var self = this;
 
         //==================================================================
@@ -112,7 +113,7 @@
          * agent initializer
          */
         this.initialize = function () {
-            lola(".labeled").assignAgent(namespace);
+            $("input.ui-input-labeled").assignAgent(namespace);
         };
 
         function handler( event ){

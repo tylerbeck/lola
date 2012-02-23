@@ -2833,12 +2833,13 @@ if ( !String.prototype.trim ) {
          * @param {Boolean|undefined} useCapture
          * @param {uint|undefined} priority default 0xFFFFFF
          * @param {Object|undefined} scope
+         * @param {Boolean|undefined} useHooks
          */
-        this.addListener = function( target, type, handler, useCapture, priority, scope ) {
+        this.addListener = function( target, type, handler, useCapture, priority, scope, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
             if ( lola.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
-                if (hooks[type] != null){
+                if (useHooks !== false && hooks[type] != null){
                     var hook = hooks[type];
                     return hook.addListener( target, type, handler, useCapture, priority, hook );
                 }
@@ -2882,12 +2883,13 @@ if ( !String.prototype.trim ) {
          * @param {String} type
          * @param {Function} handler
          * @param {Boolean|undefined} useCapture
+         * @param {Boolean|undefined} useHooks
          */
-        this.removeListener = function( target, type, handler, useCapture ) {
+        this.removeListener = function( target, type, handler, useCapture, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
             if ( lola.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
-                if (hooks[type] != null){
+                if (useHooks !== false && hooks[type] != null){
                     hooks[type]['removeListener'].call( hooks[type], target, type, handler, useCapture );
                 }
                 else {
@@ -3386,6 +3388,36 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Hooks
         //==================================================================
+
+        /**
+         * event alias hook
+         */
+        this.AliasHook = function( events ){
+            this.addListener = function( target, type, handler, useCapture, priority, scope ){
+                lola.debug('alias hook addListener',type);
+                var uid;
+                events.forEach( function(item){
+                    lola.debug('    ',item);
+                   uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                });
+
+                return uid;
+            };
+
+            this.removeListener = function( target, type, handler, useCapture ){
+                lola.debug('alias hook removeListener',type);
+                events.forEach( function(item){
+                    lola.debug('    ',item);
+                   uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                });
+            };
+
+        };
+        this.addHook( 'transitionend',
+                       new this.AliasHook([ 'transitionend',
+                                           'webkitTransitionEnd',
+                                            'oTransitionEnd']) );
+
         /**
          * delayed hover intent event hook
          * @event hover
@@ -3532,8 +3564,8 @@ if ( !String.prototype.trim ) {
          * mouse leave event
          * @event mouseleave
          */
-
         this.addHook( 'mouseleave', mesh );
+
         /**
          * mouse enter event
          * @event mouseleave
@@ -8940,7 +8972,6 @@ if ( !String.prototype.trim ) {
                     this.complete = true;
                     this.active = true;
                 }
-                console.log('value', this.value);
                 this.value = elapsed ? this.easing.exec( elapsed, 0, 1, this.duration ) : 0;
             },
 

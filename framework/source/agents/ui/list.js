@@ -495,15 +495,14 @@
         function handleClientKeyDown( event ){
             //console.log('handleClientKeyDown',lola.now());
 
-            //TODO: Add key jumpto functionality
-            //TODO: Add scrollto functionality
+            //TODO: Add key jumpto functionality using keypress event
 
             //keep tabbing behavior
-            if ( event.keyCode != 9 )
-                event.preventDefault();
+            //if ( event.keyCode != 9 )
 
             //only execute handler if keycode expected
             if ( ([38,40]).indexOf(event.keyCode) >= 0 ){
+                event.preventDefault();
 
                 var client = event.currentTarget;
                 var $client = $(client);

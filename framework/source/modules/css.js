@@ -552,36 +552,59 @@
             };
 
             /**
-             * parses style color values returns rgba object
+             * parses style color values
              * @public
-             * @param {String} val
+             * @param {String|Object} val
              */
-            function parseString( val ) {
+            function parseValue( val ) {
+                if (typeof val == "string"){
+                    var cparts = val.match( lola.regex.isColor );
+                    if ( cparts ) {
+                        var parts;
+                        switch ( cparts[1] ) {
+                            case '#':
+                                parts = val.match( lola.regex.isHexColor );
+                                hex = ( parts != null ) ? parts[1] : "000000";
+                                rgb = lola.math.color.hex2rgb(hex);
+                                hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                rgb.a = hsl.a = 1;
+                                break;
+                            case 'rgb':
+                            case 'rgba':
+                                rgb = parseRGBColorString( val );
+                                hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
+                                hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                break;
+                            case 'hsl':
+                            case 'hsla':
+                                hsl = parseHSLColorString( val );
+                                rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                                hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
+                                rgb.a = hsl.a;
+                                break;
+                        }
+                    }
+                }
+                else{
+                    if ( val.r != undefined && val.g != undefined && val.b != undefined){
+                        //rgba
+                        rgb = val;
+                        hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
+                        hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                    }
+                    else if ( val.h != undefined && val.s != undefined && val.l != undefined){
+                        hsl = val;
+                        rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                        hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
+                    }
 
-                var cparts = val.match( lola.regex.isColor );
-                if ( cparts ) {
-                    var parts,rgb,hsl,hex;
-                    switch ( cparts[1] ) {
-                        case '#':
-                            parts = val.match( lola.regex.isHexColor );
-                            hex = ( parts != null ) ? parts[1] : "000000";
-                            rgb = lola.math.color.hex2rgb(hex);
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
-                            rgb.a = hsl.a = 1;
-                            break;
-                        case 'rgb':
-                        case 'rgba':
-                            rgb = parseRGBColorString( val );
-                            hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
-                            break;
-                        case 'hsl':
-                        case 'hsla':
-                            hsl = parseHSLColorString( val );
-                            rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                            hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
-                            rgb.a = hsl.a;
-                            break;
+                    if (val.a != undefined){
+                        rgb.a = val.a;
+                        hsl.a = val.a;
+                    }
+                    else{
+                        rgb.a = 1;
+                        hsl.a = 1;
                     }
                 }
             }
@@ -614,13 +637,13 @@
              */
             function parseRGBColorString( val ) {
                 var c = { r:0, g:0, b:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
+                var parts = val.match( lola.regex.isRGBColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );
-                    c.h = parseColorPart( v[0], 255  );
-                    c.s = parseColorPart( v[1], 255  );
-                    c.l = parseColorPart( v[2], 255  );
+                    c.r = parseColorPart( v[0], 255  );
+                    c.g = parseColorPart( v[1], 255  );
+                    c.b = parseColorPart( v[2], 255  );
                     c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
                 }
                 return c;
@@ -700,7 +723,8 @@
                 return self.toRgbString(true)
             };
 
-            return this.init(value);
+            parseValue(value);
+            return this;
         };
 
     };

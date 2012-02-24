@@ -47,6 +47,7 @@
             <file file="framework/source/modules/graphics.js" />
             <file file="framework/source/modules/easing.js" />
             <file file="framework/source/modules/tween.js" />
+            <file file="framework/source/modules/parallax.js" />
             <file file="framework/source/modules/chart.js" />
             <file file="framework/source/modules/math/tvm.js" />
             <file file="framework/source/modules/test.js" />
@@ -89,6 +90,7 @@
                 <file name="modules/graphics.js" />
                 <file name="modules/easing.js" />
                 <file name="modules/tween.js" />
+                <file name="modules/parallax.js" />
                 <file name="modules/chart.js" />
                 <file name="modules/math/tvm.js" />
                 <file name="modules/test.js" />

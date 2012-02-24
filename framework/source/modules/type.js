@@ -96,7 +96,7 @@
                 "table tbody td textarea tfoot th thead time title tr track tt "+
                 "u ul "+
                 "var video "+
-                "wbr "+
+                "wbr"+
                 "xmp";
             var specialTagTypes ="object";
 
@@ -108,8 +108,10 @@
             var cn = document.createComment( 'test' );
             var tntype = Object.prototype.toString.call( tn );
             var cntype = Object.prototype.toString.call( cn );
+            var windowtype = Object.prototype.toString.call( lola.window );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
+            map[ windowtype ] = 'window';
             //TODO: add isTextNode and isCommentNode selector functions
             //TODO: add support for blockquote
         }

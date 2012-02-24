@@ -118,13 +118,26 @@
          * @param {Number|undefined} value
          */
         this.innerWidth = function( elem, value ) {
-            if ( value != undefined ){
+            var w;
+            if ( $(elem).getType() == "window" ){
+                w = -1;
+                if(elem.innerWidth)
+                    w = elem.innerWidth;
+                else{
+                    var ed = elem.document;
+                    if(ed.documentElement && ed.documentElement.clientWidth)
+                        w = ed.documentElement.clientWidth;
+                    else if(ed.body)
+                        w = ed.body.clientWidth;
+                }
+                return w;
+            }
+            else if ( value != undefined ){
                 //setting
                 return lola.css.style( elem, 'width', value);
             }
             else{
                 //getting
-                var w;
                 if ( elem.offsetWidth )
                     w = elem.offsetWidth;
                 else
@@ -146,7 +159,6 @@
          * @param {Number|undefined} value
          */
         this.height = function( elem, value ) {
-            //console.log('lola.geometry.height', elem, value );
             if ( value != undefined ){
                 //setting
                 var bt = lola.css.style(elem,"borderTop");
@@ -172,14 +184,26 @@
          * @param {Number|undefined} value
          */
         this.innerHeight = function( elem, value ) {
-            if ( value != undefined ){
+            var h;
+            if ( $(elem).getType() == "window" ){
+                h = -1;
+                if(elem.innerHeight)
+                    h = elem.innerHeight;
+                else{
+                    var ed = elem.document;
+                    if(ed.documentElement && ed.documentElement.clientHeight)
+                        h = ed.documentElement.clientHeight;
+                    else if(ed.body)
+                        h = ed.body.clientHeight;
+                }
+                return h;
+            }
+            else if ( value != undefined ){
                 //setting
-
                 return lola.css.style( elem, 'height', value);
             }
             else{
                 //getting
-                var h;
                 if ( elem.offsetHeight )
                     h = elem.offsetHeight;
                 else

@@ -1422,7 +1422,7 @@ if ( !String.prototype.trim ) {
                 "table tbody td textarea tfoot th thead time title tr track tt "+
                 "u ul "+
                 "var video "+
-                "wbr "+
+                "wbr"+
                 "xmp";
             var specialTagTypes ="object";
 
@@ -1434,8 +1434,10 @@ if ( !String.prototype.trim ) {
             var cn = document.createComment( 'test' );
             var tntype = Object.prototype.toString.call( tn );
             var cntype = Object.prototype.toString.call( cn );
+            var windowtype = Object.prototype.toString.call( lola.window );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
+            map[ windowtype ] = 'window';
             //TODO: add isTextNode and isCommentNode selector functions
             //TODO: add support for blockquote
         }
@@ -7083,13 +7085,26 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.innerWidth = function( elem, value ) {
-            if ( value != undefined ){
+            var w;
+            if ( $(elem).getType() == "window" ){
+                w = -1;
+                if(elem.innerWidth)
+                    w = elem.innerWidth;
+                else{
+                    var ed = elem.document;
+                    if(ed.documentElement && ed.documentElement.clientWidth)
+                        w = ed.documentElement.clientWidth;
+                    else if(ed.body)
+                        w = ed.body.clientWidth;
+                }
+                return w;
+            }
+            else if ( value != undefined ){
                 //setting
                 return lola.css.style( elem, 'width', value);
             }
             else{
                 //getting
-                var w;
                 if ( elem.offsetWidth )
                     w = elem.offsetWidth;
                 else
@@ -7111,7 +7126,6 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.height = function( elem, value ) {
-            //console.log('lola.geometry.height', elem, value );
             if ( value != undefined ){
                 //setting
                 var bt = lola.css.style(elem,"borderTop");
@@ -7137,14 +7151,26 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.innerHeight = function( elem, value ) {
-            if ( value != undefined ){
+            var h;
+            if ( $(elem).getType() == "window" ){
+                h = -1;
+                if(elem.innerHeight)
+                    w = elem.innerHeight;
+                else{
+                    var ed = elem.document;
+                    if(ed.documentElement && ed.documentElement.clientHeight)
+                        w = ed.documentElement.clientHeight;
+                    else if(ed.body)
+                        w = ed.body.clientHeight;
+                }
+                return w;
+            }
+            else if ( value != undefined ){
                 //setting
-
                 return lola.css.style( elem, 'height', value);
             }
             else{
                 //getting
-                var h;
                 if ( elem.offsetHeight )
                     h = elem.offsetHeight;
                 else
@@ -8436,7 +8462,7 @@ if ( !String.prototype.trim ) {
         var targets = {};
 
         /**
-         * tween uid generato
+         * tween uid generator
          * @private
          */
         var tweenUid = 0;
@@ -8593,42 +8619,44 @@ if ( !String.prototype.trim ) {
                     var id = $(obj).identify().attr('id');
                     if (!targets[id])
                         targets[id] = {};
-                    for (var p in properties){
-                        if (p == "style"){
-                            //TODO: use CSS3 transitions if available
-                            for (var s in properties[p] ){
-                                if (collisions || targets[id]['style:'+s] == null ){
-                                    if (!properties[p][s].from && !obj.style[s]){
+                    for (var g in properties){
+                        // p should be lola selector methods eg style, attr, classes
+                        //if (p == "style"){
+                            if (!targets[id][g])
+                                targets[id][g] = {};
+                            for (var p in properties[g] ){
+                                if (collisions || targets[id][g][p] == null ){
+                                    if (!properties[g][p].from){
                                         //try to get "from" value
-                                        var f = lola.css.style( obj, s );
+                                        var f = lola(obj)[g]( obj, p );
                                         //console.log('  getting initial style')
-                                        if (typeof properties[p][s] == "object" ){
-                                            properties[p][s].from = f;
+                                        if (typeof properties[g][p] == "object" ){
+                                            properties[g][p].from = f;
                                         }
                                         else {
-                                            var t = String(properties[p][s]);
-                                            properties[p][s] = {from:f,to:t};
+                                            var t = String(properties[p][p]);
+                                            properties[g][p] = {from:f,to:t};
                                         }
                                     }
-                                    if (!targets[id]['style:'+s])
-                                        targets[id]['style:'+s] = [];
+                                    if (!targets[id][g][p])
+                                        targets[id][g][p] = [];
                                     if (collisions)
-                                        targets[id]['style:'+s].push( getTweenObject( tweenId, obj.style, s, properties[p][s], obj ));
+                                        targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
                                     else
-                                        targets[id]['style:'+s] = [ getTweenObject( tweenId, obj.style, s, properties[p][s], obj )];
+                                        targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
                                 }
                             }
-                        }
+                        /*}
                         else {
 
-                            if (!this.targets[id][p])
-                                this.targets[id][p] = [];
+                            if (!targets[id][p])
+                                targets[id][p] = [];
                             if (collisions)
-                                this.targets[id][p].push( getTweenObject( tweenId, obj, p, properties[p], obj ));
+                                targets[id][p].push( this.getTweenObject( tweenId, obj, p, properties[p], obj ));
                             else
-                                this.targets[id][p] = [ getTweenObject( tweenId, obj, p, properties[p], obj )];
+                                targets[id][p] = [ this.getTweenObject( tweenId, obj, p, properties[p], obj )];
 
-                        }
+                        }*/
 
                     }
                 }
@@ -8647,8 +8675,8 @@ if ( !String.prototype.trim ) {
          * @param {*} dispatcher element that dispatches complete event
          * @private
          */
-        function getTweenObject( tweenId, target, property, value, dispatcher ){
-            //console.log("getTweenObject", tweenId, target, property, value );
+        this.getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
+            //console.log("this.getTweenObject", tweenId, target, group, property, value, dispatcher );
             //get initial value
             var from,to,delta;
             if ( value.from ) {
@@ -8658,7 +8686,7 @@ if ( !String.prototype.trim ) {
                 from = value.call( target );
             }
             else{
-                from = target[ property ];
+                from = $(target)[group]( property );
             }
             //console.log('    from',  String(from));
             //we can only tween if there's a from value
@@ -8696,6 +8724,9 @@ if ( !String.prototype.trim ) {
                 for ( var i in types ) {
                     type = types[i];
                     //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
+                    if ( i == group ){
+                        break;
+                    }
                     if ( type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
                         break;
                     }
@@ -8723,7 +8754,7 @@ if ( !String.prototype.trim ) {
             //console.log('    type', type);
 
             return new self.TweenObject( tweenId, target, property, from, delta, proxy, dispatcher );
-        }
+        };
 
         /**
          * executes a frame tick for tweening engine
@@ -8822,82 +8853,106 @@ if ( !String.prototype.trim ) {
         // Tween Types
         //==================================================================
         this.addTweenType('simple', {
-                match: lola.regex.isNumber,
-                parse: function(val){
-                    return parseFloat( val );
-                },
-                canTween: function(a,b){
-                    return ( a != undefined && b != undefined  );
-                },
-                getDelta: function( to, from, method) {
-                    if( method ){
-                        return to;
-                    }
-                    else{
-                        return to - from;
-                    }
-                },
-                proxy: null
-            });
+            match: lola.regex.isNumber,
+            parse: function(val){
+                return parseFloat( val );
+            },
+            canTween: function(a,b){
+                return ( a != undefined && b != undefined  );
+            },
+            getDelta: function( to, from, method) {
+                if( method ){
+                    return to;
+                }
+                else{
+                    return to - from;
+                }
+            },
+            proxy: null
+        });
 
         this.addTweenType('dimensional', {
-                match: lola.regex.isDimension,
-                parse: function(val){
-                    var parts = String( val ).match( lola.regex.isDimension );
-                    return { value: parseFloat( parts[1] ), units: parts[2] };
-                },
-                canTween: function(a,b){
-                    return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
-                },
-                getDelta: function( to, from, method) {
-                    if( method ){
-                        return {value:to.value, units:to.units};
-                    }
-                    else{
-                        return {value:to.value - from.value, units:to.units};
-                    }
-                },
-                proxy: function( target, property, from, delta, progress ) {
-                    target[property] = (from.value + delta.value * progress) + delta.units;
+            match: lola.regex.isDimension,
+            parse: function(val){
+                var parts = String( val ).match( lola.regex.isDimension );
+                return { value: parseFloat( parts[1] ), units: parts[2] };
+            },
+            canTween: function(a,b){
+                return ((a && b) && ((a.units == b.units)||(a.units == "" && b.units != "")));
+            },
+            getDelta: function( to, from, method) {
+                if( method ){
+                    return {value:to.value, units:to.units};
                 }
-            });
+                else{
+                    return {value:to.value - from.value, units:to.units};
+                }
+            },
+            proxy: function( target, property, from, delta, progress ) {
+                target[property] = (from.value + delta.value * progress) + delta.units;
+            }
+        });
 
         this.addTweenType('color', {
-                match: lola.regex.isColor,
-                    parse: function(val){
-                    //console.log ('color.parse: ',val);
-                    var color = new lola.css.Color( val );
-                    //console.log( '    ', color.rgbValue );
-                    return color.getRgbValue();
-                },
-                canTween: function( a, b ) {
-                    //console.log ('color.canTween: ',( a && b ));
-                    return ( a && b );
-                },
-                getDelta: function( to, from, method ) {
-                    if( method ){
-                        //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
-                        return { r:to.r, g:to.g, b:to.b, a:to.a };
-                    }
-                    else{
-                        //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
-                        return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
-                    }
-                },
-
-                proxy: function( target, property, from, delta, progress ) {
-                    var r = ((from.r + delta.r * progress) * 255) | 0;
-                    var g = ((from.g + delta.g * progress) * 255) | 0;
-                    var b = ((from.b + delta.b * progress) * 255) | 0;
-                    var a = (from.a + delta.a * progress);
-                    //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
-
-                    if ( lola.support.colorAlpha )
-                        target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
-                    else
-                        target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
+            match: lola.regex.isColor,
+            parse: function(val){
+                //console.log ('color.parse: ',val);
+                var color = new lola.css.Color( val );
+                //console.log( '    ', color.rgbValue );
+                return color.getRgbValue();
+            },
+            canTween: function( a, b ) {
+                //console.log ('color.canTween: ',( a && b ));
+                return ( a && b );
+            },
+            getDelta: function( to, from, method ) {
+                if( method ){
+                    //console.log ('color.getDelta '+method+': ', { r:to.r, g:to.g, b:to.b, a:to.a });
+                    return { r:to.r, g:to.g, b:to.b, a:to.a };
                 }
-            });
+                else{
+                    //console.log ('color.getDelta '+method+': ', { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a });
+                    return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
+                }
+            },
+
+            proxy: function( target, property, from, delta, progress ) {
+                var r = ((from.r + delta.r * progress) * 255) | 0;
+                var g = ((from.g + delta.g * progress) * 255) | 0;
+                var b = ((from.b + delta.b * progress) * 255) | 0;
+                var a = (from.a + delta.a * progress);
+                //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
+
+                if ( lola.support.colorAlpha )
+                    target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                else
+                    target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
+            }
+        });
+
+        this.addTweenType('class', {
+            match: false,
+            parse: function(val){
+                return false;
+            },
+            canTween: function(a,b){
+                return true;
+            },
+            getDelta: function( to, from, method) {
+                return false;
+            },
+            proxy: function( target, property, from, delta, progress ) {
+                $t = $(target);
+                if (progress < 1){
+                    if ( !$t.hasClass(property) )
+                        $t.addClass(property);
+                }
+                else{
+                    if ( $t.hasClass(property) )
+                        $t.removeClass(property);
+                }
+            }
+        });
 
 
 
@@ -8909,15 +8964,6 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-            /*tweenStyle: function( properties, duration, delay, easing, collisions ){
-                var targets = [];
-                this.forEach( function(item){
-                    targets.push( item.style );
-                });
-                var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
-                self.addTarget( tweenId, targets, properties, collisions );
-                self.start(tweenId);
-            },*/
 
             tween: function( properties, duration, delay, easing, collisions ){
                 var targets = [];
@@ -9049,6 +9095,148 @@ if ( !String.prototype.trim ) {
 	lola.registerModule( new Module() );
 
 })( lola );
+
+/***********************************************************************
+ * Lola JavaScript Framework Module
+ *
+ *       Module: para
+ *  Description: parallax scrolling module
+ *       Author: Copyright 2012, tylerbeck
+ *
+ ***********************************************************************/
+(function (lola) {
+    /**
+     * Parallaz Module
+     * @namespace lola.para
+     */
+    var Module = function () {
+        var self = this;
+
+        //==================================================================
+        // Attributes
+        //==================================================================
+
+        /**
+         * module's namespace
+         * @type {String}
+         * @private
+         */
+        var namespace = "para";
+
+        /**
+         * agent's dependencies
+         * @type {Object}
+         * @private
+         */
+        var dependencies = ["tween"];
+
+        var $scrollSrc;
+
+        var maxScroll;
+        var vertical = true;
+
+        var active = [];
+        var targets = [];
+
+        //==================================================================
+        // Getters & Setters
+        //==================================================================
+        /**
+         * get module's namespace
+         * @return {String}
+         */
+        this.namespace = function () {
+            return namespace;
+        };
+
+        /**
+         * get module's dependencies
+         * @return {Array}
+         */
+        this.dependencies = function () {
+            return dependencies;
+        };
+
+
+        //==================================================================
+        // Methods
+        //==================================================================
+        /**
+         * preinitializes module
+         * @private
+         * @return {void}
+         */
+        this.preinitialize = function () {
+            lola.debug('lola.para::preinitialize');
+            if (!lola) throw new Error('lola not defined!');
+
+            //do module preinitialization
+
+
+            //remove initialization method
+            delete lola.para.preinitialize;
+        };
+
+        /**
+         * initializes module
+         * @public
+         * @return {void}
+         */
+        this.initialize = function () {
+            lola.debug('lola.para::initialize');
+            //this framework is dependent on lola framework
+            if (!lola) throw new Error('lola not defined!');
+
+            //do module initialization
+
+
+            //remove initialization method
+            delete lola.para.initialize;
+        };
+
+        this.setScrollSource = function( src, scrollv ){
+            vertical = scrollv === false;
+            if ($scrollSrc){
+                $scrollSrc.removeListener( 'scroll', handleScroll );
+            }
+            $scrollSrc = $(src);
+            $scrollSrc.addListener( 'scroll', handleScroll );
+            if (vertical)
+                maxScroll = $scrollSrc.height() - $(lola.window).innerHeight();
+            else
+                maxScroll = $scrollSrc.width() - $(lola.window).innerWidth();
+
+        };
+
+        function handleScroll( event ){
+            var position = $scrollSrc.attr(veritcal?'scrollTop':'scrollLeft') / maxScroll;
+            console.log('position', position);
+        }
+
+        //==================================================================
+        // Selection Methods
+        //==================================================================
+        /**
+         * module's selector methods
+         * @type {Object}
+         */
+        this.selectorMethods = {
+
+
+        };
+
+
+        //==================================================================
+        // Classes
+        //==================================================================
+
+
+    };
+
+    //register module
+    lola.registerModule(new Module());
+
+})(lola);
 
 /***********************************************************************
  * Lola JavaScript Framework

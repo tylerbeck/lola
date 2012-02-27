@@ -290,7 +290,7 @@
                 return methods[ id ];
             }
             else {
-                console.log('easing method "'+id+'" not found.');
+                lola.debug('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };

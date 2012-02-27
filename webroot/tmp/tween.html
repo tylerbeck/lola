@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tween Test</title>
+    <!--<script src="../bin/lola.min.js"></script>-->
+    <script src="../lola/head.js"></script>
+    <script src="../lola/upgrades.js"></script>
+    <script src="../lola/selector.js"></script>
+    <script src="../lola/modules/core.js"></script>
+    <script src="../lola/modules/support.js"></script>
+    <script src="../lola/modules/array.js"></script>
+    <script src="../lola/modules/type.js"></script>
+    <script src="../lola/modules/dom.js"></script>
+    <script src="../lola/modules/data.js"></script>
+    <script src="../lola/modules/util.js"></script>
+    <script src="../lola/modules/string.js"></script>
+    <script src="../lola/modules/regex.js"></script>
+    <script src="../lola/modules/event.js"></script>
+    <script src="../lola/modules/math.js"></script>
+    <script src="../lola/modules/math/color.js"></script>
+    <script src="../lola/modules/animation.js"></script>
+    <script src="../lola/modules/css.js"></script>
+    <script src="../lola/modules/http.js"></script>
+    <script src="../lola/modules/json.js"></script>
+    <script src="../lola/modules/agent.js"></script>
+    <script src="../lola/modules/cmd.js"></script>
+    <script src="../lola/modules/template.js"></script>
+    <script src="../lola/modules/geometry.js"></script>
+    <script src="../lola/modules/graphics.js"></script>
+    <script src="../lola/modules/easing.js"></script>
+    <script src="../lola/modules/tween.js"></script>
+    <script src="../lola/modules/range.js"></script>
+    <script src="../lola/modules/chart.js"></script>
+    <script src="../lola/modules/math/tvm.js"></script>
+    <script src="../lola/modules/test.js"></script>
+    <script src="../lola/tail.js"></script>
+
+    <style>
+        html,body{
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+        .ball{
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+    </style>
+
+</head>
+<body>
+<script>
+    $( function(){
+        var tweenId = lola.tween.registerTween( new lola.tween.Tween( 10000, 'ease-out', 0 ) );
+        for (var i=0; i<1000; i++){
+            var ts = (Math.random()*100)+"%";
+            var te = (Math.random()*100)+"%";
+            var ls = (Math.random()*100)+"%";
+            var le = (Math.random()*100)+"%";
+            var rs = Math.round((Math.random()*255));
+            var re = Math.round((Math.random()*255));
+            var gs = Math.round((Math.random()*255));
+            var ge = Math.round((Math.random()*255));
+            var bs = Math.round((Math.random()*255));
+            var be = Math.round((Math.random()*255));
+
+            var div = document.createElement('div');
+            var $d = $(div).classes('ball');
+            $d.style('backgroundColor', 'rgb('+rs+','+gs+','+bs+')');
+            $d.style('top', ts);
+            $d.style('left', ls);
+            document.body.appendChild(div);
+            lola.tween.addTarget( tweenId, div, {
+                start:0,
+                end:10000,
+                style:{
+                    top:te,
+                    left:le,
+                    backgroundColor: 'rgb('+re+','+ge+','+be+')'
+                }
+            } );
+
+        }
+        //console.log( tweenId );
+        lola.tween.start(tweenId);
+    });
+</script>
+
+</body>
+</html>

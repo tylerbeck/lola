@@ -253,7 +253,9 @@
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    this.get().appendChild( node );
+                    var p = this.get();
+                    if ( p && p.appendChild )
+                        p.appendChild( node );
                 }
 
                 return this;

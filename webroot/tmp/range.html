@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Range Test</title>
+    <!--<script src="../bin/lola.min.js"></script>-->
+    <script src="../lola/head.js"></script>
+    <script src="../lola/upgrades.js"></script>
+    <script src="../lola/selector.js"></script>
+    <script src="../lola/modules/core.js"></script>
+    <script src="../lola/modules/support.js"></script>
+    <script src="../lola/modules/array.js"></script>
+    <script src="../lola/modules/type.js"></script>
+    <script src="../lola/modules/dom.js"></script>
+    <script src="../lola/modules/data.js"></script>
+    <script src="../lola/modules/util.js"></script>
+    <script src="../lola/modules/string.js"></script>
+    <script src="../lola/modules/regex.js"></script>
+    <script src="../lola/modules/event.js"></script>
+    <script src="../lola/modules/math.js"></script>
+    <script src="../lola/modules/math/color.js"></script>
+    <script src="../lola/modules/animation.js"></script>
+    <script src="../lola/modules/css.js"></script>
+    <script src="../lola/modules/http.js"></script>
+    <script src="../lola/modules/json.js"></script>
+    <script src="../lola/modules/agent.js"></script>
+    <script src="../lola/modules/cmd.js"></script>
+    <script src="../lola/modules/template.js"></script>
+    <script src="../lola/modules/geometry.js"></script>
+    <script src="../lola/modules/graphics.js"></script>
+    <script src="../lola/modules/easing.js"></script>
+    <script src="../lola/modules/tween.js"></script>
+    <script src="../lola/modules/motion.js"></script>
+    <script src="../lola/modules/chart.js"></script>
+    <script src="../lola/modules/math/tvm.js"></script>
+    <script src="../lola/modules/test.js"></script>
+    <script src="../lola/tail.js"></script>
+
+    <style>
+        html,body{
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        #content{
+            -webkit-transition: all 1s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            overflow-y: scroll;
+        }
+
+        #content.alt{
+            background-color: black;
+        }
+        #content #tall{
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 10000px;
+
+        }
+        .ball{
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+        }
+    </style>
+
+</head>
+<body>
+<div id="content">
+    <div id="tall"></div>
+</div>
+<script>
+    $( function(){
+        var tweenId = lola.tween.registerTween( new lola.tween.Tween( 10000, 'ease-out', 0 ) );
+        var $content = $('#content');
+        for (var i=0; i<1000; i++){
+
+            var angle = Math.random()*2*Math.PI;
+            var radius = Math.random()*50;
+
+
+            //var ts = (Math.random()*100)+"%";
+            var te = (50+Math.sin(angle)*(35+Math.random()*10))+"%";
+            //var ls = (Math.random()*100)+"%";
+            var le = (50+Math.cos(angle)*(35+Math.random()*10))+"%";
+            var rs = Math.round((Math.random()*255));
+            var re = Math.round((Math.random()*255));
+            var gs = Math.round((Math.random()*255));
+            var ge = Math.round((Math.random()*255));
+            var bs = Math.round((Math.random()*255));
+            var be = Math.round((Math.random()*255));
+
+            var s = Math.round((Math.random()*4000));
+            var e = Math.round((Math.random()*5000)+5000);
+
+            var div = document.createElement('div');
+            var $d = $(div).classes('ball');
+            $d.style('backgroundColor', 'rgb('+rs+','+gs+','+bs+')');
+            $d.style('top', '50%');
+            $d.style('left', '50%');
+            $content.appendChild(div);
+            $d.motionRange( {
+                start:s,
+                end:e,
+                ease:'back-out',
+                style:{
+                    top:te,
+                    left:le,
+                    backgroundColor: 'rgb('+re+','+ge+','+be+')'
+                }
+            } );
+        }
+
+        /*$content.motionRange( {
+            start:4000,
+            end:5000,
+            ease:'linear',
+            event:{
+                testevent: {from:'from',to:'to'}
+            }
+        } );*/
+
+
+        var $w = $(window);
+        var $b = $content;
+        var endRange = 10000;
+        var maxScroll = endRange - $w.innerHeight();
+        lola.motion.setEndPosition( endRange );
+        lola.motion.setMaxRate( 10000 );
+
+        $w.addListener('resize', function( event ){
+            maxScroll = endRange - $w.innerHeight();
+        });
+
+        $b.addListener('scroll', function( event ){
+            var position = Math.max( 0, Math.min( endRange, endRange * $b.get().scrollTop / maxScroll ));
+            lola.motion.setPosition( position );
+        });
+
+        $b.addListener('testevent', function( event ){
+            console.log('test event fired!', event.data);
+        });
+
+    });
+</script>
+
+</body>
+</html>

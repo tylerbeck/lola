@@ -122,7 +122,11 @@
          * @param {Function} fn
          */
         this.addInitializer = function( fn ){
-            initializers.push( fn );
+            if (lola.isInitialized())
+                fn( lola );
+            else {
+                initializers.push( fn );
+            }
         };
 
         /**
@@ -209,7 +213,7 @@
 
             for ( i = 0; i < stackSize; i++ ) {
                 if (lola.hasFn(initializers,i)){
-                    initializers[i]();
+                    initializers[i]( lola );
                     delete initializers[i];
                 }
             }
@@ -520,9 +524,6 @@
 
         return this;
     };
-
-
-
 
     var core = new Module();
     core.setURL( lola.window.location.href );

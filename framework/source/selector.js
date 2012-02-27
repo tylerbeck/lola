@@ -14,7 +14,17 @@
      */
     lola.Selector = function( selector, context ){
         var i = 0;
-        if ( typeof selector === "string" ){
+        if ( Array.isArray( selector ) ) {
+            var sl = selector.length;
+            for (i=0; i<sl; i++){
+                this[i] = sl[i];
+            }
+        }
+        else if ( typeof selector === 'object' ){
+            this[i] = selector;
+            i++;
+        }
+        else if ( typeof selector === "string" ){
             if (window['Sizzle']) {
                 var siz = Sizzle( selector, context );
                 for (i=0; i<sl; i++){
@@ -38,15 +48,8 @@
                 }
             }
         }
-        else if ( Array.isArray( selector ) ) {
-            var sl = selector.length;
-            for (i=0; i<sl; i++){
-                this[i] = sl[i];
-            }
-        }
-        else {
-            this[i] = selector;
-            i++;
+        else if (typeof selector == "function") {
+           lola.addInitializer( selector );
         }
         this.length = i;
 

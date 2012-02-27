@@ -192,14 +192,30 @@
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            if (document.defaultView && document.defaultView.getComputedStyle) {
-                return document.defaultView.getComputedStyle( node, undefined ).getPropertyValue( lola.string.dashed(prop) );
-            }
-            else if ( typeof(document.body.currentStyle) !== "undefined") {
-                return node["currentStyle"][prop];
+            if ( node.style[prop] != undefined ){
+                return node.style[prop];
             }
             else {
-                return node.style[prop];
+                //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+                var compStyle;
+
+                if ( document.defaultView && document.defaultView.getComputedStyle ) {
+                    //console.log( document.defaultView );
+                    //console.log( document.defaultView.getComputedStyle );
+                    compStyle = document.defaultView.getComputedStyle( node, undefined );
+                }
+
+                if (compStyle){
+                    //console.log( 'using getComputedStyle', compStyle );
+                    return compStyle.getPropertyValue( lola.string.dashed(prop) );
+                }
+                else if ( typeof(document.body.currentStyle) !== "undefined") {
+                    //console.log( 'using currentStyle', node["currentStyle"] );
+                    return node["currentStyle"][prop];
+                }
+                else {
+                    return undefined;
+                }
             }
         };
 
@@ -509,6 +525,8 @@
         // Classes
         //==================================================================
         this.Color = function( value ){
+            var self = this;
+            var c = lola.math.color;
             /**
              * rgba color value object
              * @private
@@ -565,21 +583,21 @@
                             case '#':
                                 parts = val.match( lola.regex.isHexColor );
                                 hex = ( parts != null ) ? parts[1] : "000000";
-                                rgb = lola.math.color.hex2rgb(hex);
-                                hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                rgb = c.hex2rgb(hex);
+                                hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
                                 rgb.a = hsl.a = 1;
                                 break;
                             case 'rgb':
                             case 'rgba':
                                 rgb = parseRGBColorString( val );
-                                hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
-                                hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                hex = c.rgb2hex( rgb.r, rgb.g, rgb.b );
+                                hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
                                 break;
                             case 'hsl':
                             case 'hsla':
                                 hsl = parseHSLColorString( val );
-                                rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                                hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
+                                rgb = c.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                                hex = c.rgb2hex(rgb.r, rgb.g, rgb.b);
                                 rgb.a = hsl.a;
                                 break;
                         }
@@ -589,13 +607,13 @@
                     if ( val.r != undefined && val.g != undefined && val.b != undefined){
                         //rgba
                         rgb = val;
-                        hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
-                        hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                        hex = c.rgb2hex( rgb.r, rgb.g, rgb.b );
+                        hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
                     }
                     else if ( val.h != undefined && val.s != undefined && val.l != undefined){
                         hsl = val;
-                        rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                        hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
+                        rgb = c.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                        hex = c.rgb2hex(rgb.r, rgb.g, rgb.b);
                     }
 
                     if (val.a != undefined){

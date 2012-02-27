@@ -27,6 +27,14 @@
     lola.window = window;
 
     /**
+     * initialization status
+     */
+    var initialized = false;
+    lola.isInitialized = function(){
+        return initialized;
+    };
+
+    /**
      * extends the target with properties from the source
      * @public
      * @param target {Object}
@@ -133,8 +141,9 @@
         //execute initialization stack
         lola.executeInitializers();
 
-        var elapsedTime = (new Date()).getTime() - startTime;
+        initialized = true;
 
+        var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
         lola.debug('initialization completed in', elapsedTime, 'ms');
     };

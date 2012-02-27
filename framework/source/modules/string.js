@@ -93,6 +93,7 @@
          * @param {String} str
          */
         this.camelCase = function ( str ) {
+            str = String(str);
             var parts = str.split( "-" );
             var pl = parts.length;
             for ( var i = 1; i<pl; i++ ) {

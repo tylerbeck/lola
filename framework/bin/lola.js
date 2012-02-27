@@ -27,6 +27,14 @@
     lola.window = window;
 
     /**
+     * initialization status
+     */
+    var initialized = false;
+    lola.isInitialized = function(){
+        return initialized;
+    };
+
+    /**
      * extends the target with properties from the source
      * @public
      * @param target {Object}
@@ -133,8 +141,9 @@
         //execute initialization stack
         lola.executeInitializers();
 
-        var elapsedTime = (new Date()).getTime() - startTime;
+        initialized = true;
 
+        var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
         lola.debug('initialization completed in', elapsedTime, 'ms');
     };
@@ -424,7 +433,17 @@ if ( !String.prototype.trim ) {
      */
     lola.Selector = function( selector, context ){
         var i = 0;
-        if ( typeof selector === "string" ){
+        if ( Array.isArray( selector ) ) {
+            var sl = selector.length;
+            for (i=0; i<sl; i++){
+                this[i] = sl[i];
+            }
+        }
+        else if ( typeof selector === 'object' ){
+            this[i] = selector;
+            i++;
+        }
+        else if ( typeof selector === "string" ){
             if (window['Sizzle']) {
                 var siz = Sizzle( selector, context );
                 for (i=0; i<sl; i++){
@@ -448,15 +467,8 @@ if ( !String.prototype.trim ) {
                 }
             }
         }
-        else if ( Array.isArray( selector ) ) {
-            var sl = selector.length;
-            for (i=0; i<sl; i++){
-                this[i] = sl[i];
-            }
-        }
-        else {
-            this[i] = selector;
-            i++;
+        else if (typeof selector == "function") {
+           lola.addInitializer( selector );
         }
         this.length = i;
 
@@ -604,7 +616,11 @@ if ( !String.prototype.trim ) {
          * @param {Function} fn
          */
         this.addInitializer = function( fn ){
-            initializers.push( fn );
+            if (lola.isInitialized())
+                fn( lola );
+            else {
+                initializers.push( fn );
+            }
         };
 
         /**
@@ -691,7 +707,7 @@ if ( !String.prototype.trim ) {
 
             for ( i = 0; i < stackSize; i++ ) {
                 if (lola.hasFn(initializers,i)){
-                    initializers[i]();
+                    initializers[i]( lola );
                     delete initializers[i];
                 }
             }
@@ -1002,9 +1018,6 @@ if ( !String.prototype.trim ) {
 
         return this;
     };
-
-
-
 
     var core = new Module();
     core.setURL( lola.window.location.href );
@@ -2585,6 +2598,7 @@ if ( !String.prototype.trim ) {
          * @param {String} str
          */
         this.camelCase = function ( str ) {
+            str = String(str);
             var parts = str.split( "-" );
             var pl = parts.length;
             for ( var i = 1; i<pl; i++ ) {
@@ -4181,11 +4195,12 @@ if ( !String.prototype.trim ) {
          * start ticking
          */
         function startTicking(){
+            //console.log('startTicking:',active);
             if (!active){
                 active = true;
                 requestTick();
             }
-        };
+        }
 
         /**
          * set callback for animation frame
@@ -4200,23 +4215,16 @@ if ( !String.prototype.trim ) {
          * @param {Function} callback
          */
         function requestFrame(callback){
-            switch ( getFrameType ) {
-                case 1:
-                    lola.window.requestAnimationFrame( callback );
-                    break;
-                case 2:
-                    lola.window.mozRequestAnimationFrame( callback );
-                    break;
-                case 3:
-                    lola.window.webkitRequestAnimationFrame( callback );
-                    break;
-                case 4:
-                    lola.window.oRequestAnimationFrame( callback );
-                    break;
-                default:
-                    setTimeout( callback, timeout );
-                    break;
-            }
+            if ( getFrameType == 1 )
+                lola.window.requestAnimationFrame( callback );
+            else if ( getFrameType == 2 )
+                lola.window.mozRequestAnimationFrame( callback );
+            else if ( getFrameType == 3 )
+                lola.window.webkitRequestAnimationFrame( callback );
+            else if ( getFrameType == 4 )
+                lola.window.oRequestAnimationFrame( callback );
+            else
+                setTimeout( callback, timeout );
         }
 
         /**
@@ -4353,11 +4361,7 @@ if ( !String.prototype.trim ) {
 
             this.start = function(){
                 if (!active){
-                    active = true;
-                    complete = false;
-                    startTime = lastTime = lola.now();
-                    startTicking();
-                    lola.event.trigger( self, 'animationstart',false,false);
+                    this.restart();
                 }
             };
 
@@ -4376,6 +4380,14 @@ if ( !String.prototype.trim ) {
                     startTicking();
                     lola.event.trigger( self, 'animationresume',false,false);
                 }
+            };
+
+            this.restart = function(){
+                active = true;
+                complete = false;
+                startTime = lastTime = lola.now();
+                startTicking();
+                lola.event.trigger( self, 'animationstart',false,false);
             };
 
             this.stop = function(){
@@ -4589,14 +4601,30 @@ if ( !String.prototype.trim ) {
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            if (document.defaultView && document.defaultView.getComputedStyle) {
-                return document.defaultView.getComputedStyle( node, undefined ).getPropertyValue( lola.string.dashed(prop) );
-            }
-            else if ( typeof(document.body.currentStyle) !== "undefined") {
-                return node["currentStyle"][prop];
+            if ( node.style[prop] != undefined ){
+                return node.style[prop];
             }
             else {
-                return node.style[prop];
+                //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+                var compStyle;
+
+                if ( document.defaultView && document.defaultView.getComputedStyle ) {
+                    //console.log( document.defaultView );
+                    //console.log( document.defaultView.getComputedStyle );
+                    compStyle = document.defaultView.getComputedStyle( node, undefined );
+                }
+
+                if (compStyle){
+                    //console.log( 'using getComputedStyle', compStyle );
+                    return compStyle.getPropertyValue( lola.string.dashed(prop) );
+                }
+                else if ( typeof(document.body.currentStyle) !== "undefined") {
+                    //console.log( 'using currentStyle', node["currentStyle"] );
+                    return node["currentStyle"][prop];
+                }
+                else {
+                    return undefined;
+                }
             }
         };
 
@@ -4906,6 +4934,8 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         this.Color = function( value ){
+            var self = this;
+            var c = lola.math.color;
             /**
              * rgba color value object
              * @private
@@ -4949,36 +4979,59 @@ if ( !String.prototype.trim ) {
             };
 
             /**
-             * parses style color values returns rgba object
+             * parses style color values
              * @public
-             * @param {String} val
+             * @param {String|Object} val
              */
-            function parseString( val ) {
+            function parseValue( val ) {
+                if (typeof val == "string"){
+                    var cparts = val.match( lola.regex.isColor );
+                    if ( cparts ) {
+                        var parts;
+                        switch ( cparts[1] ) {
+                            case '#':
+                                parts = val.match( lola.regex.isHexColor );
+                                hex = ( parts != null ) ? parts[1] : "000000";
+                                rgb = c.hex2rgb(hex);
+                                hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                rgb.a = hsl.a = 1;
+                                break;
+                            case 'rgb':
+                            case 'rgba':
+                                rgb = parseRGBColorString( val );
+                                hex = c.rgb2hex( rgb.r, rgb.g, rgb.b );
+                                hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                                break;
+                            case 'hsl':
+                            case 'hsla':
+                                hsl = parseHSLColorString( val );
+                                rgb = c.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                                hex = c.rgb2hex(rgb.r, rgb.g, rgb.b);
+                                rgb.a = hsl.a;
+                                break;
+                        }
+                    }
+                }
+                else{
+                    if ( val.r != undefined && val.g != undefined && val.b != undefined){
+                        //rgba
+                        rgb = val;
+                        hex = c.rgb2hex( rgb.r, rgb.g, rgb.b );
+                        hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
+                    }
+                    else if ( val.h != undefined && val.s != undefined && val.l != undefined){
+                        hsl = val;
+                        rgb = c.hsl2rgb(hsl.h,hsl.s,hsl.l);
+                        hex = c.rgb2hex(rgb.r, rgb.g, rgb.b);
+                    }
 
-                var cparts = val.match( lola.regex.isColor );
-                if ( cparts ) {
-                    var parts,rgb,hsl,hex;
-                    switch ( cparts[1] ) {
-                        case '#':
-                            parts = val.match( lola.regex.isHexColor );
-                            hex = ( parts != null ) ? parts[1] : "000000";
-                            rgb = lola.math.color.hex2rgb(hex);
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
-                            rgb.a = hsl.a = 1;
-                            break;
-                        case 'rgb':
-                        case 'rgba':
-                            rgb = parseRGBColorString( val );
-                            hex = lola.math.color.rgb2hex( rgb.r, rgb.g, rgb.b );
-                            hsl = lola.math.color.rgb2hsl( rgb.r, rgb.g, rgb.b );
-                            break;
-                        case 'hsl':
-                        case 'hsla':
-                            hsl = parseHSLColorString( val );
-                            rgb = lola.math.color.hsl2rgb(hsl.h,hsl.s,hsl.l);
-                            hex = lola.math.color.rgb2hex(rgb.r, rgb.g, rgb.b);
-                            rgb.a = hsl.a;
-                            break;
+                    if (val.a != undefined){
+                        rgb.a = val.a;
+                        hsl.a = val.a;
+                    }
+                    else{
+                        rgb.a = 1;
+                        hsl.a = 1;
                     }
                 }
             }
@@ -5011,13 +5064,13 @@ if ( !String.prototype.trim ) {
              */
             function parseRGBColorString( val ) {
                 var c = { r:0, g:0, b:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
+                var parts = val.match( lola.regex.isRGBColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );
-                    c.h = parseColorPart( v[0], 255  );
-                    c.s = parseColorPart( v[1], 255  );
-                    c.l = parseColorPart( v[2], 255  );
+                    c.r = parseColorPart( v[0], 255  );
+                    c.g = parseColorPart( v[1], 255  );
+                    c.b = parseColorPart( v[2], 255  );
                     c.a = (v.length > 3) ? parseColorPart( v[3], 1 ) : 1;
                 }
                 return c;
@@ -5097,7 +5150,8 @@ if ( !String.prototype.trim ) {
                 return self.toRgbString(true)
             };
 
-            return this.init(value);
+            parseValue(value);
+            return this;
         };
 
     };
@@ -7155,15 +7209,15 @@ if ( !String.prototype.trim ) {
             if ( $(elem).getType() == "window" ){
                 h = -1;
                 if(elem.innerHeight)
-                    w = elem.innerHeight;
+                    h = elem.innerHeight;
                 else{
                     var ed = elem.document;
                     if(ed.documentElement && ed.documentElement.clientHeight)
-                        w = ed.documentElement.clientHeight;
+                        h = ed.documentElement.clientHeight;
                     else if(ed.body)
-                        w = ed.body.clientHeight;
+                        h = ed.body.clientHeight;
                 }
-                return w;
+                return h;
             }
             else if ( value != undefined ){
                 //setting
@@ -8278,7 +8332,7 @@ if ( !String.prototype.trim ) {
                 return methods[ id ];
             }
             else {
-                console.log('easing method "'+id+'" not found.');
+                lola.debug('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };
@@ -8621,43 +8675,18 @@ if ( !String.prototype.trim ) {
                         targets[id] = {};
                     for (var g in properties){
                         // p should be lola selector methods eg style, attr, classes
-                        //if (p == "style"){
-                            if (!targets[id][g])
-                                targets[id][g] = {};
-                            for (var p in properties[g] ){
-                                if (collisions || targets[id][g][p] == null ){
-                                    if (!properties[g][p].from){
-                                        //try to get "from" value
-                                        var f = lola(obj)[g]( obj, p );
-                                        //console.log('  getting initial style')
-                                        if (typeof properties[g][p] == "object" ){
-                                            properties[g][p].from = f;
-                                        }
-                                        else {
-                                            var t = String(properties[p][p]);
-                                            properties[g][p] = {from:f,to:t};
-                                        }
-                                    }
-                                    if (!targets[id][g][p])
-                                        targets[id][g][p] = [];
-                                    if (collisions)
-                                        targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
-                                    else
-                                        targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
-                                }
+                        if (!targets[id][g])
+                            targets[id][g] = {};
+                        for (var p in properties[g] ){
+                            if (collisions || targets[id][g][p] == null ){
+                                if (!targets[id][g][p])
+                                    targets[id][g][p] = [];
+                                if (collisions)
+                                    targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
+                                else
+                                    targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
                             }
-                        /*}
-                        else {
-
-                            if (!targets[id][p])
-                                targets[id][p] = [];
-                            if (collisions)
-                                targets[id][p].push( this.getTweenObject( tweenId, obj, p, properties[p], obj ));
-                            else
-                                targets[id][p] = [ this.getTweenObject( tweenId, obj, p, properties[p], obj )];
-
-                        }*/
-
+                        }
                     }
                 }
             }
@@ -8675,18 +8704,35 @@ if ( !String.prototype.trim ) {
          * @param {*} dispatcher element that dispatches complete event
          * @private
          */
-        this.getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
+        this.getTweenObject = function( tweenId, target, group, property, value ){
             //console.log("this.getTweenObject", tweenId, target, group, property, value, dispatcher );
             //get initial value
             var from,to,delta;
+
+            if (!value.from){
+                //try to get "from" value
+                var f = lola(target)[group]( property );
+                //console.log()
+                if (typeof value == "object" ){
+                    value.from = f;
+                }
+                else {
+                    var t = String(value);
+                    value = {from:f,to:t};
+                }
+            }
+
             if ( value.from ) {
                 from = value.from;
+                //console.log('    using value.from');
             }
             else if (typeof value == "function"){
                 from = value.call( target );
+                //console.log('    using value.call( target )');
             }
             else{
                 from = $(target)[group]( property );
+                //console.log('    using $(target)[group]( property )');
             }
             //console.log('    from',  String(from));
             //we can only tween if there's a from value
@@ -8717,17 +8763,18 @@ if ( !String.prototype.trim ) {
             //break down from and to values to tweenable values
             //and determine how to tween values
             var type, proxy;
-            if ( hooks[ property ] ) {
-                type = hooks[ property ];
+            if ( hooks[ group ] ) {
+                type = hooks[ group ];
             }
             else {
                 for ( var i in types ) {
+                    //console.log('checking type', i);
                     type = types[i];
                     //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
                     if ( i == group ){
                         break;
                     }
-                    if ( type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
+                    if ( type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
                         break;
                     }
                     else {
@@ -8743,6 +8790,7 @@ if ( !String.prototype.trim ) {
                 delta = type.getDelta( to, from, deltaMethod );
                 proxy = type.proxy;
                 //console.log('   canTween', type.canTween( from, to ) );
+                //console.log('       ', from, to );
                 if ( !type.canTween( from, to ) ) {
                     type = null;
                 }
@@ -8751,9 +8799,10 @@ if ( !String.prototype.trim ) {
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            //console.log('    type', type);
 
-            return new self.TweenObject( tweenId, target, property, from, delta, proxy, dispatcher );
+            var result = new self.TweenObject( tweenId, target, group, property, from, delta, proxy );
+            //console.log(result);
+            return result;
         };
 
         /**
@@ -8777,13 +8826,16 @@ if ( !String.prototype.trim ) {
                         //trigger events
                         lola.event.trigger(tweens[k],'tweencomplete',false,false);
                         for (var tr in targets){
-                            for ( var pr in targets[tr] ){
-                                var dispatcher = targets[tr][pr][0].dispatcher;
-                                if (dispatcher){
-                                    //console.log( dispatcher );
-                                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                                    break;
+                            for ( var gr in targets[tr] ){
+                                for ( var pr in targets[tr][gr] ){
+                                    var dispatcher = targets[tr][gr][pr][0].target;
+                                    if (dispatcher){
+                                        //console.log( dispatcher );
+                                        lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                                        break;
+                                    }
                                 }
+                                break;
                             }
                         }
                         delete tweens[k];
@@ -8795,31 +8847,40 @@ if ( !String.prototype.trim ) {
             //apply tween position to targets
             for (var t in targets){
                 //console.log('target:',t);
-                var c1 = 0;
-                for ( var p in targets[t] ){
-                    //console.log("    ",p);
-                    var tmp = [];
-                    var to;
-                    while (to = targets[t][p].shift()){
-                        //console.log("        ",to);
-                        //console.log("        ",tweens[to.tweenId])
-                        if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
-                            to.apply( tweens[to.tweenId].value );
-                            tmp.push( to );
+                var gcount = 0;
+                for ( var g in targets[t] ){
+                    var pcount = 0;
+                    //console.log("    ",g);
+                    for ( var p in targets[t][g] ){
+                        //console.log("    ",p);
+                        var tmp = [];
+                        var to;
+                        while (to = targets[t][g][p].shift()){
+                            //console.log("      TweenObject",to);
+                            //console.log("      Tween",tweens[to.tweenId]);
+                            if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
+                                to.apply( tweens[to.tweenId].value );
+                                tmp.push( to );
+                            }
+                        }
+                        targets[t][g][p] = tmp;
+
+                        if ( targets[t][g][p].length == 0){
+                            delete targets[t][g][p];
+                        }
+                        else{
+                            pcount++;
                         }
                     }
-                    targets[t][p] = tmp;
-
-                    if ( targets[t][p].length == 0){
-                        delete targets[t][p];
+                    if ( pcount == 0){
+                        delete targets[t][g];
                     }
                     else{
-                        c1++;
+                        gcount++;
                     }
                 }
-                if (c1 == 0)
+                if (gcount == 0)
                     delete targets[t];
-
             }
 
             return activityCheck;
@@ -8835,7 +8896,7 @@ if ( !String.prototype.trim ) {
          * @param delta
          * @param progress
          */
-        function setAfterProxy( target, property, from, delta, progress ) {
+        function setAfterProxy( obj, progress ) {
             if ( progress >= 1  )
                 target[property] = delta;
         }
@@ -8868,7 +8929,9 @@ if ( !String.prototype.trim ) {
                     return to - from;
                 }
             },
-            proxy: null
+            proxy: function( obj, progress ){
+                obj.$target[ obj.type ]( obj.property, obj.initialValue + obj.deltaValue * progress );
+            }
         });
 
         this.addTweenType('dimensional', {
@@ -8888,8 +8951,10 @@ if ( !String.prototype.trim ) {
                     return {value:to.value - from.value, units:to.units};
                 }
             },
-            proxy: function( target, property, from, delta, progress ) {
-                target[property] = (from.value + delta.value * progress) + delta.units;
+            proxy: function( obj, progress ) {
+                var i = obj.initialValue;
+                var d = obj.deltaValue;
+                obj.$target[ obj.type ]( obj.property, (i.value + d.value * progress) + d.units);
             }
         });
 
@@ -8915,18 +8980,19 @@ if ( !String.prototype.trim ) {
                     return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
                 }
             },
-
-            proxy: function( target, property, from, delta, progress ) {
-                var r = ((from.r + delta.r * progress) * 255) | 0;
-                var g = ((from.g + delta.g * progress) * 255) | 0;
-                var b = ((from.b + delta.b * progress) * 255) | 0;
-                var a = (from.a + delta.a * progress);
+            proxy: function( obj, progress ) {
+                var i = obj.initialValue;
+                var d = obj.deltaValue;
+                var r = ((i.r + d.r * progress) * 255) | 0;
+                var g = ((i.g + d.g * progress) * 255) | 0;
+                var b = ((i.b + d.b * progress) * 255) | 0;
+                var a = (i.a + d.a * progress);
                 //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
 
                 if ( lola.support.colorAlpha )
-                    target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                    obj.$target[ obj.type ]( obj.property, "rgba(" + [r,g,b,a].join( ',' ) + ")");
                 else
-                    target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
+                    obj.$target[ obj.type ]( obj.property, "rgb(" + [r,g,b].join( ',' ) + ")");
             }
         });
 
@@ -8941,15 +9007,15 @@ if ( !String.prototype.trim ) {
             getDelta: function( to, from, method) {
                 return false;
             },
-            proxy: function( target, property, from, delta, progress ) {
-                $t = $(target);
+            proxy: function( obj, progress ) {
+                var $t = obj.$target;
                 if (progress < 1){
-                    if ( !$t.hasClass(property) )
-                        $t.addClass(property);
+                    if ( !$t.hasClass(obj.property) )
+                        $t.addClass(obj.property);
                 }
                 else{
-                    if ( $t.hasClass(property) )
-                        $t.removeClass(property);
+                    if ( $t.hasClass(obj.property) )
+                        $t.removeClass(obj.property);
                 }
             }
         });
@@ -8966,14 +9032,9 @@ if ( !String.prototype.trim ) {
         this.selectorMethods = {
 
             tween: function( properties, duration, delay, easing, collisions ){
-                var targets = [];
-                this.forEach( function(item){
-                    targets.push( item );
-                });
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
-                self.addTarget( tweenId, targets, properties, collisions );
+                self.addTarget( tweenId, this.getAll(), properties, collisions );
                 self.start(tweenId);
-
                 return this;
             }
         };
@@ -9055,37 +9116,35 @@ if ( !String.prototype.trim ) {
         };
 
 
-        this.TweenObject = function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
-            this.init( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher );
+        this.TweenObject = function( tweenId, target, type, property, initialValue, deltaValue, proxy ){
+            this.init( tweenId, target, type, property, initialValue, deltaValue, proxy );
             return this;
         };
         this.TweenObject.prototype = {
+            $target: null,
             target: null,
+            type: null,
             property: null,
             tweenId: -1,
             initialValue: null,
             deltaValue: null,
             proxy: null,
             units: "",
-            dispatcher: null,
-            init: function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
+
+            init: function( tweenId, target, type, property, initialValue, deltaValue, proxy ){
+                this.$target = $(target);
                 this.target = target;
+                this.type = type;
                 this.property = property;
                 this.tweenId = tweenId;
                 this.initialValue = initialValue;
                 this.deltaValue = deltaValue;
                 this.proxy = proxy;
-                this.dispatcher = dispatcher;
+                //console.log('proxy', proxy);
             },
 
             apply: function( value ){
-                //console.log('apply: '+value);
-                if (this.proxy){
-                    this.proxy( this.target, this.property, this.initialValue, this.deltaValue, value );
-                }
-                else {
-                    this.target[ this.property ] = this.initialValue + this.deltaValue * value;
-                }
+                this.proxy( this, value );
             }
         };
 
@@ -9099,15 +9158,17 @@ if ( !String.prototype.trim ) {
 /***********************************************************************
  * Lola JavaScript Framework Module
  *
- *       Module: para
- *  Description: parallax scrolling module
+ *       Module: Motion Range Control
+ *  Description: scrolling control module
  *       Author: Copyright 2012, tylerbeck
  *
  ***********************************************************************/
 (function (lola) {
+    var $ = lola;
+
     /**
-     * Parallaz Module
-     * @namespace lola.para
+     * Motion Range Module
+     * @namespace lola.motion
      */
     var Module = function () {
         var self = this;
@@ -9121,7 +9182,7 @@ if ( !String.prototype.trim ) {
          * @type {String}
          * @private
          */
-        var namespace = "para";
+        var namespace = "motion";
 
         /**
          * agent's dependencies
@@ -9130,13 +9191,16 @@ if ( !String.prototype.trim ) {
          */
         var dependencies = ["tween"];
 
-        var $scrollSrc;
+        var anim;
 
-        var maxScroll;
-        var vertical = true;
+        var maxRate = 2000;
 
-        var active = [];
+        var targetPosition = 0;
+        var lastPosition = 0;
+        var endPosition = 10000;
+
         var targets = [];
+        var count = 0;
 
         //==================================================================
         // Getters & Setters
@@ -9158,60 +9222,97 @@ if ( !String.prototype.trim ) {
         };
 
 
+        this.setEndPosition = function( value ){
+            endPosition = value;
+        };
+
+        this.setPosition = function( val ){
+            //console.log( val );
+            targetPosition = Math.round(val);
+            anim.start();
+        };
+
+
         //==================================================================
         // Methods
         //==================================================================
-        /**
-         * preinitializes module
-         * @private
-         * @return {void}
-         */
-        this.preinitialize = function () {
-            lola.debug('lola.para::preinitialize');
-            if (!lola) throw new Error('lola not defined!');
-
-            //do module preinitialization
-
-
-            //remove initialization method
-            delete lola.para.preinitialize;
+        this.initialize = function(){
+            lola.debug('motion::initialize');
+            anim = new lola.animation.Animation( tick, self );
+            lola.animation.register( namespace, anim );
+            delete self.initialize;
         };
 
-        /**
-         * initializes module
-         * @public
-         * @return {void}
-         */
-        this.initialize = function () {
-            lola.debug('lola.para::initialize');
-            //this framework is dependent on lola framework
-            if (!lola) throw new Error('lola not defined!');
+        function tick( now, delta, elapsed ){
+            console.log('tick[', now,']', targetPosition, lastPosition);
+            var active = false;
 
-            //do module initialization
+            if (targetPosition != lastPosition){
+                //get current delta to target
+                var d = targetPosition - lastPosition;
+                var sign = d < 0 ? -1 : 1;
 
+                //move half the distance now
+                d /= 2;
 
-            //remove initialization method
-            delete lola.para.initialize;
-        };
+                var rate = maxRate * ( delta / 1000 );
+                var abs = d * sign;
 
-        this.setScrollSource = function( src, scrollv ){
-            vertical = scrollv === false;
-            if ($scrollSrc){
-                $scrollSrc.removeListener( 'scroll', handleScroll );
+                if (abs > rate){
+                    rate *= sign;
+                    update( lastPosition + rate );
+                    active = true;
+                }
+                else if ( abs < 1){
+                    update( targetPosition );
+                }
+                else {
+                    update( lastPosition + d );
+                    active = true;
+                }
+
             }
-            $scrollSrc = $(src);
-            $scrollSrc.addListener( 'scroll', handleScroll );
-            if (vertical)
-                maxScroll = $scrollSrc.height() - $(lola.window).innerHeight();
-            else
-                maxScroll = $scrollSrc.width() - $(lola.window).innerWidth();
 
-        };
-
-        function handleScroll( event ){
-            var position = $scrollSrc.attr(veritcal?'scrollTop':'scrollLeft') / maxScroll;
-            console.log('position', position);
+            return active;
         }
+
+        function update( position ){
+            console.log('update position:', position );
+            var positive = position > lastPosition;
+            position = Math.round(Math.min(endPosition,Math.max(0,position)));
+            var i = 0;
+            while( i < count ){
+                targets[i].setPosition( position, positive );
+                i++;
+            }
+            lastPosition = position;
+        }
+
+        this.addTarget = function( objects, properties ){
+            if (!Array.isArray(objects))
+                objects = [objects];
+
+            var start = (properties.start) ? properties.start : 0;
+            var end = (properties.end) ? properties.end : range;
+            var ease = lola.easing.get( properties.ease ? properties.ease : 'linear' );
+            delete properties.start;
+            delete properties.end;
+            delete properties.ease;
+
+            //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
+            objects.forEach( function(obj){
+               for (var g in properties){
+                   for (var p in properties[g] ){
+                       var s = properties[g][p].start == undefined ? start : properties[g][p].start;
+                       var e = properties[g][p].end == undefined ? end : properties[g][p].end;
+                       var es = properties[g][p].ease == undefined ? ease : properties[g][p].ease;
+                       targets.push( new RangeTween( obj, g, p, properties[g][p], es, s, e ) );
+                   }
+               }
+            });
+
+            count = targets.length;
+        };
 
         //==================================================================
         // Selection Methods
@@ -9221,7 +9322,9 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-
+            motionRange: function( options ){
+                self.addTarget( this.getAll(), options );
+            }
 
         };
 
@@ -9229,7 +9332,31 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Classes
         //==================================================================
-
+        var RangeTween = function( target, group, property, value, ease, start, end ){
+            var self = this
+            var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
+            var active = false;
+            var delta = end - start;
+            self.setPosition = function( position, positive ){
+                if ( position >= start && position <= end ){
+                    active = true;
+                    tweenObject.apply( ease.exec( position-start, 0, 1, delta) );
+                }
+                else if ( active ){
+                    active = false;
+                    tweenObject.apply( positive ? 1 : 0 );
+                }
+                else{
+                    //prevent skipping this objects range and not setting anything
+                    if (positive && lastPosition < start && position > end ){
+                        tweenObject.apply( 1 );
+                    }
+                    else if (!positive && lastPosition > end && position < start ){
+                        tweenObject.apply( 0 );
+                    }
+                }
+            }
+        };
 
     };
 

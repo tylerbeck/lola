@@ -196,43 +196,18 @@
                         targets[id] = {};
                     for (var g in properties){
                         // p should be lola selector methods eg style, attr, classes
-                        //if (p == "style"){
-                            if (!targets[id][g])
-                                targets[id][g] = {};
-                            for (var p in properties[g] ){
-                                if (collisions || targets[id][g][p] == null ){
-                                    if (!properties[g][p].from){
-                                        //try to get "from" value
-                                        var f = lola(obj)[g]( obj, p );
-                                        //console.log('  getting initial style')
-                                        if (typeof properties[g][p] == "object" ){
-                                            properties[g][p].from = f;
-                                        }
-                                        else {
-                                            var t = String(properties[p][p]);
-                                            properties[g][p] = {from:f,to:t};
-                                        }
-                                    }
-                                    if (!targets[id][g][p])
-                                        targets[id][g][p] = [];
-                                    if (collisions)
-                                        targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
-                                    else
-                                        targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
-                                }
+                        if (!targets[id][g])
+                            targets[id][g] = {};
+                        for (var p in properties[g] ){
+                            if (collisions || targets[id][g][p] == null ){
+                                if (!targets[id][g][p])
+                                    targets[id][g][p] = [];
+                                if (collisions)
+                                    targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
+                                else
+                                    targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
                             }
-                        /*}
-                        else {
-
-                            if (!targets[id][p])
-                                targets[id][p] = [];
-                            if (collisions)
-                                targets[id][p].push( this.getTweenObject( tweenId, obj, p, properties[p], obj ));
-                            else
-                                targets[id][p] = [ this.getTweenObject( tweenId, obj, p, properties[p], obj )];
-
-                        }*/
-
+                        }
                     }
                 }
             }
@@ -250,18 +225,35 @@
          * @param {*} dispatcher element that dispatches complete event
          * @private
          */
-        this.getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
+        this.getTweenObject = function( tweenId, target, group, property, value ){
             //console.log("this.getTweenObject", tweenId, target, group, property, value, dispatcher );
             //get initial value
             var from,to,delta;
+
+            if (!value.from){
+                //try to get "from" value
+                var f = lola(target)[group]( property );
+                //console.log()
+                if (typeof value == "object" ){
+                    value.from = f;
+                }
+                else {
+                    var t = String(value);
+                    value = {from:f,to:t};
+                }
+            }
+
             if ( value.from ) {
                 from = value.from;
+                //console.log('    using value.from');
             }
             else if (typeof value == "function"){
                 from = value.call( target );
+                //console.log('    using value.call( target )');
             }
             else{
                 from = $(target)[group]( property );
+                //console.log('    using $(target)[group]( property )');
             }
             //console.log('    from',  String(from));
             //we can only tween if there's a from value
@@ -292,17 +284,18 @@
             //break down from and to values to tweenable values
             //and determine how to tween values
             var type, proxy;
-            if ( hooks[ property ] ) {
-                type = hooks[ property ];
+            if ( hooks[ group ] ) {
+                type = hooks[ group ];
             }
             else {
                 for ( var i in types ) {
+                    //console.log('checking type', i);
                     type = types[i];
                     //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
                     if ( i == group ){
                         break;
                     }
-                    if ( type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
+                    if ( type.match === true || (type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) )) {
                         break;
                     }
                     else {
@@ -318,6 +311,7 @@
                 delta = type.getDelta( to, from, deltaMethod );
                 proxy = type.proxy;
                 //console.log('   canTween', type.canTween( from, to ) );
+                //console.log('       ', from, to );
                 if ( !type.canTween( from, to ) ) {
                     type = null;
                 }
@@ -326,9 +320,10 @@
                 proxy = lola.tween.setAfterProxy;
                 delta = to;
             }
-            //console.log('    type', type);
 
-            return new self.TweenObject( tweenId, target, property, from, delta, proxy, dispatcher );
+            var result = new self.TweenObject( tweenId, target, group, property, from, delta, proxy );
+            //console.log(result);
+            return result;
         };
 
         /**
@@ -352,13 +347,16 @@
                         //trigger events
                         lola.event.trigger(tweens[k],'tweencomplete',false,false);
                         for (var tr in targets){
-                            for ( var pr in targets[tr] ){
-                                var dispatcher = targets[tr][pr][0].dispatcher;
-                                if (dispatcher){
-                                    //console.log( dispatcher );
-                                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                                    break;
+                            for ( var gr in targets[tr] ){
+                                for ( var pr in targets[tr][gr] ){
+                                    var dispatcher = targets[tr][gr][pr][0].target;
+                                    if (dispatcher){
+                                        //console.log( dispatcher );
+                                        lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                                        break;
+                                    }
                                 }
+                                break;
                             }
                         }
                         delete tweens[k];
@@ -370,31 +368,40 @@
             //apply tween position to targets
             for (var t in targets){
                 //console.log('target:',t);
-                var c1 = 0;
-                for ( var p in targets[t] ){
-                    //console.log("    ",p);
-                    var tmp = [];
-                    var to;
-                    while (to = targets[t][p].shift()){
-                        //console.log("        ",to);
-                        //console.log("        ",tweens[to.tweenId])
-                        if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
-                            to.apply( tweens[to.tweenId].value );
-                            tmp.push( to );
+                var gcount = 0;
+                for ( var g in targets[t] ){
+                    var pcount = 0;
+                    //console.log("    ",g);
+                    for ( var p in targets[t][g] ){
+                        //console.log("    ",p);
+                        var tmp = [];
+                        var to;
+                        while (to = targets[t][g][p].shift()){
+                            //console.log("      TweenObject",to);
+                            //console.log("      Tween",tweens[to.tweenId]);
+                            if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
+                                to.apply( tweens[to.tweenId].value );
+                                tmp.push( to );
+                            }
+                        }
+                        targets[t][g][p] = tmp;
+
+                        if ( targets[t][g][p].length == 0){
+                            delete targets[t][g][p];
+                        }
+                        else{
+                            pcount++;
                         }
                     }
-                    targets[t][p] = tmp;
-
-                    if ( targets[t][p].length == 0){
-                        delete targets[t][p];
+                    if ( pcount == 0){
+                        delete targets[t][g];
                     }
                     else{
-                        c1++;
+                        gcount++;
                     }
                 }
-                if (c1 == 0)
+                if (gcount == 0)
                     delete targets[t];
-
             }
 
             return activityCheck;
@@ -410,9 +417,9 @@
          * @param delta
          * @param progress
          */
-        function setAfterProxy( target, property, from, delta, progress ) {
+        function setAfterProxy( obj, progress ) {
             if ( progress >= 1  )
-                target[property] = delta;
+                obj.$target[ obj.type ]( obj.property, obj.initialValue + obj.deltaValue);
         }
 
         /**
@@ -443,7 +450,9 @@
                     return to - from;
                 }
             },
-            proxy: null
+            proxy: function( obj, progress ){
+                obj.$target[ obj.type ]( obj.property, obj.initialValue + obj.deltaValue * progress );
+            }
         });
 
         this.addTweenType('dimensional', {
@@ -463,8 +472,10 @@
                     return {value:to.value - from.value, units:to.units};
                 }
             },
-            proxy: function( target, property, from, delta, progress ) {
-                target[property] = (from.value + delta.value * progress) + delta.units;
+            proxy: function( obj, progress ) {
+                var i = obj.initialValue;
+                var d = obj.deltaValue;
+                obj.$target[ obj.type ]( obj.property, (i.value + d.value * progress) + d.units);
             }
         });
 
@@ -490,43 +501,80 @@
                     return { r:to.r-from.r, g:to.g-from.g, b:to.b-from.b, a:to.a-from.a };
                 }
             },
-
-            proxy: function( target, property, from, delta, progress ) {
-                var r = ((from.r + delta.r * progress) * 255) | 0;
-                var g = ((from.g + delta.g * progress) * 255) | 0;
-                var b = ((from.b + delta.b * progress) * 255) | 0;
-                var a = (from.a + delta.a * progress);
+            proxy: function( obj, progress ) {
+                var i = obj.initialValue;
+                var d = obj.deltaValue;
+                var r = ((i.r + d.r * progress) * 255) | 0;
+                var g = ((i.g + d.g * progress) * 255) | 0;
+                var b = ((i.b + d.b * progress) * 255) | 0;
+                var a = (i.a + d.a * progress);
                 //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
 
                 if ( lola.support.colorAlpha )
-                    target[property] = "rgba(" + [r,g,b,a].join( ',' ) + ")";
+                    obj.$target[ obj.type ]( obj.property, "rgba(" + [r,g,b,a].join( ',' ) + ")");
                 else
-                    target[property] = "rgb(" + [r,g,b].join( ',' ) + ")";
+                    obj.$target[ obj.type ]( obj.property, "rgb(" + [r,g,b].join( ',' ) + ")");
             }
         });
 
         this.addTweenType('class', {
             match: false,
             parse: function(val){
-                return false;
+                return val;
             },
             canTween: function(a,b){
                 return true;
             },
             getDelta: function( to, from, method) {
-                return false;
+                return to;
             },
-            proxy: function( target, property, from, delta, progress ) {
-                $t = $(target);
+            proxy: function( obj, progress ) {
+                var $t = obj.$target;
                 if (progress < 1){
-                    if ( !$t.hasClass(property) )
-                        $t.addClass(property);
+                    if ( !$t.hasClass(obj.property) )
+                        $t.addClass(obj.property);
                 }
                 else{
-                    if ( $t.hasClass(property) )
-                        $t.removeClass(property);
+                    if ( $t.hasClass(obj.property) )
+                        $t.removeClass(obj.property);
                 }
             }
+        });
+
+        this.addTweenType('event', {
+            match: false,
+            parse: function(val){
+                return val;
+            },
+            canTween: function(a,b){
+                return true;
+            },
+            getDelta: function( to, from, method) {
+                return to;
+            },
+            proxy: function( obj, progress ) {
+                var $t = obj.$target;
+                if (progress >= 1){
+                    $t.trigger(obj.property,false,false, obj.deltaValue );
+                }
+                else if (progress <= 0){
+                    $t.trigger(obj.property,false,false, obj.initialValue );
+                }
+            }
+        });
+
+        this.addTweenType('setafter', {
+            match: true,
+            parse: function(val){
+                return val;
+            },
+            canTween: function(a,b){
+                return true;
+            },
+            getDelta: function( to, from, method) {
+                return to;
+            },
+            proxy: setAfterProxy
         });
 
 
@@ -541,14 +589,9 @@
         this.selectorMethods = {
 
             tween: function( properties, duration, delay, easing, collisions ){
-                var targets = [];
-                this.forEach( function(item){
-                    targets.push( item );
-                });
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
-                self.addTarget( tweenId, targets, properties, collisions );
+                self.addTarget( tweenId, this.getAll(), properties, collisions );
                 self.start(tweenId);
-
                 return this;
             }
         };
@@ -630,37 +673,35 @@
         };
 
 
-        this.TweenObject = function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
-            this.init( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher );
+        this.TweenObject = function( tweenId, target, type, property, initialValue, deltaValue, proxy ){
+            this.init( tweenId, target, type, property, initialValue, deltaValue, proxy );
             return this;
         };
         this.TweenObject.prototype = {
+            $target: null,
             target: null,
+            type: null,
             property: null,
             tweenId: -1,
             initialValue: null,
             deltaValue: null,
             proxy: null,
             units: "",
-            dispatcher: null,
-            init: function( tweenId, target, property, initialValue, deltaValue, proxy, dispatcher ){
+
+            init: function( tweenId, target, type, property, initialValue, deltaValue, proxy ){
+                this.$target = $(target);
                 this.target = target;
+                this.type = type;
                 this.property = property;
                 this.tweenId = tweenId;
                 this.initialValue = initialValue;
                 this.deltaValue = deltaValue;
                 this.proxy = proxy;
-                this.dispatcher = dispatcher;
+                //console.log('proxy', proxy);
             },
 
             apply: function( value ){
-                //console.log('apply: '+value);
-                if (this.proxy){
-                    this.proxy( this.target, this.property, this.initialValue, this.deltaValue, value );
-                }
-                else {
-                    this.target[ this.property ] = this.initialValue + this.deltaValue * value;
-                }
+                this.proxy( this, value );
             }
         };
 

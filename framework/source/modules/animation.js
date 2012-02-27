@@ -112,11 +112,12 @@
          * start ticking
          */
         function startTicking(){
+            //console.log('startTicking:',active);
             if (!active){
                 active = true;
                 requestTick();
             }
-        };
+        }
 
         /**
          * set callback for animation frame
@@ -131,23 +132,16 @@
          * @param {Function} callback
          */
         function requestFrame(callback){
-            switch ( getFrameType ) {
-                case 1:
-                    lola.window.requestAnimationFrame( callback );
-                    break;
-                case 2:
-                    lola.window.mozRequestAnimationFrame( callback );
-                    break;
-                case 3:
-                    lola.window.webkitRequestAnimationFrame( callback );
-                    break;
-                case 4:
-                    lola.window.oRequestAnimationFrame( callback );
-                    break;
-                default:
-                    setTimeout( callback, timeout );
-                    break;
-            }
+            if ( getFrameType == 1 )
+                lola.window.requestAnimationFrame( callback );
+            else if ( getFrameType == 2 )
+                lola.window.mozRequestAnimationFrame( callback );
+            else if ( getFrameType == 3 )
+                lola.window.webkitRequestAnimationFrame( callback );
+            else if ( getFrameType == 4 )
+                lola.window.oRequestAnimationFrame( callback );
+            else
+                setTimeout( callback, timeout );
         }
 
         /**
@@ -284,11 +278,7 @@
 
             this.start = function(){
                 if (!active){
-                    active = true;
-                    complete = false;
-                    startTime = lastTime = lola.now();
-                    startTicking();
-                    lola.event.trigger( self, 'animationstart',false,false);
+                    this.restart();
                 }
             };
 
@@ -307,6 +297,14 @@
                     startTicking();
                     lola.event.trigger( self, 'animationresume',false,false);
                 }
+            };
+
+            this.restart = function(){
+                active = true;
+                complete = false;
+                startTime = lastTime = lola.now();
+                startTicking();
+                lola.event.trigger( self, 'animationstart',false,false);
             };
 
             this.stop = function(){

@@ -187,25 +187,32 @@
          * @param objects
          * @param properties
          */
-        this.addTarget = function( objects, properties ){
+        this.addTarget = function( objects, options ){
             if (!Array.isArray(objects))
                 objects = [objects];
 
-            var start = (properties.start) ? properties.start : 0;
-            var end = (properties.end) ? properties.end : range;
-            var ease = lola.easing.get( properties.ease ? properties.ease : 'linear' );
-            delete properties.start;
-            delete properties.end;
-            delete properties.ease;
+            var start = (options.start) ? options.start : 0;
+            var end = (options.end) ? options.end : range;
+            var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
+            var step = options.step;
+            delete options.start;
+            delete options.end;
+            delete options.ease;
+            delete options.step;
 
             //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
             objects.forEach( function(obj){
-               for (var g in properties){
-                   for (var p in properties[g] ){
-                       var s = properties[g][p].start == undefined ? start : properties[g][p].start;
-                       var e = properties[g][p].end == undefined ? end : properties[g][p].end;
-                       var es = properties[g][p].ease == undefined ? ease : properties[g][p].ease;
-                       targets.push( new RangeTween( obj, g, p, properties[g][p], es, s, e ) );
+               for (var g in options){
+                   if (options.hasOwnProperty(g)){
+                       var optGroup = options[g];
+                       for (var p in optGroup ){
+                           if (optGroup.hasOwnProperty(p)){
+                               var s = options[g][p].start == undefined ? start : options[g][p].start;
+                               var e = options[g][p].end == undefined ? end : options[g][p].end;
+                               var es = options[g][p].ease == undefined ? ease : options[g][p].ease;
+                               targets.push( new RangeTween( obj, g, p, options[g][p], es, s, e, step ) );
+                           }
+                       }
                    }
                }
             });
@@ -241,11 +248,14 @@
          * @param start
          * @param end
          */
-        var RangeTween = function( target, group, property, value, ease, start, end ){
+        var RangeTween = function( target, group, property, value, ease, start, end, step ){
             var self = this
             var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;
+
+            if (typeof step != 'function')
+                step = false;
 
             /**
              * set the position of this target
@@ -253,23 +263,30 @@
              * @param positive
              */
             self.setPosition = function( position, positive ){
+                var value = undefined;
                 if ( position >= start && position <= end ){
                     active = true;
-                    tweenObject.apply( ease.exec( position-start, 0, 1, delta) );
+                    value = ease.exec( position-start, 0, 1, delta);
                 }
                 else if ( active ){
                     active = false;
-                    tweenObject.apply( positive ? 1 : 0 );
+                    value = positive ? 1 : 0;
                 }
                 else{
                     //prevent skipping this objects range and not setting anything
                     if (positive && lastPosition < start && position > end ){
-                        tweenObject.apply( 1 );
+                        value = 1;
                     }
                     else if (!positive && lastPosition > end && position < start ){
-                        tweenObject.apply( 0 );
+                        value = 0;
                     }
                 }
+                if (value != undefined){
+                    tweenObject.apply( value );
+                    if (step)
+                        step( value, this );
+                }
+
             }
         };
 

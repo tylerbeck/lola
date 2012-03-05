@@ -181,12 +181,7 @@
             var green = 0;
             var blue = 0;
 
-            if ( s == 0 ) {
-                red = b;
-                green = red;
-                blue = red;
-            }
-            else {
+            if ( s != 0 ){
                 var _h = (h - Math.floor( h )) * 6;
                 var _f = _h - Math.floor( _h );
 
@@ -260,8 +255,6 @@
          * @return {Object}
          */
         this.int2rgb = function( value ) {
-            var str = "";
-
             //make sure value is in range
             value = (value > 0xFFFFFF) ? 0xFFFFFF : value;
             value = (value < 0x000000) ? 0x000000 : value;

@@ -195,17 +195,22 @@
                     if (!targets[id])
                         targets[id] = {};
                     for (var g in properties){
-                        // p should be lola selector methods eg style, attr, classes
-                        if (!targets[id][g])
-                            targets[id][g] = {};
-                        for (var p in properties[g] ){
-                            if (collisions || targets[id][g][p] == null ){
-                                if (!targets[id][g][p])
-                                    targets[id][g][p] = [];
-                                if (collisions)
-                                    targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
-                                else
-                                    targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
+                        if (properties.hasOwnProperty(g)){
+                            var propg = properties[g];
+                            // p should be lola selector methods eg style, attr, classes
+                            if (!targets[id][g])
+                                targets[id][g] = {};
+                            for (var p in propg ){
+                                if (propg.hasOwnProperty(p)){
+                                    if (collisions || targets[id][g][p] == null ){
+                                        if (!targets[id][g][p])
+                                            targets[id][g][p] = [];
+                                        if (collisions)
+                                            targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, propg[p] ) );
+                                        else
+                                            targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, propg[p] ) ];
+                                    }
+                                }
                             }
                         }
                     }
@@ -226,13 +231,14 @@
          * @private
          */
         this.getTweenObject = function( tweenId, target, group, property, value ){
-            //console.log("this.getTweenObject", tweenId, target, group, property, value, dispatcher );
+            //console.log("this.getTweenObject", tweenId, target, group, property, value );
             //get initial value
             var from,to,delta;
 
             if (!value.from){
                 //try to get "from" value
                 var f = lola(target)[group]( property );
+                //console.log('test f:',f);
                 //console.log()
                 if (typeof value == "object" ){
                     value.from = f;
@@ -289,17 +295,19 @@
             }
             else {
                 for ( var i in types ) {
-                    //console.log('checking type', i);
-                    type = types[i];
-                    //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
-                    if ( i == group ){
-                        break;
-                    }
-                    if ( type.match === true || (type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) )) {
-                        break;
-                    }
-                    else {
-                        type = null;
+                    if (types.hasOwnProperty(i)){
+                        //console.log('checking type', i);
+                        type = types[i];
+                        //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
+                        if ( i == group ){
+                            break;
+                        }
+                        if ( type.match === true || (type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) )) {
+                            break;
+                        }
+                        else {
+                            type = null;
+                        }
                     }
                 }
             }
@@ -337,28 +345,29 @@
             var activityCheck = false;
             //console.log('tick: '+now);
 
+            var tFn, gFn, pFn;
+            tFn = undefined;
+            gFn = function(t,g){ return false; };
+            pFn = function(t,g,p,obj){
+                var dispatcher = obj[0].target;
+                if (dispatcher){
+                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                    return false;
+                }
+            };
+
             for (var k in tweens){
-                if (tweens[k].active){
+                if (tweens.hasOwnProperty(k) && tweens[k].active){
                     activityCheck = true;
                     if ( !tweens[k].complete )
                         tweens[k].calculate( now );
                     else{
                         //catch complete on next tick
+
                         //trigger events
                         lola.event.trigger(tweens[k],'tweencomplete',false,false);
-                        for (var tr in targets){
-                            for ( var gr in targets[tr] ){
-                                for ( var pr in targets[tr][gr] ){
-                                    var dispatcher = targets[tr][gr][pr][0].target;
-                                    if (dispatcher){
-                                        //console.log( dispatcher );
-                                        lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-                        }
+                        iterateTargets( tFn, gFn, pFn );
+
                         delete tweens[k];
                         freeTweenIds.push( parseInt(k) );
                     }
@@ -366,45 +375,81 @@
             }
 
             //apply tween position to targets
-            for (var t in targets){
-                //console.log('target:',t);
-                var gcount = 0;
-                for ( var g in targets[t] ){
-                    var pcount = 0;
-                    //console.log("    ",g);
-                    for ( var p in targets[t][g] ){
-                        //console.log("    ",p);
-                        var tmp = [];
-                        var to;
-                        while (to = targets[t][g][p].shift()){
-                            //console.log("      TweenObject",to);
-                            //console.log("      Tween",tweens[to.tweenId]);
-                            if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
-                                to.apply( tweens[to.tweenId].value );
-                                tmp.push( to );
-                            }
-                        }
-                        targets[t][g][p] = tmp;
-
-                        if ( targets[t][g][p].length == 0){
-                            delete targets[t][g][p];
-                        }
-                        else{
-                            pcount++;
-                        }
-                    }
-                    if ( pcount == 0){
-                        delete targets[t][g];
-                    }
-                    else{
-                        gcount++;
+            var gCount = 0;
+            var pCount = 0;
+            tFn = function(t){
+                if (gCount == 0){
+                    delete targets[t];
+                }
+                gCount = 0;
+            };
+            gFn = function(t,g){
+                if (pCount == 0){
+                    delete targets[t][g];
+                }
+                else{
+                    gCount++;
+                }
+                pCount = 0;
+            };
+            pFn = function(t,g,p,obj){
+                var tmp = [];
+                var trg;
+                while (trg = obj.shift()){
+                    //console.log("      TweenObject",to);
+                    //console.log("      Tween",tweens[to.tweenId]);
+                    if (trg && tweens[trg.tweenId] && tweens[trg.tweenId].active){
+                        trg.apply( tweens[trg.tweenId].value );
+                        tmp.push( trg );
                     }
                 }
-                if (gcount == 0)
-                    delete targets[t];
-            }
+                targets[t][g][p] = tmp;
+
+                if ( targets[t][g][p].length == 0){
+                    delete targets[t][g][p];
+                }
+                else{
+                    pCount++;
+                }
+            };
+
+            iterateTargets( tFn, gFn, pFn );
 
             return activityCheck;
+        }
+
+        /**
+         * iterate through target tree
+         * @param tFn
+         * @param gFn
+         * @param pFn
+         */
+        function iterateTargets( tFn, gFn, pFn ){
+            for (var t in  targets){
+                //target level
+                if (targets.hasOwnProperty(t)){
+                    var tar = targets[t];
+                    for (var g in tar){
+                        if (tar.hasOwnProperty(g)){
+                            var targ = tar[g];
+                            for (var p in targ){
+                                if (targ.hasOwnProperty(p)){
+                                    var obj = targ[p];
+                                    if (pFn)
+                                        if (!pFn( t, g, p, obj ))
+                                            break;
+                                }
+                            }
+                            if (gFn)
+                                if (!gFn( t, g ))
+                                    break;
+                        }
+                    }
+                    if (tFn)
+                        if (!tFn(t))
+                            break;
+                }
+            }
         }
 
         /**

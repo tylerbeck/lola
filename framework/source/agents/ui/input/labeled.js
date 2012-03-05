@@ -1,4 +1,4 @@
-/***********************************************************************
+ /***********************************************************************
  * Lola JavaScript Framework Agent
  *
  *       Agent: Integrated Label Input
@@ -113,7 +113,7 @@
          * agent initializer
          */
         this.initialize = function () {
-            $("input.ui-input-labeled").assignAgent(namespace);
+            $("input.labeled").assignAgent(namespace);
         };
 
         function handler( event ){

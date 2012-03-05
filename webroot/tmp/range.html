@@ -87,9 +87,9 @@
 
 
             //var ts = (Math.random()*100)+"%";
-            var te = (50+Math.sin(angle)*(35+Math.random()*10))+"%";
+            var te = (50+Math.sin(angle)*(5+Math.random()*40))+"%";
             //var ls = (Math.random()*100)+"%";
-            var le = (50+Math.cos(angle)*(35+Math.random()*10))+"%";
+            var le = (50+Math.cos(angle)*(5+Math.random()*40))+"%";
             var rs = Math.round((Math.random()*255));
             var re = Math.round((Math.random()*255));
             var gs = Math.round((Math.random()*255));
@@ -109,10 +109,24 @@
             $d.motionRange( {
                 start:s,
                 end:e,
-                ease:'back-out',
+                ease:'quadratic-in',
                 style:{
-                    top:te,
-                    left:le,
+                    top:te
+                }
+            } );
+            $d.motionRange( {
+                start:s,
+                end:e,
+                ease:'bounce-out',
+                style:{
+                    left:le
+                }
+            } );
+            $d.motionRange( {
+                start:s,
+                end:e,
+                ease:'linear',
+                style:{
                     backgroundColor: 'rgb('+re+','+ge+','+be+')'
                 }
             } );
@@ -133,7 +147,7 @@
         var endRange = 10000;
         var maxScroll = endRange - $w.innerHeight();
         lola.motion.setEndPosition( endRange );
-        lola.motion.setMaxRate( 10000 );
+        lola.motion.setMaxRate( 2000 );
 
         $w.addListener('resize', function( event ){
             maxScroll = endRange - $w.innerHeight();

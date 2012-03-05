@@ -1837,7 +1837,9 @@ if ( !String.prototype.trim ) {
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    this.get().appendChild( node );
+                    var p = this.get();
+                    if ( p && p.appendChild )
+                        p.appendChild( node );
                 }
 
                 return this;
@@ -3925,12 +3927,7 @@ if ( !String.prototype.trim ) {
             var green = 0;
             var blue = 0;
 
-            if ( s == 0 ) {
-                red = b;
-                green = red;
-                blue = red;
-            }
-            else {
+            if ( s != 0 ){
                 var _h = (h - Math.floor( h )) * 6;
                 var _f = _h - Math.floor( _h );
 
@@ -4004,8 +4001,6 @@ if ( !String.prototype.trim ) {
          * @return {Object}
          */
         this.int2rgb = function( value ) {
-            var str = "";
-
             //make sure value is in range
             value = (value > 0xFFFFFF) ? 0xFFFFFF : value;
             value = (value < 0x000000) ? 0x000000 : value;
@@ -4418,8 +4413,7 @@ if ( !String.prototype.trim ) {
 (function( lola ) {
 	/**
 	 * CSS Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.css
 	 */
     var Module = function(){
         var self = this;
@@ -4446,11 +4440,11 @@ if ( !String.prototype.trim ) {
          */
         var propertyCache = {};
 
-        /**
+        /*
          * cache for fixed/mapped selectors
          * @private
          */
-        var selectorCache = {};
+        //var selectorCache = {};
 
         /**
          * style property hooks
@@ -4540,19 +4534,19 @@ if ( !String.prototype.trim ) {
          */
         function canStyle( obj ) {
             //TODO: Implement canStyle function
-            return true;
+            return obj != false;
         }
 
-        /**
+        /*
          * gets mapped selector string
          * @param {String} selector
          * @return {String}
-         */
+
         function getSelector( selector ) {
             if ( !selectorCache[selector] )
                 selectorCache[selector] = lola.string.camelCase( selector );
             return selectorCache[selector];
-        }
+        }*/
 
         /**
          * gets mapped selector string
@@ -4575,6 +4569,7 @@ if ( !String.prototype.trim ) {
          * @return {*}
          */
         this['style'] = function( node, style, value, useHooks ) {
+
             //make sure style can be set
             var prop = getProperty( style );
             if ( canStyle( node ) ) {
@@ -4601,11 +4596,11 @@ if ( !String.prototype.trim ) {
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            if ( node.style[prop] != undefined ){
-                return node.style[prop];
-            }
-            else {
-                //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+            //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+
+            var result = node.style[prop];
+            if ( !result || result == "" ){
+                //console.log('element style not set');
                 var compStyle;
 
                 if ( document.defaultView && document.defaultView.getComputedStyle ) {
@@ -4616,16 +4611,18 @@ if ( !String.prototype.trim ) {
 
                 if (compStyle){
                     //console.log( 'using getComputedStyle', compStyle );
-                    return compStyle.getPropertyValue( lola.string.dashed(prop) );
+                    result = compStyle.getPropertyValue( lola.string.dashed(prop) );
                 }
                 else if ( typeof(document.body.currentStyle) !== "undefined") {
                     //console.log( 'using currentStyle', node["currentStyle"] );
-                    return node["currentStyle"][prop];
+                    result = node["currentStyle"][prop];
                 }
                 else {
-                    return undefined;
+                    result = undefined;
                 }
             }
+
+            return result;
         };
 
         /**
@@ -4659,14 +4656,17 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function dimensionalHook( obj, style, value ){
+            var result;
             if (value == undefined) {
-                var val = self.getRawStyle( obj, style );
-                return parseFloat(val.replace( lola.regex.isDimension, "$1"));
+                result = self.getRawStyle( obj, style );
+                result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
             }
             else {
                 value = (String(value).match(lola.regex.isDimension)) ? value : value+"px";
-                self.setRawStyle( obj, style, value );
+                result = self.setRawStyle( obj, style, value );
             }
+
+            return result;
         }
 
         /**
@@ -4741,10 +4741,12 @@ if ( !String.prototype.trim ) {
                 if ( !media || media == ss.mediaText ) {
                     var rules = (lola.support.cssRules) ? ss.cssRules : ss.rules;
                     for ( var ri in rules ) {
-                        if ( rules[ri] && rules[ri].selectorText ) {
-                            if ( rules[ri].selectorText.toLowerCase() == selector ) {
-                                //console.info( 'matched rule: ' + rules[ri].selectorText );
-                                action( si, ri );
+                        if ( rules.hasOwnProperty(ri)){
+                            if ( rules[ri] && rules[ri].selectorText ) {
+                                if ( rules[ri].selectorText.toLowerCase() == selector ) {
+                                    //console.info( 'matched rule: ' + rules[ri].selectorText );
+                                    action( si, ri );
+                                }
                             }
                         }
                     }
@@ -8674,17 +8676,22 @@ if ( !String.prototype.trim ) {
                     if (!targets[id])
                         targets[id] = {};
                     for (var g in properties){
-                        // p should be lola selector methods eg style, attr, classes
-                        if (!targets[id][g])
-                            targets[id][g] = {};
-                        for (var p in properties[g] ){
-                            if (collisions || targets[id][g][p] == null ){
-                                if (!targets[id][g][p])
-                                    targets[id][g][p] = [];
-                                if (collisions)
-                                    targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) );
-                                else
-                                    targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, properties[g][p], obj ) ];
+                        if (properties.hasOwnProperty(g)){
+                            var propg = properties[g];
+                            // p should be lola selector methods eg style, attr, classes
+                            if (!targets[id][g])
+                                targets[id][g] = {};
+                            for (var p in propg ){
+                                if (propg.hasOwnProperty(p)){
+                                    if (collisions || targets[id][g][p] == null ){
+                                        if (!targets[id][g][p])
+                                            targets[id][g][p] = [];
+                                        if (collisions)
+                                            targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, propg[p] ) );
+                                        else
+                                            targets[id][g][p] = [ self.getTweenObject( tweenId, obj, g, p, propg[p] ) ];
+                                    }
+                                }
                             }
                         }
                     }
@@ -8705,13 +8712,14 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.getTweenObject = function( tweenId, target, group, property, value ){
-            //console.log("this.getTweenObject", tweenId, target, group, property, value, dispatcher );
+            //console.log("this.getTweenObject", tweenId, target, group, property, value );
             //get initial value
             var from,to,delta;
 
             if (!value.from){
                 //try to get "from" value
                 var f = lola(target)[group]( property );
+                //console.log('test f:',f);
                 //console.log()
                 if (typeof value == "object" ){
                     value.from = f;
@@ -8768,17 +8776,19 @@ if ( !String.prototype.trim ) {
             }
             else {
                 for ( var i in types ) {
-                    //console.log('checking type', i);
-                    type = types[i];
-                    //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
-                    if ( i == group ){
-                        break;
-                    }
-                    if ( type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) ) {
-                        break;
-                    }
-                    else {
-                        type = null;
+                    if (types.hasOwnProperty(i)){
+                        //console.log('checking type', i);
+                        type = types[i];
+                        //console.log('    testing type', i, type.match.test( String( from ) ), type.match.test( String( to ) ) );
+                        if ( i == group ){
+                            break;
+                        }
+                        if ( type.match === true || (type.match && type.match.test( String( to ) ) && type.match.test( String( from ) ) )) {
+                            break;
+                        }
+                        else {
+                            type = null;
+                        }
                     }
                 }
             }
@@ -8816,28 +8826,29 @@ if ( !String.prototype.trim ) {
             var activityCheck = false;
             //console.log('tick: '+now);
 
+            var tFn, gFn, pFn;
+            tFn = undefined;
+            gFn = function(t,g){ return false; };
+            pFn = function(t,g,p,obj){
+                var dispatcher = obj[0].target;
+                if (dispatcher){
+                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                    return false;
+                }
+            };
+
             for (var k in tweens){
-                if (tweens[k].active){
+                if (tweens.hasOwnProperty(k) && tweens[k].active){
                     activityCheck = true;
                     if ( !tweens[k].complete )
                         tweens[k].calculate( now );
                     else{
                         //catch complete on next tick
+
                         //trigger events
                         lola.event.trigger(tweens[k],'tweencomplete',false,false);
-                        for (var tr in targets){
-                            for ( var gr in targets[tr] ){
-                                for ( var pr in targets[tr][gr] ){
-                                    var dispatcher = targets[tr][gr][pr][0].target;
-                                    if (dispatcher){
-                                        //console.log( dispatcher );
-                                        lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-                        }
+                        iterateTargets( tFn, gFn, pFn );
+
                         delete tweens[k];
                         freeTweenIds.push( parseInt(k) );
                     }
@@ -8845,45 +8856,81 @@ if ( !String.prototype.trim ) {
             }
 
             //apply tween position to targets
-            for (var t in targets){
-                //console.log('target:',t);
-                var gcount = 0;
-                for ( var g in targets[t] ){
-                    var pcount = 0;
-                    //console.log("    ",g);
-                    for ( var p in targets[t][g] ){
-                        //console.log("    ",p);
-                        var tmp = [];
-                        var to;
-                        while (to = targets[t][g][p].shift()){
-                            //console.log("      TweenObject",to);
-                            //console.log("      Tween",tweens[to.tweenId]);
-                            if (to && tweens[to.tweenId] && tweens[to.tweenId].active){
-                                to.apply( tweens[to.tweenId].value );
-                                tmp.push( to );
-                            }
-                        }
-                        targets[t][g][p] = tmp;
-
-                        if ( targets[t][g][p].length == 0){
-                            delete targets[t][g][p];
-                        }
-                        else{
-                            pcount++;
-                        }
-                    }
-                    if ( pcount == 0){
-                        delete targets[t][g];
-                    }
-                    else{
-                        gcount++;
+            var gCount = 0;
+            var pCount = 0;
+            tFn = function(t){
+                if (gCount == 0){
+                    delete targets[t];
+                }
+                gCount = 0;
+            };
+            gFn = function(t,g){
+                if (pCount == 0){
+                    delete targets[t][g];
+                }
+                else{
+                    gCount++;
+                }
+                pCount = 0;
+            };
+            pFn = function(t,g,p,obj){
+                var tmp = [];
+                var trg;
+                while (trg = obj.shift()){
+                    //console.log("      TweenObject",to);
+                    //console.log("      Tween",tweens[to.tweenId]);
+                    if (trg && tweens[trg.tweenId] && tweens[trg.tweenId].active){
+                        trg.apply( tweens[trg.tweenId].value );
+                        tmp.push( trg );
                     }
                 }
-                if (gcount == 0)
-                    delete targets[t];
-            }
+                targets[t][g][p] = tmp;
+
+                if ( targets[t][g][p].length == 0){
+                    delete targets[t][g][p];
+                }
+                else{
+                    pCount++;
+                }
+            };
+
+            iterateTargets( tFn, gFn, pFn );
 
             return activityCheck;
+        }
+
+        /**
+         * iterate through target tree
+         * @param tFn
+         * @param gFn
+         * @param pFn
+         */
+        function iterateTargets( tFn, gFn, pFn ){
+            for (var t in  targets){
+                //target level
+                if (targets.hasOwnProperty(t)){
+                    var tar = targets[t];
+                    for (var g in tar){
+                        if (tar.hasOwnProperty(g)){
+                            var targ = tar[g];
+                            for (var p in targ){
+                                if (targ.hasOwnProperty(p)){
+                                    var obj = targ[p];
+                                    if (pFn)
+                                        if (!pFn( t, g, p, obj ))
+                                            break;
+                                }
+                            }
+                            if (gFn)
+                                if (!gFn( t, g ))
+                                    break;
+                        }
+                    }
+                    if (tFn)
+                        if (!tFn(t))
+                            break;
+                }
+            }
         }
 
         /**
@@ -8898,7 +8945,7 @@ if ( !String.prototype.trim ) {
          */
         function setAfterProxy( obj, progress ) {
             if ( progress >= 1  )
-                target[property] = delta;
+                obj.$target[ obj.type ]( obj.property, obj.initialValue + obj.deltaValue);
         }
 
         /**
@@ -8999,13 +9046,13 @@ if ( !String.prototype.trim ) {
         this.addTweenType('class', {
             match: false,
             parse: function(val){
-                return false;
+                return val;
             },
             canTween: function(a,b){
                 return true;
             },
             getDelta: function( to, from, method) {
-                return false;
+                return to;
             },
             proxy: function( obj, progress ) {
                 var $t = obj.$target;
@@ -9018,6 +9065,42 @@ if ( !String.prototype.trim ) {
                         $t.removeClass(obj.property);
                 }
             }
+        });
+
+        this.addTweenType('event', {
+            match: false,
+            parse: function(val){
+                return val;
+            },
+            canTween: function(a,b){
+                return true;
+            },
+            getDelta: function( to, from, method) {
+                return to;
+            },
+            proxy: function( obj, progress ) {
+                var $t = obj.$target;
+                if (progress >= 1){
+                    $t.trigger(obj.property,false,false, obj.deltaValue );
+                }
+                else if (progress <= 0){
+                    $t.trigger(obj.property,false,false, obj.initialValue );
+                }
+            }
+        });
+
+        this.addTweenType('setafter', {
+            match: true,
+            parse: function(val){
+                return val;
+            },
+            canTween: function(a,b){
+                return true;
+            },
+            getDelta: function( to, from, method) {
+                return to;
+            },
+            proxy: setAfterProxy
         });
 
 
@@ -9191,15 +9274,39 @@ if ( !String.prototype.trim ) {
          */
         var dependencies = ["tween"];
 
+        /**
+         * reference to animation object
+         */
         var anim;
 
+        /**
+         * max frames per second for progression
+         */
         var maxRate = 2000;
 
+        /**
+         * target position
+         */
         var targetPosition = 0;
+
+        /**
+         * last position set on targets
+         */
         var lastPosition = 0;
+
+        /**
+         * terminal position
+         */
         var endPosition = 10000;
 
+        /**
+         * array of targets
+         */
         var targets = [];
+
+        /**
+         * target.length
+         */
         var count = 0;
 
         //==================================================================
@@ -9221,21 +9328,39 @@ if ( !String.prototype.trim ) {
             return dependencies;
         };
 
-
+        /**
+         * sets end position for keyed motion
+         * @param {int} value
+         */
         this.setEndPosition = function( value ){
             endPosition = value;
         };
 
+        /**
+         * sets target position for keyed motion
+         * @param {int} val
+         */
         this.setPosition = function( val ){
             //console.log( val );
             targetPosition = Math.round(val);
             anim.start();
         };
 
+        /**
+         * sets maximum progression rate per secont
+         * @param {int} val
+         */
+        this.setMaxRate = function( val ){
+            maxRate = val;
+        };
+
 
         //==================================================================
         // Methods
         //==================================================================
+        /**
+         * module initializer
+         */
         this.initialize = function(){
             lola.debug('motion::initialize');
             anim = new lola.animation.Animation( tick, self );
@@ -9243,8 +9368,14 @@ if ( !String.prototype.trim ) {
             delete self.initialize;
         };
 
+        /**
+         * animation tick function
+         * @param now
+         * @param delta
+         * @param elapsed
+         */
         function tick( now, delta, elapsed ){
-            console.log('tick[', now,']', targetPosition, lastPosition);
+            //console.log('tick[', now,']', targetPosition, lastPosition);
             var active = false;
 
             if (targetPosition != lastPosition){
@@ -9270,14 +9401,17 @@ if ( !String.prototype.trim ) {
                     update( lastPosition + d );
                     active = true;
                 }
-
             }
 
             return active;
         }
 
+        /**
+         * updates all targets with the current position
+         * @param {Number} position
+         */
         function update( position ){
-            console.log('update position:', position );
+            //console.log('update position:', position );
             var positive = position > lastPosition;
             position = Math.round(Math.min(endPosition,Math.max(0,position)));
             var i = 0;
@@ -9288,25 +9422,37 @@ if ( !String.prototype.trim ) {
             lastPosition = position;
         }
 
-        this.addTarget = function( objects, properties ){
+        /**
+         * adds keyed motion targets
+         * @param objects
+         * @param properties
+         */
+        this.addTarget = function( objects, options ){
             if (!Array.isArray(objects))
                 objects = [objects];
 
-            var start = (properties.start) ? properties.start : 0;
-            var end = (properties.end) ? properties.end : range;
-            var ease = lola.easing.get( properties.ease ? properties.ease : 'linear' );
-            delete properties.start;
-            delete properties.end;
-            delete properties.ease;
+            var start = (options.start) ? options.start : 0;
+            var end = (options.end) ? options.end : range;
+            var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
+            var step = options.step;
+            delete options.start;
+            delete options.end;
+            delete options.ease;
+            delete options.step;
 
             //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
             objects.forEach( function(obj){
-               for (var g in properties){
-                   for (var p in properties[g] ){
-                       var s = properties[g][p].start == undefined ? start : properties[g][p].start;
-                       var e = properties[g][p].end == undefined ? end : properties[g][p].end;
-                       var es = properties[g][p].ease == undefined ? ease : properties[g][p].ease;
-                       targets.push( new RangeTween( obj, g, p, properties[g][p], es, s, e ) );
+               for (var g in options){
+                   if (options.hasOwnProperty(g)){
+                       var optGroup = options[g];
+                       for (var p in optGroup ){
+                           if (optGroup.hasOwnProperty(p)){
+                               var s = options[g][p].start == undefined ? start : options[g][p].start;
+                               var e = options[g][p].end == undefined ? end : options[g][p].end;
+                               var es = options[g][p].ease == undefined ? ease : options[g][p].ease;
+                               targets.push( new RangeTween( obj, g, p, options[g][p], es, s, e, step ) );
+                           }
+                       }
                    }
                }
             });
@@ -9332,29 +9478,55 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Classes
         //==================================================================
-        var RangeTween = function( target, group, property, value, ease, start, end ){
-            var self = this
+        /**
+         * Class used for storing keyed motion targets
+         * @param target
+         * @param group
+         * @param property
+         * @param value
+         * @param ease
+         * @param start
+         * @param end
+         */
+        var RangeTween = function( target, group, property, value, ease, start, end, step ){
+            var self = this;
             var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;
+
+            if (typeof step != 'function')
+                step = false;
+
+            /**
+             * set the position of this target
+             * @param position
+             * @param positive
+             */
             self.setPosition = function( position, positive ){
+                var value = undefined;
                 if ( position >= start && position <= end ){
                     active = true;
-                    tweenObject.apply( ease.exec( position-start, 0, 1, delta) );
+                    value = ease.exec( position-start, 0, 1, delta);
                 }
                 else if ( active ){
                     active = false;
-                    tweenObject.apply( positive ? 1 : 0 );
+                    value = positive ? 1 : 0;
                 }
                 else{
                     //prevent skipping this objects range and not setting anything
                     if (positive && lastPosition < start && position > end ){
-                        tweenObject.apply( 1 );
+                        value = 1;
                     }
                     else if (!positive && lastPosition > end && position < start ){
-                        tweenObject.apply( 0 );
+                        value = 0;
                     }
                 }
+                if (value != undefined){
+                    tweenObject.apply( value );
+                    if (step)
+                        step( value, this );
+                }
+
             }
         };
 

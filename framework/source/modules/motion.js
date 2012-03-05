@@ -249,7 +249,7 @@
          * @param end
          */
         var RangeTween = function( target, group, property, value, ease, start, end, step ){
-            var self = this
+            var self = this;
             var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;

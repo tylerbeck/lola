@@ -9,8 +9,7 @@
 (function( lola ) {
 	/**
 	 * CSS Module
-	 * @implements {lola.Module}
-	 * @memberof lola
+	 * @namespace lola.css
 	 */
     var Module = function(){
         var self = this;
@@ -37,11 +36,11 @@
          */
         var propertyCache = {};
 
-        /**
+        /*
          * cache for fixed/mapped selectors
          * @private
          */
-        var selectorCache = {};
+        //var selectorCache = {};
 
         /**
          * style property hooks
@@ -131,19 +130,19 @@
          */
         function canStyle( obj ) {
             //TODO: Implement canStyle function
-            return true;
+            return obj != false;
         }
 
-        /**
+        /*
          * gets mapped selector string
          * @param {String} selector
          * @return {String}
-         */
+
         function getSelector( selector ) {
             if ( !selectorCache[selector] )
                 selectorCache[selector] = lola.string.camelCase( selector );
             return selectorCache[selector];
-        }
+        }*/
 
         /**
          * gets mapped selector string
@@ -166,6 +165,7 @@
          * @return {*}
          */
         this['style'] = function( node, style, value, useHooks ) {
+
             //make sure style can be set
             var prop = getProperty( style );
             if ( canStyle( node ) ) {
@@ -192,11 +192,11 @@
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            if ( node.style[prop] != undefined ){
-                return node.style[prop];
-            }
-            else {
-                //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+            //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+
+            var result = node.style[prop];
+            if ( !result || result == "" ){
+                //console.log('element style not set');
                 var compStyle;
 
                 if ( document.defaultView && document.defaultView.getComputedStyle ) {
@@ -207,16 +207,18 @@
 
                 if (compStyle){
                     //console.log( 'using getComputedStyle', compStyle );
-                    return compStyle.getPropertyValue( lola.string.dashed(prop) );
+                    result = compStyle.getPropertyValue( lola.string.dashed(prop) );
                 }
                 else if ( typeof(document.body.currentStyle) !== "undefined") {
                     //console.log( 'using currentStyle', node["currentStyle"] );
-                    return node["currentStyle"][prop];
+                    result = node["currentStyle"][prop];
                 }
                 else {
-                    return undefined;
+                    result = undefined;
                 }
             }
+
+            return result;
         };
 
         /**
@@ -250,14 +252,17 @@
          * @private
          */
         function dimensionalHook( obj, style, value ){
+            var result;
             if (value == undefined) {
-                var val = self.getRawStyle( obj, style );
-                return parseFloat(val.replace( lola.regex.isDimension, "$1"));
+                result = self.getRawStyle( obj, style );
+                result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
             }
             else {
                 value = (String(value).match(lola.regex.isDimension)) ? value : value+"px";
-                self.setRawStyle( obj, style, value );
+                result = self.setRawStyle( obj, style, value );
             }
+
+            return result;
         }
 
         /**
@@ -332,10 +337,12 @@
                 if ( !media || media == ss.mediaText ) {
                     var rules = (lola.support.cssRules) ? ss.cssRules : ss.rules;
                     for ( var ri in rules ) {
-                        if ( rules[ri] && rules[ri].selectorText ) {
-                            if ( rules[ri].selectorText.toLowerCase() == selector ) {
-                                //console.info( 'matched rule: ' + rules[ri].selectorText );
-                                action( si, ri );
+                        if ( rules.hasOwnProperty(ri)){
+                            if ( rules[ri] && rules[ri].selectorText ) {
+                                if ( rules[ri].selectorText.toLowerCase() == selector ) {
+                                    //console.info( 'matched rule: ' + rules[ri].selectorText );
+                                    action( si, ri );
+                                }
                             }
                         }
                     }

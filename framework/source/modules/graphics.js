@@ -91,6 +91,7 @@
         this.registerContext = function( canvas, id ){
             var ctx = canvas.getContext('2d');
             id = (id==undefined)?lola(canvas).identify().attr('id'):id;
+            //console.log('register context:',id);
             var gdata = $(canvas).getData( "_"+namespace, true );
             if (gdata.contexts == null)
                 gdata.contexts = [];
@@ -237,8 +238,10 @@
          */
         function createContextMethod( prop ){
             self[ prop ] = function(){
-                var ctx = resolveContext();
-                ctx[prop].apply( ctx, arguments );
+                var ctx = resolveContext( null );
+                if (ctx){
+                    ctx[ prop ].apply( ctx, arguments );
+                }
             }
         }
         //==================================================================
@@ -264,12 +267,14 @@
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
         for ( var prop in ctx ){
-            if ( lola.type.isPrimitive( ctx[ prop ] ) ){
-                reset[ prop ] = ctx[ prop ];
-            }
-            else if (lola.type.get( ctx[prop] ) == 'function'){
-                createContextMethod( prop );
-            }
+            //if (ctx.hasOwnProperty(prop)){
+                if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                    reset[ prop ] = ctx[ prop ];
+                }
+                else if (lola.type.get( ctx[prop] ) == 'function'){
+                    createContextMethod( prop );
+                }
+            //}
         }
 
     };

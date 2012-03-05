@@ -4224,12 +4224,22 @@ if ( !String.prototype.trim ) {
 
         /**
          * registers a animation with the framework
+         * @param name
          * @param {lola.animation.Animation} animation
-         * @return {uint} animation identifier
          */
         this.register = function( name, animation ){
             //console.log('lola.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
+        };
+
+        /**
+         * removes a registered animation
+         */
+        this.remove = function( name ){
+            //console.log('lola.animation.registerAnimation', name, animation );
+            if (animations[name]){
+                delete animations[name];
+            }
         };
 
         /**
@@ -7855,6 +7865,7 @@ if ( !String.prototype.trim ) {
         this.registerContext = function( canvas, id ){
             var ctx = canvas.getContext('2d');
             id = (id==undefined)?lola(canvas).identify().attr('id'):id;
+            //console.log('register context:',id);
             var gdata = $(canvas).getData( "_"+namespace, true );
             if (gdata.contexts == null)
                 gdata.contexts = [];
@@ -8001,8 +8012,10 @@ if ( !String.prototype.trim ) {
          */
         function createContextMethod( prop ){
             self[ prop ] = function(){
-                var ctx = resolveContext();
-                ctx[prop].apply( ctx, arguments );
+                var ctx = resolveContext( null );
+                if (ctx){
+                    ctx[ prop ].apply( ctx, arguments );
+                }
             }
         }
         //==================================================================
@@ -8028,12 +8041,14 @@ if ( !String.prototype.trim ) {
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
         for ( var prop in ctx ){
-            if ( lola.type.isPrimitive( ctx[ prop ] ) ){
-                reset[ prop ] = ctx[ prop ];
-            }
-            else if (lola.type.get( ctx[prop] ) == 'function'){
-                createContextMethod( prop );
-            }
+            //if (ctx.hasOwnProperty(prop)){
+                if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                    reset[ prop ] = ctx[ prop ];
+                }
+                else if (lola.type.get( ctx[prop] ) == 'function'){
+                    createContextMethod( prop );
+                }
+            //}
         }
 
     };
@@ -9274,40 +9289,7 @@ if ( !String.prototype.trim ) {
          */
         var dependencies = ["tween"];
 
-        /**
-         * reference to animation object
-         */
-        var anim;
-
-        /**
-         * max frames per second for progression
-         */
-        var maxRate = 2000;
-
-        /**
-         * target position
-         */
-        var targetPosition = 0;
-
-        /**
-         * last position set on targets
-         */
-        var lastPosition = 0;
-
-        /**
-         * terminal position
-         */
-        var endPosition = 10000;
-
-        /**
-         * array of targets
-         */
-        var targets = [];
-
-        /**
-         * target.length
-         */
-        var count = 0;
+        var groups = {};
 
         //==================================================================
         // Getters & Setters
@@ -9328,32 +9310,6 @@ if ( !String.prototype.trim ) {
             return dependencies;
         };
 
-        /**
-         * sets end position for keyed motion
-         * @param {int} value
-         */
-        this.setEndPosition = function( value ){
-            endPosition = value;
-        };
-
-        /**
-         * sets target position for keyed motion
-         * @param {int} val
-         */
-        this.setPosition = function( val ){
-            //console.log( val );
-            targetPosition = Math.round(val);
-            anim.start();
-        };
-
-        /**
-         * sets maximum progression rate per secont
-         * @param {int} val
-         */
-        this.setMaxRate = function( val ){
-            maxRate = val;
-        };
-
 
         //==================================================================
         // Methods
@@ -9363,102 +9319,110 @@ if ( !String.prototype.trim ) {
          */
         this.initialize = function(){
             lola.debug('motion::initialize');
-            anim = new lola.animation.Animation( tick, self );
-            lola.animation.register( namespace, anim );
+
             delete self.initialize;
         };
 
         /**
-         * animation tick function
-         * @param now
-         * @param delta
-         * @param elapsed
+         * registers a motion group
+         * @param name
+         * @param options
          */
-        function tick( now, delta, elapsed ){
-            //console.log('tick[', now,']', targetPosition, lastPosition);
-            var active = false;
+        this.register = function( name, options ){
+            if (!groups[ name ]){
+                var group = new Group( name );
+                if ( options.frames )
+                    group.frames( options.frames );
+                if ( options.maxRate )
+                    group.maxRate( options.maxRate );
 
-            if (targetPosition != lastPosition){
-                //get current delta to target
-                var d = targetPosition - lastPosition;
-                var sign = d < 0 ? -1 : 1;
-
-                //move half the distance now
-                d /= 2;
-
-                var rate = maxRate * ( delta / 1000 );
-                var abs = d * sign;
-
-                if (abs > rate){
-                    rate *= sign;
-                    update( lastPosition + rate );
-                    active = true;
-                }
-                else if ( abs < 1){
-                    update( targetPosition );
-                }
-                else {
-                    update( lastPosition + d );
-                    active = true;
-                }
+                groups[ name ] = group;
             }
 
-            return active;
-        }
-
-        /**
-         * updates all targets with the current position
-         * @param {Number} position
-         */
-        function update( position ){
-            //console.log('update position:', position );
-            var positive = position > lastPosition;
-            position = Math.round(Math.min(endPosition,Math.max(0,position)));
-            var i = 0;
-            while( i < count ){
-                targets[i].setPosition( position, positive );
-                i++;
-            }
-            lastPosition = position;
-        }
-
-        /**
-         * adds keyed motion targets
-         * @param objects
-         * @param properties
-         */
-        this.addTarget = function( objects, options ){
-            if (!Array.isArray(objects))
-                objects = [objects];
-
-            var start = (options.start) ? options.start : 0;
-            var end = (options.end) ? options.end : range;
-            var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
-            var step = options.step;
-            delete options.start;
-            delete options.end;
-            delete options.ease;
-            delete options.step;
-
-            //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
-            objects.forEach( function(obj){
-               for (var g in options){
-                   if (options.hasOwnProperty(g)){
-                       var optGroup = options[g];
-                       for (var p in optGroup ){
-                           if (optGroup.hasOwnProperty(p)){
-                               var s = options[g][p].start == undefined ? start : options[g][p].start;
-                               var e = options[g][p].end == undefined ? end : options[g][p].end;
-                               var es = options[g][p].ease == undefined ? ease : options[g][p].ease;
-                               targets.push( new RangeTween( obj, g, p, options[g][p], es, s, e, step ) );
-                           }
-                       }
-                   }
-               }
-            });
-
-            count = targets.length;
+            //TODO: add inline targets
         };
+
+        function getGroups( names ){
+            var result = [];
+            if (names == undefined){
+                names = groups.keys();
+            }
+            else if (typeof names == "string"){
+                names = [names];
+            }
+
+            if (Array.isArray(names)){
+                names.forEach( function( name ){
+                    if (groups[ name ])
+                        result.push( name );
+                })
+
+            }
+
+            return result;
+        }
+
+        /**
+         * removes a motion group
+         * @param groupNames
+         */
+        this.remove = function( groupNames ){
+            var names = getGroups( groupNames );
+            names.forEach( function(name){
+                var group = groups[name];
+                group.destroy();
+                delete groups[name];
+            });
+        };
+
+        /**
+         * gets a motion group
+         * @param name
+         */
+        this.get = function( name ){
+            return groups[name];
+        };
+
+        /**
+         * adds targets to the specified group
+         * @param groupName
+         * @param objects
+         * @param options
+         */
+        this.addTargets = function( groupName, objects, options ){
+            var group = groups[groupName];
+            group.addTargets( objects, options );
+        };
+
+        /**
+         * removes targets from specified groups
+         * @param targets
+         * @param groupNames
+         */
+        this.removeTargets = function( targets, groupNames ){
+            var names = getGroups( groupNames );
+            names.forEach( function(item){
+                var group = groups[item];
+                if (group){
+                    group.removeTargets( targets );
+                }
+            });
+        };
+
+        /**
+         * sets target position for specified groups
+         * @param value
+         * @param groupNames
+         */
+        this.position = function( value, groupNames ){
+            var names = getGroups( groupNames );
+            names.forEach( function(name){
+                if (groups[name]){
+                    groups[name].position( value );
+                }
+            });
+        };
+
 
         //==================================================================
         // Selection Methods
@@ -9468,16 +9432,181 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-            motionRange: function( options ){
-                self.addTarget( this.getAll(), options );
+            motionRange: function( groupName, options ){
+                self.addTarget( groupName, this.getAll(), options );
+                return this;
             }
-
         };
 
 
         //==================================================================
         // Classes
         //==================================================================
+        var Group = function( name ){
+
+            var self = this;
+            var anim = new lola.animation.Animation( tick, self );
+            lola.animation.register( namespace+'.'+name, anim );
+            var frameCount = 10000;
+            var maxRate = 5000;
+            var targetPosition = 0;
+            var lastPosition = 0;
+            var targets = [];
+            var count = 0;
+
+            /**
+             * sets end position for keyed motion
+             * @param {int} value
+             */
+            self.frames = function( value ){
+                if (value){
+                    frameCount = parseInt(value);
+                }
+                return frameCount;
+            };
+
+            /**
+             * sets target position for keyed motion
+             * @param {int} val
+             */
+            self.position = function( value ){
+                //console.log( value );
+                if ( value != undefined ){
+                    targetPosition = Math.round( value );
+                    anim.start();
+                }
+                return targetPosition;
+            };
+
+            /**
+             * sets maximum progression rate per secont
+             * @param {int} val
+             */
+            self.maxRate = function( value ){
+                if ( value != undefined ){
+                    maxRate = val;
+                }
+                return maxRate;
+            };
+
+
+            /**
+             * animation tick function
+             * @param now
+             * @param delta
+             * @param elapsed
+             */
+            function tick( now, delta, elapsed ){
+                //console.log('tick[', now,']', targetPosition, lastPosition);
+                var active = false;
+
+                if (targetPosition != lastPosition){
+                    //get current delta to target
+                    var d = targetPosition - lastPosition;
+                    var sign = d < 0 ? -1 : 1;
+
+                    //move half the distance now
+                    d /= 2;
+
+                    var rate = maxRate * ( delta / 1000 );
+                    var abs = d * sign;
+
+                    if (abs > rate){
+                        rate *= sign;
+                        update( lastPosition + rate );
+                        active = true;
+                    }
+                    else if ( abs < 1){
+                        update( targetPosition );
+                    }
+                    else {
+                        update( lastPosition + d );
+                        active = true;
+                    }
+                }
+
+                return active;
+            }
+
+            /**
+             * updates all targets with the current position
+             * @param {Number} position
+             */
+            function update( position ){
+                //console.log('update position:', position );
+                var positive = position > lastPosition;
+                position = Math.round( Math.min( frameCount, Math.max(0,position) ) );
+                var i = 0;
+                while( i < count ){
+                    targets[i].setPosition( position, positive );
+                    i++;
+                }
+                lastPosition = position;
+            }
+
+            /**
+             * adds keyed motion targets
+             * @param objects
+             * @param options
+             */
+            self.addTargets = function( objects, options ){
+                if (!Array.isArray(objects))
+                    objects = [objects];
+
+                var start = (options.start) ? options.start : 0;
+                var end = (options.end) ? options.end : frameCount;
+                var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
+                var step = options.step;
+
+                delete options.start;
+                delete options.end;
+                delete options.ease;
+                delete options.step;
+
+                //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
+                objects.forEach( function(obj){
+                    for (var g in options){
+                        if (options.hasOwnProperty(g)){
+                            var optGroup = options[g];
+                            for (var p in optGroup ){
+                                if (optGroup.hasOwnProperty(p)){
+                                    var s = options[g][p].start == undefined ? start : options[g][p].start;
+                                    var e = options[g][p].end == undefined ? end : options[g][p].end;
+                                    var es = options[g][p].ease == undefined ? ease : options[g][p].ease;
+                                    targets.push( new RangeTween( obj, g, p, options[g][p], es, s, e, step ) );
+                                }
+                            }
+                        }
+                    }
+                });
+
+                count = targets.length;
+            };
+
+            /**
+             * removes targets from group
+             * @param objects
+             */
+            self.removeTargets = function( objects ){
+                var newTargets = [];
+                targets.forEach( function(item){
+                    if ( objects.indexOf( item.obj ) == -1 ){
+                        newTargets.push( item );
+                    }
+                });
+                targets = newTargets;
+            };
+
+            /**
+             * destroy group - unregister animation and targets
+             */
+            self.destroy = function(){
+                targets = [];
+                lola.animation.remove( namespace+'.'+name );
+            }
+
+        };
+
         /**
          * Class used for storing keyed motion targets
          * @param target

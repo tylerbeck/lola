@@ -146,12 +146,22 @@
 
         /**
          * registers a animation with the framework
+         * @param name
          * @param {lola.animation.Animation} animation
-         * @return {uint} animation identifier
          */
         this.register = function( name, animation ){
             //console.log('lola.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
+        };
+
+        /**
+         * removes a registered animation
+         */
+        this.remove = function( name ){
+            //console.log('lola.animation.registerAnimation', name, animation );
+            if (animations[name]){
+                delete animations[name];
+            }
         };
 
         /**

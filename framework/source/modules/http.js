@@ -63,8 +63,8 @@
         /**
          * @descripiton applies transformation using results of two requests
          * @public
-         * @param {lola.http.Request} xmlDoc
-         * @param {lola.http.Request} xslDoc
+         * @param {Request} xmlDoc
+         * @param {Request} xslDoc
          * @param {Object} xslParams
          */
         this.transform = function( xmlDoc, xslDoc, xslParams ) {
@@ -200,12 +200,12 @@
          * Base HTTP Request Class
          * @class
          * @private
-         * @param {String} u request url
-         * @param {String} m request method
-         * @param {Array} h request headers
-         * @param {Boolean} a execute request asyncronously
-         * @param {String} un credentials username
-         * @param {String} p credentials password
+         * @param {String} url request url
+         * @param {String} method request method
+         * @param {Array} headers request headers
+         * @param {Boolean} async execute request asyncronously
+         * @param {String} user credentials username
+         * @param {String} password credentials password
          */
         var Request = function( url, method, headers, async, user, password ) {
             var parent = self;

@@ -284,7 +284,7 @@
              * @param elapsed
              */
             function tick( now, delta, elapsed ){
-                console.log('tick[', now,']', targetPosition, lastPosition);
+                //console.log('tick[', now,']', targetPosition, lastPosition);
                 var active = false;
 
                 if (targetPosition != lastPosition){

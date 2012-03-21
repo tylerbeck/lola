@@ -238,9 +238,11 @@
          */
         function createContextMethod( prop ){
             self[ prop ] = function(){
+                //console.log('proxy method:',prop);
                 var ctx = resolveContext( null );
                 if (ctx){
                     ctx[ prop ].apply( ctx, arguments );
+                    //console.log('    proxy method applied');
                 }
             }
         }

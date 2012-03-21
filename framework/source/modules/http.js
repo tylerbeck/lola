@@ -88,7 +88,9 @@
                 var xsltProcessor = new XSLTProcessor();
                 xsltProcessor.importStylesheet( xslDoc );
                 for ( k in xslParams ) {
-                    xsltProcessor.setParameter( null, k, xslParams[k] );
+                    if (xslParams.hasOwnProperty(k)){
+                        xsltProcessor.setParameter( k, xslParams[k] ); //null, k, xslParams[k] );
+                    }
                 }
                 var resultDocument = xsltProcessor.transformToFragment( xmlDoc, document );
                 if ( resultDocument ) {
@@ -133,6 +135,27 @@
                 str = str.replace( /&amp;/g, '&' );
             }
             return str;
+        };
+
+        /**
+         * returns a parameterized string
+         * @param paramObj
+         * @return {String}
+         */
+        this.getParamString = function( paramObj ){
+            if ( paramObj != undefined ) {
+                if ( lola.type.get( paramObj ) != 'string' ) {
+                    var temp = [];
+                    for ( var k in paramObj ) {
+                        if (paramObj.hasOwnProperty(k)){
+                            temp.push( k + "=" + self.encode( paramObj[k] ) );
+                        }
+                    }
+                    return temp.join( '&' );
+                }
+            }
+
+            return "";
         };
 
 
@@ -279,39 +302,21 @@
             /**
              * send request
              * @public
-             * @param {Object|String|undefined} params
+             * @param {Object|String|undefined} data
              * @return {lola.http.Request}
              */
-            this.send = function( params ) {
+            this.send = function( data ) {
                 request = getRequestObject();
                 request.open( method, url, async, user, password );
-                request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
-                for ( var i = 0; i < headers.length; i++ ) {
-                    try {
-                        request.setRequestHeader( headers[i].name, headers[i].value );
-                    }
-                    catch( e ) {
+                for ( var k in headers ) {
+                    if (headers.hasOwnProperty(k)){
+                        request.setRequestHeader( k, headers[k] );
                     }
                 }
-                if ( params != undefined ) {
-                    if ( lola.type.get( params ) != 'string' ) {
-                        var temp = [];
-                        for ( var k in params ) {
-                            temp.push( k + "=" + lola.string.encode( params[k] ) );
-                        }
-                        params = temp.join( '&' );
-                    }
-
-                    /*if ( params.length > 0 ) {
-                        request.setRequestHeader("Content-Length", params.length);
-                        request.setRequestHeader("Connection", "close");
-                    }*/
-                }
-
                 request.onreadystatechange = function() {
                     readyStateChange.call( self )
                 };
-                request.send( params );
+                request.send( data );
 
                 return request;
             };

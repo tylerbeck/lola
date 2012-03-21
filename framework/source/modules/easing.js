@@ -412,6 +412,15 @@
                 }
             },
             //---------------------------------
+            septic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t * t * t * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
             sine: {
                 easeIn: function( t, v, c, d ) {
                     return -c * Math.cos( t / d * (Math.PI / 2) ) + c + v;

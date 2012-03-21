@@ -172,6 +172,7 @@
             //make sure values are in range
             h = (h < 0) ? 0 : h;
             h = (h > 1) ? 1 : h;
+            //h = h%1;
             s = (s < 0) ? 0 : s;
             s = (s > 1) ? 1 : s;
             l = (l < 0) ? 0 : l;
@@ -181,7 +182,7 @@
             var green = 0;
             var blue = 0;
 
-            if ( s != 0 ){
+            if ( l != 0 ){
                 var _h = (h - Math.floor( h )) * 6;
                 var _f = _h - Math.floor( _h );
 

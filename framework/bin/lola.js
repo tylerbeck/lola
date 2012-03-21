@@ -2005,7 +2005,11 @@ if ( !String.prototype.trim ) {
              * @return {lola.Selector}
              */
             deleteExpando: function( name ) {
-                return this.s( lola.deleteExpando, name );
+                return this.s( self.deleteExpando, name );
+            },
+
+            isAncestor: function( elem ){
+                  return this.s( self.isAncestor, elem );
             }
         };
 
@@ -2919,16 +2923,18 @@ if ( !String.prototype.trim ) {
                     //get handler uid
                     var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
 
-                    delete data[phase][type][uid];
+                    if (data && data[phase] && data[phase][type] ){
+                        delete data[phase][type][uid];
 
-                    //if there are no more listeners in stack remove handler
-                    // function checks if event listener can actually be removed
-                    if ( Object.keys( data[phase][type] ).length == 0 ) {
-                        if ( phase == 'capture' )
-                            self.removeDOMListener( target, type, captureHandler, true );
-                        else
-                            self.removeDOMListener( target, type, bubbleHandler, false );
+                        //if there are no more listeners in stack remove handler
+                        // function checks if event listener can actually be removed
+                        if ( data[phase][type] && Object.keys( data[phase][type] ).length == 0 ) {
+                            if ( phase == 'capture' )
+                                self.removeDOMListener( target, type, captureHandler, true );
+                            else
+                                self.removeDOMListener( target, type, bubbleHandler, false );
 
+                        }
                     }
                 }
             }
@@ -3361,9 +3367,10 @@ if ( !String.prototype.trim ) {
             init: function( event, target ) {
                 lola.extend( this, event, false, false );
                 this.originalEvent = event;
-                if ( target ) {
+                /*if ( target ) {
                     this.target = target;
-                }
+                }*/
+                this.target = event.target;
                 this.currentTarget = self.getDOMTarget( event, target );
                 var gpos = self.getDOMGlobalXY( event );
                 this.globalX = gpos.x;
@@ -3374,6 +3381,16 @@ if ( !String.prototype.trim ) {
                 this.localY = lpos.y;
 
                 this.key = self.getDOMKey( event );
+
+                if (event.hasOwnProperty('wheelDelta') || event.axis){
+                    var wdo = { x:event.wheelDeltaX, y:event.wheelDeltaY };
+                    if (event.axis){
+                        wdo.x = -3 * ((event.axis === 2) ? 0 : event.detail);
+                        wdo.y = -3 * ((event.axis === 1) ? 0 : event.detail);
+                    }
+                }
+
+                this.wheelDelta = wdo;
 
                 return this;
             },
@@ -3416,7 +3433,7 @@ if ( !String.prototype.trim ) {
                 var uid;
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                    uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
                 return uid;
@@ -3426,15 +3443,22 @@ if ( !String.prototype.trim ) {
                 lola.debug('alias hook removeListener',type);
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                    uid = lola.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
 
         };
         this.addHook( 'transitionend',
-                       new this.AliasHook([ 'transitionend',
-                                           'webkitTransitionEnd',
-                                            'oTransitionEnd']) );
+            new this.AliasHook([ 'transitionend',
+                'webkitTransitionEnd',
+                'oTransitionEnd']) );
+
+        /**
+         * mousewheel hook
+         */
+        this.addHook( 'mousewheel',
+            new this.AliasHook([ 'mousewheel',
+                'DOMMouseScroll']) );
 
         /**
          * delayed hover intent event hook
@@ -3918,6 +3942,7 @@ if ( !String.prototype.trim ) {
             //make sure values are in range
             h = (h < 0) ? 0 : h;
             h = (h > 1) ? 1 : h;
+            //h = h%1;
             s = (s < 0) ? 0 : s;
             s = (s > 1) ? 1 : s;
             l = (l < 0) ? 0 : l;
@@ -3927,7 +3952,7 @@ if ( !String.prototype.trim ) {
             var green = 0;
             var blue = 0;
 
-            if ( s != 0 ){
+            if ( l != 0 ){
                 var _h = (h - Math.floor( h )) * 6;
                 var _f = _h - Math.floor( _h );
 
@@ -4834,7 +4859,7 @@ if ( !String.prototype.trim ) {
 
             }
             else {
-                var names = obj.className.replace( lola.regex.extraSpace , " " );
+                var names = (obj && obj.className) ? obj.className.replace( lola.regex.extraSpace , " " ): "";
                 return names.split( " " ).reverse();
             }
         };
@@ -5262,7 +5287,9 @@ if ( !String.prototype.trim ) {
                 var xsltProcessor = new XSLTProcessor();
                 xsltProcessor.importStylesheet( xslDoc );
                 for ( k in xslParams ) {
-                    xsltProcessor.setParameter( null, k, xslParams[k] );
+                    if (xslParams.hasOwnProperty(k)){
+                        xsltProcessor.setParameter( k, xslParams[k] ); //null, k, xslParams[k] );
+                    }
                 }
                 var resultDocument = xsltProcessor.transformToFragment( xmlDoc, document );
                 if ( resultDocument ) {
@@ -5307,6 +5334,27 @@ if ( !String.prototype.trim ) {
                 str = str.replace( /&amp;/g, '&' );
             }
             return str;
+        };
+
+        /**
+         * returns a parameterized string
+         * @param paramObj
+         * @return {String}
+         */
+        this.getParamString = function( paramObj ){
+            if ( paramObj != undefined ) {
+                if ( lola.type.get( paramObj ) != 'string' ) {
+                    var temp = [];
+                    for ( var k in paramObj ) {
+                        if (paramObj.hasOwnProperty(k)){
+                            temp.push( k + "=" + self.encode( paramObj[k] ) );
+                        }
+                    }
+                    return temp.join( '&' );
+                }
+            }
+
+            return "";
         };
 
 
@@ -5453,39 +5501,21 @@ if ( !String.prototype.trim ) {
             /**
              * send request
              * @public
-             * @param {Object|String|undefined} params
+             * @param {Object|String|undefined} data
              * @return {lola.http.Request}
              */
-            this.send = function( params ) {
+            this.send = function( data ) {
                 request = getRequestObject();
                 request.open( method, url, async, user, password );
-                request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
-                for ( var i = 0; i < headers.length; i++ ) {
-                    try {
-                        request.setRequestHeader( headers[i].name, headers[i].value );
-                    }
-                    catch( e ) {
+                for ( var k in headers ) {
+                    if (headers.hasOwnProperty(k)){
+                        request.setRequestHeader( k, headers[k] );
                     }
                 }
-                if ( params != undefined ) {
-                    if ( lola.type.get( params ) != 'string' ) {
-                        var temp = [];
-                        for ( var k in params ) {
-                            temp.push( k + "=" + lola.string.encode( params[k] ) );
-                        }
-                        params = temp.join( '&' );
-                    }
-
-                    /*if ( params.length > 0 ) {
-                        request.setRequestHeader("Content-Length", params.length);
-                        request.setRequestHeader("Connection", "close");
-                    }*/
-                }
-
                 request.onreadystatechange = function() {
                     readyStateChange.call( self )
                 };
-                request.send( params );
+                request.send( data );
 
                 return request;
             };
@@ -8012,9 +8042,11 @@ if ( !String.prototype.trim ) {
          */
         function createContextMethod( prop ){
             self[ prop ] = function(){
+                //console.log('proxy method:',prop);
                 var ctx = resolveContext( null );
                 if (ctx){
                     ctx[ prop ].apply( ctx, arguments );
+                    //console.log('    proxy method applied');
                 }
             }
         }
@@ -8468,6 +8500,15 @@ if ( !String.prototype.trim ) {
                 },
                 easeOut: function( t, v, c, d ) {
                     return c * ((t = t / d - 1) * t * t * t * t + 1) + v;
+                }
+            },
+            //---------------------------------
+            septic: {
+                easeIn: function( t, v, c, d ) {
+                    return c * (t /= d) * t * t * t * t * t * t + v;
+                },
+                easeOut: function( t, v, c, d ) {
+                    return c * ((t = t / d - 1) * t * t * t * t * t * t + 1) + v;
                 }
             },
             //---------------------------------

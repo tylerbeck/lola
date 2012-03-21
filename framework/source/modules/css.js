@@ -420,7 +420,7 @@
 
             }
             else {
-                var names = obj.className.replace( lola.regex.extraSpace , " " );
+                var names = (obj && obj.className) ? obj.className.replace( lola.regex.extraSpace , " " ): "";
                 return names.split( " " ).reverse();
             }
         };

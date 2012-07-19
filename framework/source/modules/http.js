@@ -299,6 +299,15 @@
                 return request;
             };
 
+            function overrideMimeType( type ){
+                if (request.hasOwnProperty('overrideMimeType')){
+                    request.overrideMimeType( type );
+                    return true;
+                }
+
+                return false;
+            }
+
             /**
              * send request
              * @public

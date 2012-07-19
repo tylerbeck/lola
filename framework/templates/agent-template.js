@@ -7,6 +7,7 @@
  *
  ***********************************************************************/
 #set( $client = "$client" )
+#set( $ans = "agentNamespace()" )
 (function( lola ) {
     var Agent = function(){
         var self = this;
@@ -53,6 +54,13 @@
         this.dependencies = function() {
             return dependencies;
         };
+        
+        /**
+         * get namespace including "agent."
+         */
+        function $ans{
+            return "agent."+namespace;
+        }
 
         //==================================================================
         // Methods
@@ -68,7 +76,7 @@
 
                 //setup client
                 clients[ client.id ] = client;
-                $client.putData( {}, namespace );
+                $client.putData( {}, $ans );
 
                 //add listeners
 
@@ -82,11 +90,11 @@
         this.drop = function( client ) {
             if (clients[ client.id ] ) {
                 var $client = $(client);
-                var data = $client.getData( namespace );
+                var data = $client.getData( $ans );
                 //remove listeners
 
                 //teardown client
-                $client.removeData( namespace );
+                $client.removeData( $ans );
                 delete clients[ client.id ];
             }
         };

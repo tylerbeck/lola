@@ -138,6 +138,19 @@
         };
 
 
+        /**
+         *
+         * @param a
+         * @param b
+         * @param c
+         * @param d
+         */
+        this.doSomething = function( a, b, c, d ){
+
+
+        };
+
+
 
         //==================================================================
         // Selector Methods

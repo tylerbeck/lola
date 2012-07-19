@@ -566,7 +566,7 @@
          * @param event
          */
         function handleClientFocus( event ){
-            $ctrl = $( $(event.currentTarget).getData(namespace).control );
+            var $ctrl = $( $(event.currentTarget).getData(namespace).control );
             $ctrl.addClass('focused');
         }
 
@@ -576,7 +576,7 @@
          * @param event
          */
         function handleClientBlur( event ){
-            $ctrl = $( $(event.currentTarget).getData(namespace).control );
+            var $ctrl = $( $(event.currentTarget).getData(namespace).control );
             $ctrl.removeClass('focused');
         }
 

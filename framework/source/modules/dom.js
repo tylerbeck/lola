@@ -429,7 +429,11 @@
              * @return {lola.Selector}
              */
             deleteExpando: function( name ) {
-                return this.s( lola.deleteExpando, name );
+                return this.s( self.deleteExpando, name );
+            },
+
+            isAncestor: function( elem ){
+                  return this.s( self.isAncestor, elem );
             }
         };
 

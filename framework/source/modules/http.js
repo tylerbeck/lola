@@ -63,8 +63,8 @@
         /**
          * @descripiton applies transformation using results of two requests
          * @public
-         * @param {lola.http.Request} xmlDoc
-         * @param {lola.http.Request} xslDoc
+         * @param {Request} xmlDoc
+         * @param {Request} xslDoc
          * @param {Object} xslParams
          */
         this.transform = function( xmlDoc, xslDoc, xslParams ) {
@@ -88,7 +88,9 @@
                 var xsltProcessor = new XSLTProcessor();
                 xsltProcessor.importStylesheet( xslDoc );
                 for ( k in xslParams ) {
-                    xsltProcessor.setParameter( null, k, xslParams[k] );
+                    if (xslParams.hasOwnProperty(k)){
+                        xsltProcessor.setParameter( k, xslParams[k] ); //null, k, xslParams[k] );
+                    }
                 }
                 var resultDocument = xsltProcessor.transformToFragment( xmlDoc, document );
                 if ( resultDocument ) {
@@ -133,6 +135,27 @@
                 str = str.replace( /&amp;/g, '&' );
             }
             return str;
+        };
+
+        /**
+         * returns a parameterized string
+         * @param paramObj
+         * @return {String}
+         */
+        this.getParamString = function( paramObj ){
+            if ( paramObj != undefined ) {
+                if ( lola.type.get( paramObj ) != 'string' ) {
+                    var temp = [];
+                    for ( var k in paramObj ) {
+                        if (paramObj.hasOwnProperty(k)){
+                            temp.push( k + "=" + self.encode( paramObj[k] ) );
+                        }
+                    }
+                    return temp.join( '&' );
+                }
+            }
+
+            return "";
         };
 
 
@@ -203,12 +226,12 @@
          * Base HTTP Request Class
          * @class
          * @private
-         * @param {String} u request url
-         * @param {String} m request method
-         * @param {Array} h request headers
-         * @param {Boolean} a execute request asyncronously
-         * @param {String} un credentials username
-         * @param {String} p credentials password
+         * @param {String} url request url
+         * @param {String} method request method
+         * @param {Array} headers request headers
+         * @param {Boolean} async execute request asyncronously
+         * @param {String} user credentials username
+         * @param {String} password credentials password
          */
         var Request = function( url, method, headers, async, user, password ) {
             var parent = self;
@@ -279,42 +302,33 @@
                 return request;
             };
 
+            function overrideMimeType( type ){
+                if (request.hasOwnProperty('overrideMimeType')){
+                    request.overrideMimeType( type );
+                    return true;
+                }
+
+                return false;
+            }
+
             /**
              * send request
              * @public
-             * @param {Object|String|undefined} params
+             * @param {Object|String|undefined} data
              * @return {lola.http.Request}
              */
-            this.send = function( params ) {
+            this.send = function( data ) {
                 request = getRequestObject();
                 request.open( method, url, async, user, password );
-                request.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
-                for ( var i = 0; i < headers.length; i++ ) {
-                    try {
-                        request.setRequestHeader( headers[i].name, headers[i].value );
-                    }
-                    catch( e ) {
+                for ( var k in headers ) {
+                    if (headers.hasOwnProperty(k)){
+                        request.setRequestHeader( k, headers[k] );
                     }
                 }
-                if ( params != undefined ) {
-                    if ( lola.type.get( params ) != 'string' ) {
-                        var temp = [];
-                        for ( var k in params ) {
-                            temp.push( k + "=" + lola.string.encode( params[k] ) );
-                        }
-                        params = temp.join( '&' );
-                    }
-
-                    /*if ( params.length > 0 ) {
-                        request.setRequestHeader("Content-Length", params.length);
-                        request.setRequestHeader("Connection", "close");
-                    }*/
-                }
-
                 request.onreadystatechange = function() {
                     readyStateChange.call( self )
                 };
-                request.send( params );
+                request.send( data );
 
                 return request;
             };

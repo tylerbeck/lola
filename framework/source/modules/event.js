@@ -172,16 +172,18 @@
                     //get handler uid
                     var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
 
-                    delete data[phase][type][uid];
+                    if (data && data[phase] && data[phase][type] ){
+                        delete data[phase][type][uid];
 
-                    //if there are no more listeners in stack remove handler
-                    // function checks if event listener can actually be removed
-                    if ( Object.keys( data[phase][type] ).length == 0 ) {
-                        if ( phase == 'capture' )
-                            self.removeDOMListener( target, type, captureHandler, true );
-                        else
-                            self.removeDOMListener( target, type, bubbleHandler, false );
+                        //if there are no more listeners in stack remove handler
+                        // function checks if event listener can actually be removed
+                        if ( data[phase][type] && Object.keys( data[phase][type] ).length == 0 ) {
+                            if ( phase == 'capture' )
+                                self.removeDOMListener( target, type, captureHandler, true );
+                            else
+                                self.removeDOMListener( target, type, bubbleHandler, false );
 
+                        }
                     }
                 }
             }
@@ -628,9 +630,10 @@
                 //target, source, overwrite, errors, deep, ignore
                 lola.extend( this, event, false, false,false,['layerX','layerY']);
                 this.originalEvent = event;
-                if ( target ) {
+                /*if ( target ) {
                     this.target = target;
-                }
+                }*/
+                this.target = event.target;
                 this.currentTarget = self.getDOMTarget( event, target );
                 var gpos = self.getDOMGlobalXY( event );
                 this.globalX = gpos.x;
@@ -641,6 +644,16 @@
                 this.localY = lpos.y;
 
                 this.key = self.getDOMKey( event );
+
+                if (event.hasOwnProperty('wheelDelta') || event.axis){
+                    var wdo = { x:event.wheelDeltaX, y:event.wheelDeltaY };
+                    if (event.axis){
+                        wdo.x = -3 * ((event.axis === 2) ? 0 : event.detail);
+                        wdo.y = -3 * ((event.axis === 1) ? 0 : event.detail);
+                    }
+                }
+
+                this.wheelDelta = wdo;
 
                 return this;
             },
@@ -699,9 +712,16 @@
 
         };
         this.addHook( 'transitionend',
-                       new this.AliasHook([ 'transitionend',
-                                           'webkitTransitionEnd',
-                                            'oTransitionEnd']) );
+            new this.AliasHook([ 'transitionend',
+                'webkitTransitionEnd',
+                'oTransitionEnd']) );
+
+        /**
+         * mousewheel hook
+         */
+        this.addHook( 'mousewheel',
+            new this.AliasHook([ 'mousewheel',
+                'DOMMouseScroll']) );
 
         /**
          * delayed hover intent event hook

@@ -434,7 +434,7 @@
          * @return {Object}
          */
         this.getDOMGlobalXY = function( e ) {
-            console.log('getDOMGlobalXY:',e);
+            //console.log('getDOMGlobalXY:',e);
             var xPos = 0;
             var yPos = 0;
             if ( e.pageX || e.pageY ) {

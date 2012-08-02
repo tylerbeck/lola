@@ -263,20 +263,23 @@
         //==================================================================
         // Preinitialization
         //==================================================================
-        lola.addSafeDeleteHook( self.removeContext, self );
 
-        //get reset context
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        for ( var prop in ctx ){
-            //if (ctx.hasOwnProperty(prop)){
-                if ( lola.type.isPrimitive( ctx[ prop ] ) ){
-                    reset[ prop ] = ctx[ prop ];
-                }
-                else if (lola.type.get( ctx[prop] ) == 'function'){
-                    createContextMethod( prop );
-                }
-            //}
+        if (lola.support.canvas){
+            lola.addSafeDeleteHook( self.removeContext, self );
+
+            //get reset context
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            for ( var prop in ctx ){
+                //if (ctx.hasOwnProperty(prop)){
+                    if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                        reset[ prop ] = ctx[ prop ];
+                    }
+                    else if (lola.type.get( ctx[prop] ) == 'function'){
+                        createContextMethod( prop );
+                    }
+                //}
+            }
         }
 
     };

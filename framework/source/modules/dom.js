@@ -263,7 +263,8 @@
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    var p = this.get();
+                    console.log("appendChild:",node);
+                    var p = this.get(0);
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }

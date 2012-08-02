@@ -59,10 +59,10 @@
          * @private
          */
         var logFn = function(){
-            console.log( [].splice.call(arguments,0).join(' ') );
+            console.log( Array.prototype.slice.call(arguments, 0).join(' ') );
         };
         var errorFn = function(){
-            console.error( [].splice.call(arguments,0).join(' ') );
+            console.error( Array.prototype.slice.call(arguments, 0).join(' ') );
         };
 
         //==================================================================

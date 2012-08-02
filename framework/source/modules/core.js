@@ -303,7 +303,7 @@
          */
         this.debug = function(/*args*/){
             if (debugMode) {
-                console.log("["+this.now()+"]", [].splice.call(arguments,0).join(' '));
+                console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
             }
         };
 

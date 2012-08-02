@@ -38,9 +38,9 @@
         this.deleteExpando = true;
         this.msEvent = false;
         this.domEvent = true;
-        this.dataset = true;
+        this.dataset = false;
+        this.canvas = false;
         this.animationFrameType = 0;
-
         this.cssRules = false;
 
 
@@ -90,7 +90,12 @@
         root.removeChild( script );
 
         self.domEval = lola.window[ uid ];
-        delete lola.window[ uid ];
+        try {
+            delete lola.window[ uid ];
+        }
+        catch(e){
+            lola.window[ uid ] = null;
+        }
 
         //create div for testing
         var div = document.createElement( 'div' );
@@ -111,7 +116,7 @@
         }
 
         //dataset support
-        if (div.hasOwnProperty('dataset')){
+        if ( div.hasOwnProperty && div.hasOwnProperty('dataset') && div.dataset['test'] == 'yes'){
             self.dataset = true;
         }
 
@@ -130,6 +135,12 @@
             self.animationFrameType = 3;
         else if ( window.oRequestAnimationFrame )
             self.animationFrameType = 4;
+
+        //canvas
+        var canvas = document.createElement('canvas');
+        self.canvas = /canvas/.test( Object.prototype.toString.call(canvas).toLowerCase() );
+
+
 
     };
 

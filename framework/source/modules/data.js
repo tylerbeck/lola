@@ -231,7 +231,11 @@
             }
             else{
                 if (lola.support.dataset){
-                    return elem.dataset[name];
+                    try {
+                        return elem.dataset[name];
+                    }
+                    catch(e){}
+                    return undefined;
                 }
                 else{
                     return lola(elem).attr('data-'+name);

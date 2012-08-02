@@ -801,7 +801,7 @@ if ( !String.prototype.trim ) {
          */
         this.debug = function(/*args*/){
             if (debugMode) {
-                console.log("["+this.now()+"]", [].splice.call(arguments,0).join(' '));
+                console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
             }
         };
 
@@ -1078,9 +1078,9 @@ if ( !String.prototype.trim ) {
         this.deleteExpando = true;
         this.msEvent = false;
         this.domEvent = true;
-        this.dataset = true;
+        this.dataset = false;
+        this.canvas = false;
         this.animationFrameType = 0;
-
         this.cssRules = false;
 
 
@@ -1130,7 +1130,12 @@ if ( !String.prototype.trim ) {
         root.removeChild( script );
 
         self.domEval = lola.window[ uid ];
-        delete lola.window[ uid ];
+        try {
+            delete lola.window[ uid ];
+        }
+        catch(e){
+            lola.window[ uid ] = null;
+        }
 
         //create div for testing
         var div = document.createElement( 'div' );
@@ -1151,7 +1156,7 @@ if ( !String.prototype.trim ) {
         }
 
         //dataset support
-        if (div.hasOwnProperty('dataset')){
+        if ( div.hasOwnProperty && div.hasOwnProperty('dataset') && div.dataset['test'] == 'yes'){
             self.dataset = true;
         }
 
@@ -1170,6 +1175,12 @@ if ( !String.prototype.trim ) {
             self.animationFrameType = 3;
         else if ( window.oRequestAnimationFrame )
             self.animationFrameType = 4;
+
+        //canvas
+        var canvas = document.createElement('canvas');
+        self.canvas = /canvas/.test( Object.prototype.toString.call(canvas).toLowerCase() );
+
+
 
     };
 
@@ -1881,7 +1892,8 @@ if ( !String.prototype.trim ) {
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    var p = this.get();
+                    console.log("appendChild:",node);
+                    var p = this.get(0);
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }
@@ -2298,7 +2310,11 @@ if ( !String.prototype.trim ) {
             }
             else{
                 if (lola.support.dataset){
-                    return elem.dataset[name];
+                    try {
+                        return elem.dataset[name];
+                    }
+                    catch(e){}
+                    return undefined;
                 }
                 else{
                     return lola(elem).attr('data-'+name);
@@ -3338,7 +3354,7 @@ if ( !String.prototype.trim ) {
          * @return {Object}
          */
         this.getDOMGlobalXY = function( e ) {
-            console.log('getDOMGlobalXY:',e);
+            //console.log('getDOMGlobalXY:',e);
             var xPos = 0;
             var yPos = 0;
             if ( e.pageX || e.pageY ) {
@@ -4881,7 +4897,8 @@ if ( !String.prototype.trim ) {
             if (id) {
                 self.registerStyleSheet( stylesheet, id );
             }
-            lola('head').appendChild( stylesheet );
+            var head = document.getElementsByTagName("head")[0];
+            head.appendChild( stylesheet );
         };
 
 
@@ -8243,20 +8260,23 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Preinitialization
         //==================================================================
-        lola.addSafeDeleteHook( self.removeContext, self );
 
-        //get reset context
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        for ( var prop in ctx ){
-            //if (ctx.hasOwnProperty(prop)){
-                if ( lola.type.isPrimitive( ctx[ prop ] ) ){
-                    reset[ prop ] = ctx[ prop ];
-                }
-                else if (lola.type.get( ctx[prop] ) == 'function'){
-                    createContextMethod( prop );
-                }
-            //}
+        if (lola.support.canvas){
+            lola.addSafeDeleteHook( self.removeContext, self );
+
+            //get reset context
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            for ( var prop in ctx ){
+                //if (ctx.hasOwnProperty(prop)){
+                    if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                        reset[ prop ] = ctx[ prop ];
+                    }
+                    else if (lola.type.get( ctx[prop] ) == 'function'){
+                        createContextMethod( prop );
+                    }
+                //}
+            }
         }
 
     };
@@ -10284,10 +10304,10 @@ if ( !String.prototype.trim ) {
          * @private
          */
         var logFn = function(){
-            console.log( [].splice.call(arguments,0).join(' ') );
+            console.log( Array.prototype.slice.call(arguments, 0).join(' ') );
         };
         var errorFn = function(){
-            console.error( [].splice.call(arguments,0).join(' ') );
+            console.error( Array.prototype.slice.call(arguments, 0).join(' ') );
         };
 
         //==================================================================

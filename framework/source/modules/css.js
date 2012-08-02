@@ -278,7 +278,8 @@
             if (id) {
                 self.registerStyleSheet( stylesheet, id );
             }
-            lola('head').appendChild( stylesheet );
+            var head = document.getElementsByTagName("head")[0];
+            head.appendChild( stylesheet );
         };
 
 

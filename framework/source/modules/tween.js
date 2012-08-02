@@ -183,6 +183,7 @@
          * @private
          */
         this.addTarget = function( tweenId, objects, properties, collisions ){
+            //console.log('tween.addTarget',targets);
             if (tweens[ tweenId ]){
                 collisions = collisions === true;
                 if (lola.type.get(objects) != 'array')
@@ -191,10 +192,12 @@
                 var ol = objects.length;
                 for (var i=0; i<ol; i++) {
                     var obj = objects[i];
+                    //console.log('   ',obj);
                     var id = $(obj).identify().attr('id');
                     if (!targets[id])
                         targets[id] = {};
                     for (var g in properties){
+                        //console.log('      ',g);
                         if (properties.hasOwnProperty(g)){
                             var propg = properties[g];
                             // p should be lola selector methods eg style, attr, classes
@@ -202,9 +205,11 @@
                                 targets[id][g] = {};
                             for (var p in propg ){
                                 if (propg.hasOwnProperty(p)){
+                                    //console.log('         ',p);
                                     if (collisions || targets[id][g][p] == null ){
                                         if (!targets[id][g][p])
                                             targets[id][g][p] = [];
+
                                         if (collisions)
                                             targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, propg[p] ) );
                                         else
@@ -215,6 +220,7 @@
                         }
                     }
                 }
+
             }
             else{
                 throw new Error("tween not found");
@@ -347,13 +353,13 @@
 
             var tFn, gFn, pFn;
             tFn = undefined;
-            gFn = function(t,g){ return false; };
+            gFn = function(t,g){ return true; };
             pFn = function(t,g,p,obj){
                 var dispatcher = obj[0].target;
                 if (dispatcher){
                     lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                    return false;
                 }
+                return true;
             };
 
             for (var k in tweens){
@@ -382,6 +388,7 @@
                     delete targets[t];
                 }
                 gCount = 0;
+                return true;
             };
             gFn = function(t,g){
                 if (pCount == 0){
@@ -391,6 +398,7 @@
                     gCount++;
                 }
                 pCount = 0;
+                return true;
             };
             pFn = function(t,g,p,obj){
                 var tmp = [];
@@ -411,6 +419,7 @@
                 else{
                     pCount++;
                 }
+                return true;
             };
 
             iterateTargets( tFn, gFn, pFn );
@@ -435,19 +444,13 @@
                             for (var p in targ){
                                 if (targ.hasOwnProperty(p)){
                                     var obj = targ[p];
-                                    if (pFn)
-                                        if (!pFn( t, g, p, obj ))
-                                            break;
+                                    if (pFn && !pFn( t, g, p, obj )) break;
                                 }
                             }
-                            if (gFn)
-                                if (!gFn( t, g ))
-                                    break;
+                            if (gFn && !gFn( t, g )) break;
                         }
                     }
-                    if (tFn)
-                        if (!tFn(t))
-                            break;
+                    if (tFn && !tFn(t)) break;
                 }
             }
         }
@@ -474,6 +477,10 @@
          */
         this.addTweenType = function( id, obj ) {
             types[ id ] = obj;
+        };
+
+        this.getTargets = function(){
+            return targets;
         };
 
         //==================================================================
@@ -746,6 +753,7 @@
             },
 
             apply: function( value ){
+                //console.log('TweenObject::apply',this.property, value);
                 this.proxy( this, value );
             }
         };

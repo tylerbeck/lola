@@ -120,6 +120,58 @@
             return parts.join("");
         };
 
+        /**
+         * makes a string more difficult to read
+         * @param {String} str
+         * @param {Number|undefined} passes
+         */
+        this.obfuscate = function ( str, passes ) {
+            var codes = new Array(str.length);
+            var chars = str.split("");
+            chars.forEach( function(c,i){
+                codes[i] = str.charCodeAt(i);
+            } );
+            if (!passes) passes = 1;
+            while (passes){
+                codes.forEach( function(c,i){
+                    c += (i%8)*(i%2 == 0 ? 1:-1 );
+                    codes[i] = c;
+                    chars[i] = String.fromCharCode(c);
+                } );
+                passes--;
+            }
+            return chars.join('');
+            //return codes.join('|');
+        };
+
+        /**
+         * makes a string more difficult to read
+         * @param {String} str
+         * @param {Number|undefined} passes
+         */
+        this.unobfuscate = function ( str, passes ) {
+            var codes = new Array(str.length);
+            var chars = str.split("");
+            chars.forEach( function(c,i){
+                codes[i] = str.charCodeAt(i);
+            });
+
+            if (!passes) passes = 1;
+            while (passes){
+                codes.forEach( function(c,i){
+                    c -= (i%8)*(i%2 == 0 ? 1:-1 );
+                    codes[i] = c;
+                } );
+                passes--;
+            }
+
+            codes.forEach( function(c,i){
+                chars[i] = String.fromCharCode(c);
+            });
+
+            return chars.join("");
+        };
+
     };
 
 

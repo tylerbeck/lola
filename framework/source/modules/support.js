@@ -38,6 +38,7 @@
         this.deleteExpando = true;
         this.msEvent = false;
         this.domEvent = true;
+        this.dataset = true;
         this.animationFrameType = 0;
 
         this.cssRules = false;
@@ -93,7 +94,7 @@
 
         //create div for testing
         var div = document.createElement( 'div' );
-        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' >test</div>";
+        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' data-test='yes' >test</div>";
         var target = div.firstChild;
 
         //style tests
@@ -107,6 +108,11 @@
         }
         catch( e ) {
             self.deleteExpando = false;
+        }
+
+        //dataset support
+        if (div.hasOwnProperty('dataset')){
+            self.dataset = true;
         }
 
         //event model

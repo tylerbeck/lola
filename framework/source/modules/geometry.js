@@ -8,7 +8,7 @@
  ***********************************************************************/
 (function( lola ) {
     /**
-     * Array Module
+     * Geometry Module
      * @namespace lola.geometry
      */
     var Module = function(){

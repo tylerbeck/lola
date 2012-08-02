@@ -258,7 +258,7 @@
                 result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
             }
             else {
-                value = (String(value).match(lola.regex.isDimension)) ? value : value+"px";
+                value = (String(value).match(lola.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
                 result = self.setRawStyle( obj, style, value );
             }
 
@@ -443,7 +443,7 @@
         this.addClass = function( obj, className ) {
             //console.log('$.addClass: ',obj, className);
             var names = self.classes( obj );
-            if ( !lola.array.isIn( names, className ) ) {
+            if ( names.indexOf( className ) == -1 ) {
                 names.push( className );
                 self.classes( obj, names );
             }

@@ -42,18 +42,22 @@
      * @param overwrite {Boolean|undefined}
      * @param errors {Boolean|undefined}
      * @param deep {Boolean|undefined}
+     * @param deep {Array|undefined}
      * @return {void}
      */
-    lola.extend = function( target, source, overwrite, errors, deep ) {
+    lola.extend = function( target, source, overwrite, errors, deep, ignore ) {
         //TODO: make deep copy an option
         if ( overwrite == undefined ) overwrite = false;
         if ( errors == undefined ) errors = false;
         if ( deep == undefined ) deep = false;
+        if ( ignore == undefined ) ignore = [];
         for ( var k in source ) {
-            if ( overwrite || target[ k ] == null )
-                target[ k ] = source[ k ];
-            else if ( errors )
-                throw new Error( "property " + k + " already exists on extend target!" );
+            if (ignore.indexOf(k) == -1){
+                if ( overwrite || target[ k ] == null )
+                    target[ k ] = source[ k ];
+                else if ( errors )
+                    throw new Error( "property " + k + " already exists on extend target!" );
+            }
         }
     };
 
@@ -851,6 +855,17 @@ if ( !String.prototype.trim ) {
             },
 
             /**
+             * returns selector with element at the specified index
+             * @param {int} index
+             * @return {lola.Selector}
+             */
+            at: function( index ) {
+                if ( index == undefined )
+                    index = 0;
+                return lola(this[ index ]);
+            },
+
+            /**
              * returns all of the selected elements
              * @return {Array}
              */
@@ -1063,6 +1078,7 @@ if ( !String.prototype.trim ) {
         this.deleteExpando = true;
         this.msEvent = false;
         this.domEvent = true;
+        this.dataset = true;
         this.animationFrameType = 0;
 
         this.cssRules = false;
@@ -1118,7 +1134,7 @@ if ( !String.prototype.trim ) {
 
         //create div for testing
         var div = document.createElement( 'div' );
-        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' >test</div>";
+        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' data-test='yes' >test</div>";
         var target = div.firstChild;
 
         //style tests
@@ -1132,6 +1148,11 @@ if ( !String.prototype.trim ) {
         }
         catch( e ) {
             self.deleteExpando = false;
+        }
+
+        //dataset support
+        if (div.hasOwnProperty('dataset')){
+            self.dataset = true;
         }
 
         //event model
@@ -1739,6 +1760,16 @@ if ( !String.prototype.trim ) {
             return false;
         };
 
+        /**
+         * utility function: dispatches contentChanged event for target
+         * @param $target
+         * @return {Object}
+         */
+        function contentChanged( $target ){
+            $target.trigger('contentchanged', true);
+            return $target;
+        }
+
         //==================================================================
         // Selector Methods
         //==================================================================
@@ -1826,7 +1857,7 @@ if ( !String.prototype.trim ) {
                             }
                         }
                     } );
-                    return this;
+                    return contentChanged( this );
                 }
             },
 
@@ -1841,8 +1872,7 @@ if ( !String.prototype.trim ) {
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }
-
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -1854,8 +1884,7 @@ if ( !String.prototype.trim ) {
                 if ( this.length > 0 ) {
                     this.get().insertBefore( node, this.get().firstChild );
                 }
-
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -1879,7 +1908,7 @@ if ( !String.prototype.trim ) {
                 if ( this.length == 1 ) {
                     this.parent().insertBefore( node, this[0] );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -1891,7 +1920,7 @@ if ( !String.prototype.trim ) {
                 if ( this.length == 1 ) {
                     this.parent().insertAfter( node, this[0] );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -1904,7 +1933,7 @@ if ( !String.prototype.trim ) {
                     lola.safeDelete( node );
                     this.get().removeChild( node );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -1920,7 +1949,7 @@ if ( !String.prototype.trim ) {
                     //lola.data.destroyCache( oldChild, true );
                     this.get().replaceChild( newChild, oldChild );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -2241,6 +2270,25 @@ if ( !String.prototype.trim ) {
 
         };
 
+        this.dataset = function( elem, name, value ){
+            if (value != undefined ){
+                if (lola.support.dataset){
+                    elem.dataset[name] = value;
+                }
+                else{
+                    lola(elem).attr('data-'+name, value);
+                }
+            }
+            else{
+                if (lola.support.dataset){
+                    return elem.dataset[name];
+                }
+                else{
+                    return lola(elem).attr('data-'+name);
+                }
+            }
+        };
+
         //==================================================================
         // Selector Methods
         //==================================================================
@@ -2297,6 +2345,10 @@ if ( !String.prototype.trim ) {
              */
             removeAllData: function( recurse ) {
                 return this.removeData( null, recurse );
+            },
+
+            dataset: function( name, value ){
+                return this._( self.dataset, name, value );
             }
         };
 
@@ -2625,6 +2677,58 @@ if ( !String.prototype.trim ) {
                 parts.push( ch.toLowerCase() );
             }
             return parts.join("");
+        };
+
+        /**
+         * makes a string more difficult to read
+         * @param {String} str
+         * @param {Number|undefined} passes
+         */
+        this.obfuscate = function ( str, passes ) {
+            var codes = new Array(str.length);
+            var chars = str.split("");
+            chars.forEach( function(c,i){
+                codes[i] = str.charCodeAt(i);
+            } );
+            if (!passes) passes = 1;
+            while (passes){
+                codes.forEach( function(c,i){
+                    c += (i%8)*(i%2 == 0 ? 1:-1 );
+                    codes[i] = c;
+                    chars[i] = String.fromCharCode(c);
+                } );
+                passes--;
+            }
+            return chars.join('');
+            //return codes.join('|');
+        };
+
+        /**
+         * makes a string more difficult to read
+         * @param {String} str
+         * @param {Number|undefined} passes
+         */
+        this.unobfuscate = function ( str, passes ) {
+            var codes = new Array(str.length);
+            var chars = str.split("");
+            chars.forEach( function(c,i){
+                codes[i] = str.charCodeAt(i);
+            });
+
+            if (!passes) passes = 1;
+            while (passes){
+                codes.forEach( function(c,i){
+                    c -= (i%8)*(i%2 == 0 ? 1:-1 );
+                    codes[i] = c;
+                } );
+                passes--;
+            }
+
+            codes.forEach( function(c,i){
+                chars[i] = String.fromCharCode(c);
+            });
+
+            return chars.join("");
         };
 
     };
@@ -3005,7 +3109,9 @@ if ( !String.prototype.trim ) {
          * @param {String} phase
          */
         function handler( event, phase ) {
-            //console.log( 'lola.event.handler: '+event.type+' '+phase );
+            event = event ? event : window.event;
+           //console.log( 'lola.event.handler: '+event.type+' '+phase );
+
             var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
             var data = lola.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
@@ -3037,7 +3143,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type);
+            //console.log('lola.event.trigger:',type, object);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -3170,12 +3276,14 @@ if ( !String.prototype.trim ) {
             }
         };
 
+
         /**
          * returns x,y coordinates relative to document
          * @param {Event} e
          * @return {Object}
          */
         this.getDOMGlobalXY = function( e ) {
+            console.log('getDOMGlobalXY:',e);
             var xPos = 0;
             var yPos = 0;
             if ( e.pageX || e.pageY ) {
@@ -3196,8 +3304,17 @@ if ( !String.prototype.trim ) {
          * @return {Object}
          */
         this.getDOMLocalXY = function( e ) {
-            var xPos = e.layerX || e.offsetX || 0;
-            var yPos = e.layerY || e.offsetY || 0;
+            //TODO: find better way of getting local X & Y for mouse events
+            var xPos = e.offsetX || undefined;
+            var yPos = e.offsetY || undefined;
+
+            if (e.currentTarget != undefined && (xPos == undefined || yPos == undefined)){
+                var trgOffset = lola.geometry.getOffset( e.currentTarget );
+                var clickPt = self.getDOMGlobalXY( e );
+
+                xPos = clickPt.x - trgOffset.x;
+                yPos = clickPt.y - trgOffset.y;
+            }
             return {x:xPos,y:yPos};
         };
 
@@ -3359,7 +3476,8 @@ if ( !String.prototype.trim ) {
              * @param {Object} target
              */
             init: function( event, target ) {
-                lola.extend( this, event, false, false );
+                //target, source, overwrite, errors, deep, ignore
+                lola.extend( this, event, false, false,false,['layerX','layerY']);
                 this.originalEvent = event;
                 if ( target ) {
                     this.target = target;
@@ -3416,7 +3534,7 @@ if ( !String.prototype.trim ) {
                 var uid;
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                    uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
                 return uid;
@@ -3426,7 +3544,7 @@ if ( !String.prototype.trim ) {
                 lola.debug('alias hook removeListener',type);
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                    uid = lola.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
 
@@ -3441,7 +3559,6 @@ if ( !String.prototype.trim ) {
          * @event hover
          */
         var HoverHook = function() {
-            var self = this;
             var hookEvent = "hover";
 
             var ns = 'eventHover';
@@ -3458,11 +3575,11 @@ if ( !String.prototype.trim ) {
             }
 
             function mouseOver( event ){
-                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, self );
+                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0 );
                 var data = getData( event.currentTarget );
                 data.hasIntent = true;
                 if (data.timeout < 0)
-                    data.timeout = setTimeout( confirm, data.wait );
+                    data.timeout = setTimeout( function(){confirm(event.currentTarget);}, data.wait );
             }
 
             function mouseOut( event ){
@@ -3472,7 +3589,7 @@ if ( !String.prototype.trim ) {
             }
 
             function confirm( target ){
-                self.removeListener( target, 'mouseout', mouseOut, false, 0, self );
+                self.removeListener( target, 'mouseout', mouseOut, false, 0 );
                 var data = getData( target );
                 data.timeout = -1;
                 if (data.hasIntent){
@@ -3481,15 +3598,15 @@ if ( !String.prototype.trim ) {
             }
 
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope );
+                var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope, false );
                 getData( target );
-                self.addListener( target, 'mouseover', mouseOver, false, 0, self );
+                self.addListener( target, 'mouseover', mouseOver, false, 0, this );
                 return uid;
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
                 var edata = lola.data.get( target, dataNamespace );
-                self.removeListener(target, hookEvent, handler, useCapture );
+                self.removeListener( target, hookEvent, handler, useCapture, false );
                 var phase = self.phaseString( target, useCapture );
                 //check for other hook listeners before removeing
                 if (edata[phase][hookEvent] == null || Object.keys(edata[phase][hookEvent]).length == 0){
@@ -3508,8 +3625,6 @@ if ( !String.prototype.trim ) {
          * @event mouseenterstate
          */
         var MouseEnterStateHook = function(){
-            var self = this;
-
             var e1 = 'domouseenter';
             var e2 = 'domouseleave';
             var ns = 'eventMouseEnterState';
@@ -3541,7 +3656,7 @@ if ( !String.prototype.trim ) {
             function mouseOut( event ){
                 var data = getData( event.currentTarget );
                 if ( data.within &&
-                    !lola.util.isAncestor( event.currentTarget, event.relatedTarget ) &&
+                    !lola.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
                     event.currentTarget != event.relatedTarget ){
                     data.within = false;
                     self.trigger( event.currentTarget, e2, false );
@@ -3555,7 +3670,7 @@ if ( !String.prototype.trim ) {
                     self.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
                     self.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
                 }
-                return self.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope );
+                return self.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope, false );
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
@@ -3563,7 +3678,7 @@ if ( !String.prototype.trim ) {
                 var edata = lola.data.get( target, dataNamespace );
                 var phase = self.phaseString( target, useCapture );
                 type = getEnhancedType( type );
-                self.removeListener( target, type, handler, useCapture );
+                self.removeListener( target, type, handler, useCapture, false );
 
                 //check for other hook listeners before removeing
                 if (!lola.support.msEvent &&
@@ -4672,7 +4787,7 @@ if ( !String.prototype.trim ) {
                 result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
             }
             else {
-                value = (String(value).match(lola.regex.isDimension)) ? value : value+"px";
+                value = (String(value).match(lola.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
                 result = self.setRawStyle( obj, style, value );
             }
 
@@ -4857,7 +4972,7 @@ if ( !String.prototype.trim ) {
         this.addClass = function( obj, className ) {
             //console.log('$.addClass: ',obj, className);
             var names = self.classes( obj );
-            if ( !lola.array.isIn( names, className ) ) {
+            if ( names.indexOf( className ) == -1 ) {
                 names.push( className );
                 self.classes( obj, names );
             }
@@ -5330,12 +5445,13 @@ if ( !String.prototype.trim ) {
                     } );
                 });
 
-                transform.load();
+                transform.send();
 
+                return this;
             },
             /**
              * loads a request's content into elements
-             * @param {lola.http.Request} request
+             * @param {lola.http.AsyncRequest|lola.http.Request|lola.http.SyncRequest} request
              * @param {Object} requestParams
              * @param {*} interimContent
              * @param {*} faultContent
@@ -5351,7 +5467,8 @@ if ( !String.prototype.trim ) {
                     } );
                 });
 
-                request.load();
+                request.send();
+                return this;
             },
 
             /**
@@ -5363,6 +5480,7 @@ if ( !String.prototype.trim ) {
             loadContent: function( url, interimContent, faultContent ){
                 var request = new lola.http.AsyncRequest( url, 'get', [] );
                 this.applyRequest( request, {}, interimContent, faultContent);
+                return this;
             }
         };
 
@@ -7041,7 +7159,7 @@ if ( !String.prototype.trim ) {
  ***********************************************************************/
 (function( lola ) {
     /**
-     * Array Module
+     * Geometry Module
      * @namespace lola.geometry
      */
     var Module = function(){
@@ -8183,7 +8301,7 @@ if ( !String.prototype.trim ) {
             } );
             var complete = lola.now();
             lola.debug('easing preinitialization took',(complete-start), 'ms');
-            self.setDefaultEase('bounce-in-out');
+            self.setDefaultEase('ease-in-out');
         }
 
         /**
@@ -8679,6 +8797,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.addTarget = function( tweenId, objects, properties, collisions ){
+            //console.log('tween.addTarget',targets);
             if (tweens[ tweenId ]){
                 collisions = collisions === true;
                 if (lola.type.get(objects) != 'array')
@@ -8687,10 +8806,12 @@ if ( !String.prototype.trim ) {
                 var ol = objects.length;
                 for (var i=0; i<ol; i++) {
                     var obj = objects[i];
+                    //console.log('   ',obj);
                     var id = $(obj).identify().attr('id');
                     if (!targets[id])
                         targets[id] = {};
                     for (var g in properties){
+                        //console.log('      ',g);
                         if (properties.hasOwnProperty(g)){
                             var propg = properties[g];
                             // p should be lola selector methods eg style, attr, classes
@@ -8698,9 +8819,11 @@ if ( !String.prototype.trim ) {
                                 targets[id][g] = {};
                             for (var p in propg ){
                                 if (propg.hasOwnProperty(p)){
+                                    //console.log('         ',p);
                                     if (collisions || targets[id][g][p] == null ){
                                         if (!targets[id][g][p])
                                             targets[id][g][p] = [];
+
                                         if (collisions)
                                             targets[id][g][p].push( self.getTweenObject( tweenId, obj, g, p, propg[p] ) );
                                         else
@@ -8711,6 +8834,7 @@ if ( !String.prototype.trim ) {
                         }
                     }
                 }
+
             }
             else{
                 throw new Error("tween not found");
@@ -8843,13 +8967,13 @@ if ( !String.prototype.trim ) {
 
             var tFn, gFn, pFn;
             tFn = undefined;
-            gFn = function(t,g){ return false; };
+            gFn = function(t,g){ return true; };
             pFn = function(t,g,p,obj){
                 var dispatcher = obj[0].target;
                 if (dispatcher){
                     lola.event.trigger(dispatcher,'tweencomplete',false,false);
-                    return false;
                 }
+                return true;
             };
 
             for (var k in tweens){
@@ -8878,6 +9002,7 @@ if ( !String.prototype.trim ) {
                     delete targets[t];
                 }
                 gCount = 0;
+                return true;
             };
             gFn = function(t,g){
                 if (pCount == 0){
@@ -8887,6 +9012,7 @@ if ( !String.prototype.trim ) {
                     gCount++;
                 }
                 pCount = 0;
+                return true;
             };
             pFn = function(t,g,p,obj){
                 var tmp = [];
@@ -8907,6 +9033,7 @@ if ( !String.prototype.trim ) {
                 else{
                     pCount++;
                 }
+                return true;
             };
 
             iterateTargets( tFn, gFn, pFn );
@@ -8931,19 +9058,13 @@ if ( !String.prototype.trim ) {
                             for (var p in targ){
                                 if (targ.hasOwnProperty(p)){
                                     var obj = targ[p];
-                                    if (pFn)
-                                        if (!pFn( t, g, p, obj ))
-                                            break;
+                                    if (pFn && !pFn( t, g, p, obj )) break;
                                 }
                             }
-                            if (gFn)
-                                if (!gFn( t, g ))
-                                    break;
+                            if (gFn && !gFn( t, g )) break;
                         }
                     }
-                    if (tFn)
-                        if (!tFn(t))
-                            break;
+                    if (tFn && !tFn(t)) break;
                 }
             }
         }
@@ -8970,6 +9091,10 @@ if ( !String.prototype.trim ) {
          */
         this.addTweenType = function( id, obj ) {
             types[ id ] = obj;
+        };
+
+        this.getTargets = function(){
+            return targets;
         };
 
         //==================================================================
@@ -9242,6 +9367,7 @@ if ( !String.prototype.trim ) {
             },
 
             apply: function( value ){
+                //console.log('TweenObject::apply',this.property, value);
                 this.proxy( this, value );
             }
         };
@@ -9331,10 +9457,11 @@ if ( !String.prototype.trim ) {
         this.register = function( name, options ){
             if (!groups[ name ]){
                 var group = new Group( name );
-                if ( options.frames )
-                    group.frames( options.frames );
-                if ( options.maxRate )
-                    group.maxRate( options.maxRate );
+                if ( options.frames ) group.frames( options.frames );
+                if ( options.maxRate ) group.maxRate( options.maxRate );
+                if ( options.timed ) group.timed( options.timed );
+                if ( options.loop ) group.loop( options.loop );
+                if ( options.step ) group.step( options.step );
 
                 groups[ name ] = group;
             }
@@ -9391,7 +9518,9 @@ if ( !String.prototype.trim ) {
          */
         this.addTargets = function( groupName, objects, options ){
             var group = groups[groupName];
-            group.addTargets( objects, options );
+            if (group){
+                group.addTargets( objects, options );
+            }
         };
 
         /**
@@ -9433,7 +9562,7 @@ if ( !String.prototype.trim ) {
          */
         this.selectorMethods = {
             motionRange: function( groupName, options ){
-                self.addTarget( groupName, this.getAll(), options );
+                self.addTargets( groupName, this.getAll(), options );
                 return this;
             }
         };
@@ -9449,6 +9578,10 @@ if ( !String.prototype.trim ) {
             lola.animation.register( namespace+'.'+name, anim );
             var frameCount = 10000;
             var maxRate = 5000;
+            var loop = false;
+            var doLoop = false;
+            var timed = false;
+            var stepFn;
             var targetPosition = 0;
             var lastPosition = 0;
             var targets = [];
@@ -9480,13 +9613,48 @@ if ( !String.prototype.trim ) {
 
             /**
              * sets maximum progression rate per secont
-             * @param {int} val
+             * @param {int} value
              */
             self.maxRate = function( value ){
                 if ( value != undefined ){
-                    maxRate = val;
+                    maxRate = value;
                 }
                 return maxRate;
+            };
+
+            self.timed = function( value ){
+                if ( value != undefined )
+                    timed = ( value === true );
+
+                return timed;
+            };
+
+            self.loop = function( value ){
+                if ( value != undefined )
+                    loop = ( value === true );
+
+                return loop;
+            };
+
+            self.step = function( value ){
+                if ( value != undefined )
+                    stepFn = (typeof value == 'function') ? value : false;
+
+                return stepFn;
+            };
+
+
+
+            self.start = function(){
+                if (timed){
+                    doLoop = loop;
+                    self.position( frameCount );
+                }
+            };
+
+            self.stop = function(){
+                doLoop = false;
+                targetPosition = lastPosition;
             };
 
 
@@ -9497,7 +9665,7 @@ if ( !String.prototype.trim ) {
              * @param elapsed
              */
             function tick( now, delta, elapsed ){
-                //console.log('tick[', now,']', targetPosition, lastPosition);
+                console.log('tick[', now,']', targetPosition, lastPosition);
                 var active = false;
 
                 if (targetPosition != lastPosition){
@@ -9513,16 +9681,20 @@ if ( !String.prototype.trim ) {
 
                     if (abs > rate){
                         rate *= sign;
-                        update( lastPosition + rate );
+                        self.update( lastPosition + rate );
                         active = true;
                     }
                     else if ( abs < 1){
-                        update( targetPosition );
+                        self.update( targetPosition );
                     }
                     else {
-                        update( lastPosition + d );
+                        self.update( lastPosition + d );
                         active = true;
                     }
+                }
+
+                if (timed && doLoop){
+                    active = true;
                 }
 
                 return active;
@@ -9532,17 +9704,23 @@ if ( !String.prototype.trim ) {
              * updates all targets with the current position
              * @param {Number} position
              */
-            function update( position ){
-                //console.log('update position:', position );
+            self.update = function( position ){
                 var positive = position > lastPosition;
                 position = Math.round( Math.min( frameCount, Math.max(0,position) ) );
+                if ( timed && doLoop && position == frameCount ){
+                    position = 0;
+                }
                 var i = 0;
                 while( i < count ){
-                    targets[i].setPosition( position, positive );
+                    targets[i].position( position, positive );
                     i++;
                 }
+
+                if (stepFn)
+                    stepFn(position);
+
                 lastPosition = position;
-            }
+            };
 
             /**
              * adds keyed motion targets
@@ -9556,12 +9734,10 @@ if ( !String.prototype.trim ) {
                 var start = (options.start) ? options.start : 0;
                 var end = (options.end) ? options.end : frameCount;
                 var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
-                var step = options.step;
 
                 delete options.start;
                 delete options.end;
                 delete options.ease;
-                delete options.step;
 
                 //getTweenObject = function( tweenId, target, group, property, value, dispatcher ){
                 objects.forEach( function(obj){
@@ -9570,10 +9746,14 @@ if ( !String.prototype.trim ) {
                             var optGroup = options[g];
                             for (var p in optGroup ){
                                 if (optGroup.hasOwnProperty(p)){
-                                    var s = options[g][p].start == undefined ? start : options[g][p].start;
-                                    var e = options[g][p].end == undefined ? end : options[g][p].end;
-                                    var es = options[g][p].ease == undefined ? ease : options[g][p].ease;
-                                    targets.push( new RangeTween( obj, g, p, options[g][p], es, s, e, step ) );
+                                    var pObj = Array.isArray(optGroup[p]) ? optGroup[p] : [optGroup[p]];
+                                    pObj.forEach(function(item){
+                                        var s = item.start == undefined ? start : item.start;
+                                        var e = item.end == undefined ? end : item.end;
+                                        var es =  item.ease == undefined ? ease : lola.easing.get(item.ease);
+                                        var st = item.step;
+                                        targets.push( new RangeTween( obj, g, p, item, es, s, e, st ) );
+                                    });
                                 }
                             }
                         }
@@ -9622,6 +9802,7 @@ if ( !String.prototype.trim ) {
             var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;
+            var lastPosition = 0;
 
             if (typeof step != 'function')
                 step = false;
@@ -9631,7 +9812,7 @@ if ( !String.prototype.trim ) {
              * @param position
              * @param positive
              */
-            self.setPosition = function( position, positive ){
+            self.position = function( position, positive ){
                 var value = undefined;
                 if ( position >= start && position <= end ){
                     active = true;
@@ -9655,6 +9836,8 @@ if ( !String.prototype.trim ) {
                     if (step)
                         step( value, this );
                 }
+
+                lastPosition = position;
 
             }
         };

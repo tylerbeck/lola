@@ -156,12 +156,13 @@
                     } );
                 });
 
-                transform.load();
+                transform.send();
 
+                return this;
             },
             /**
              * loads a request's content into elements
-             * @param {lola.http.Request} request
+             * @param {lola.http.AsyncRequest|lola.http.Request|lola.http.SyncRequest} request
              * @param {Object} requestParams
              * @param {*} interimContent
              * @param {*} faultContent
@@ -177,7 +178,8 @@
                     } );
                 });
 
-                request.load();
+                request.send();
+                return this;
             },
 
             /**
@@ -189,6 +191,7 @@
             loadContent: function( url, interimContent, faultContent ){
                 var request = new lola.http.AsyncRequest( url, 'get', [] );
                 this.applyRequest( request, {}, interimContent, faultContent);
+                return this;
             }
         };
 

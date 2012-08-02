@@ -220,6 +220,25 @@
 
         };
 
+        this.dataset = function( elem, name, value ){
+            if (value != undefined ){
+                if (lola.support.dataset){
+                    elem.dataset[name] = value;
+                }
+                else{
+                    lola(elem).attr('data-'+name, value);
+                }
+            }
+            else{
+                if (lola.support.dataset){
+                    return elem.dataset[name];
+                }
+                else{
+                    return lola(elem).attr('data-'+name);
+                }
+            }
+        };
+
         //==================================================================
         // Selector Methods
         //==================================================================
@@ -276,6 +295,10 @@
              */
             removeAllData: function( recurse ) {
                 return this.removeData( null, recurse );
+            },
+
+            dataset: function( name, value ){
+                return this._( self.dataset, name, value );
             }
         };
 

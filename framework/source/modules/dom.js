@@ -155,6 +155,16 @@
             return false;
         };
 
+        /**
+         * utility function: dispatches contentChanged event for target
+         * @param $target
+         * @return {Object}
+         */
+        function contentChanged( $target ){
+            $target.trigger('contentchanged', true);
+            return $target;
+        }
+
         //==================================================================
         // Selector Methods
         //==================================================================
@@ -242,7 +252,7 @@
                             }
                         }
                     } );
-                    return this;
+                    return contentChanged( this );
                 }
             },
 
@@ -257,8 +267,7 @@
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }
-
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -270,8 +279,7 @@
                 if ( this.length > 0 ) {
                     this.get().insertBefore( node, this.get().firstChild );
                 }
-
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -295,7 +303,7 @@
                 if ( this.length == 1 ) {
                     this.parent().insertBefore( node, this[0] );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -307,7 +315,7 @@
                 if ( this.length == 1 ) {
                     this.parent().insertAfter( node, this[0] );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -320,7 +328,7 @@
                     lola.safeDelete( node );
                     this.get().removeChild( node );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**
@@ -336,7 +344,7 @@
                     //lola.data.destroyCache( oldChild, true );
                     this.get().replaceChild( newChild, oldChild );
                 }
-                return this;
+                return contentChanged( this );
             },
 
             /**

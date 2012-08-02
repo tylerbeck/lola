@@ -258,7 +258,9 @@
          * @param {String} phase
          */
         function handler( event, phase ) {
-            //console.log( 'lola.event.handler: '+event.type+' '+phase );
+            event = event ? event : window.event;
+           //console.log( 'lola.event.handler: '+event.type+' '+phase );
+
             var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
             var data = lola.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
@@ -290,7 +292,7 @@
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type);
+            //console.log('lola.event.trigger:',type, object);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
@@ -423,12 +425,14 @@
             }
         };
 
+
         /**
          * returns x,y coordinates relative to document
          * @param {Event} e
          * @return {Object}
          */
         this.getDOMGlobalXY = function( e ) {
+            console.log('getDOMGlobalXY:',e);
             var xPos = 0;
             var yPos = 0;
             if ( e.pageX || e.pageY ) {
@@ -449,8 +453,17 @@
          * @return {Object}
          */
         this.getDOMLocalXY = function( e ) {
-            var xPos = e.layerX || e.offsetX || 0;
-            var yPos = e.layerY || e.offsetY || 0;
+            //TODO: find better way of getting local X & Y for mouse events
+            var xPos = e.offsetX || undefined;
+            var yPos = e.offsetY || undefined;
+
+            if (e.currentTarget != undefined && (xPos == undefined || yPos == undefined)){
+                var trgOffset = lola.geometry.getOffset( e.currentTarget );
+                var clickPt = self.getDOMGlobalXY( e );
+
+                xPos = clickPt.x - trgOffset.x;
+                yPos = clickPt.y - trgOffset.y;
+            }
             return {x:xPos,y:yPos};
         };
 
@@ -612,7 +625,8 @@
              * @param {Object} target
              */
             init: function( event, target ) {
-                lola.extend( this, event, false, false );
+                //target, source, overwrite, errors, deep, ignore
+                lola.extend( this, event, false, false,false,['layerX','layerY']);
                 this.originalEvent = event;
                 if ( target ) {
                     this.target = target;
@@ -669,7 +683,7 @@
                 var uid;
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                    uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
                 return uid;
@@ -679,7 +693,7 @@
                 lola.debug('alias hook removeListener',type);
                 events.forEach( function(item){
                     lola.debug('    ',item);
-                   uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                    uid = lola.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
 
@@ -694,7 +708,6 @@
          * @event hover
          */
         var HoverHook = function() {
-            var self = this;
             var hookEvent = "hover";
 
             var ns = 'eventHover';
@@ -711,11 +724,11 @@
             }
 
             function mouseOver( event ){
-                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0, self );
+                self.addListener( event.currentTarget, 'mouseout', mouseOut, false, 0 );
                 var data = getData( event.currentTarget );
                 data.hasIntent = true;
                 if (data.timeout < 0)
-                    data.timeout = setTimeout( confirm, data.wait );
+                    data.timeout = setTimeout( function(){confirm(event.currentTarget);}, data.wait );
             }
 
             function mouseOut( event ){
@@ -725,7 +738,7 @@
             }
 
             function confirm( target ){
-                self.removeListener( target, 'mouseout', mouseOut, false, 0, self );
+                self.removeListener( target, 'mouseout', mouseOut, false, 0 );
                 var data = getData( target );
                 data.timeout = -1;
                 if (data.hasIntent){
@@ -734,15 +747,15 @@
             }
 
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope );
+                var uid = self.addListener( target, hookEvent, handler, useCapture, priority, scope, false );
                 getData( target );
-                self.addListener( target, 'mouseover', mouseOver, false, 0, self );
+                self.addListener( target, 'mouseover', mouseOver, false, 0, this );
                 return uid;
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
                 var edata = lola.data.get( target, dataNamespace );
-                self.removeListener(target, hookEvent, handler, useCapture );
+                self.removeListener( target, hookEvent, handler, useCapture, false );
                 var phase = self.phaseString( target, useCapture );
                 //check for other hook listeners before removeing
                 if (edata[phase][hookEvent] == null || Object.keys(edata[phase][hookEvent]).length == 0){
@@ -761,8 +774,6 @@
          * @event mouseenterstate
          */
         var MouseEnterStateHook = function(){
-            var self = this;
-
             var e1 = 'domouseenter';
             var e2 = 'domouseleave';
             var ns = 'eventMouseEnterState';
@@ -794,7 +805,7 @@
             function mouseOut( event ){
                 var data = getData( event.currentTarget );
                 if ( data.within &&
-                    !lola.util.isAncestor( event.currentTarget, event.relatedTarget ) &&
+                    !lola.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
                     event.currentTarget != event.relatedTarget ){
                     data.within = false;
                     self.trigger( event.currentTarget, e2, false );
@@ -808,7 +819,7 @@
                     self.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
                     self.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
                 }
-                return self.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope );
+                return self.addListener( target, getEnhancedType( type ), handler, useCapture, priority, scope, false );
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
@@ -816,7 +827,7 @@
                 var edata = lola.data.get( target, dataNamespace );
                 var phase = self.phaseString( target, useCapture );
                 type = getEnhancedType( type );
-                self.removeListener( target, type, handler, useCapture );
+                self.removeListener( target, type, handler, useCapture, false );
 
                 //check for other hook listeners before removeing
                 if (!lola.support.msEvent &&

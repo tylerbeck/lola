@@ -41,10 +41,16 @@
         var target;
 
         /**
-         * bounds
+         * bounds for current drag target
          * @private
          */
         var bounds;
+
+        /**
+         * default bounding function for current drag target
+         * @private
+         */
+        var boundsFn;
 
         /**
          * dragging flag
@@ -76,37 +82,6 @@
         this.dependencies = function() {
             return dependencies;
         };
-
-        /**
-         * set bounds
-         * @param xMin
-         * @param xMax
-         * @param yMin
-         * @param yMax
-         */
-        this.setBounds = function( xMin, xMax, yMin, yMax) {
-            bounds = {
-                xMin:xMin,
-                xMax:xMax,
-                yMin:yMin,
-                yMax:yMax
-            };
-        };
-
-        /**
-         * get bounds
-         * @return {Object}
-         */
-        this.getBounds = function() {
-            return {
-                xMin:bounds.xMin,
-                xMax:bounds.xMax,
-                yMin:bounds.yMin,
-                yMax:bounds.yMax
-            };
-        };
-
-
 
 
         //==================================================================
@@ -147,11 +122,32 @@
         };
 
         /**
-         * resets bounds
+         * default bounding function for current drag target
+         * @param t
+         * @param x
+         * @param y
+         * @return {Object}
          */
-        this.resetBounds = function() {
-            bounds = null;
-        };
+        function defaultBoundsFn(t,x,y){
+            return {x:x,y:y};
+        }
+
+
+        /**
+         * parent bounding function for current drag target
+         * @param t
+         * @param x
+         * @param y
+         * @return {Object}
+         */
+        function parentalBoundsFn(t,x,y){
+            var $t = $(t);
+            var $p = $($t.parent());
+            x = lola.math.normalizeRange( 0, x, $p.width() - $t.width() );
+            y = lola.math.normalizeRange( 0, y, $p.height() - $t.height() );
+            return {x:x,y:y};
+        }
+
 
         /**
          * drag start handler
@@ -159,8 +155,11 @@
          * @private
          */
         function startDrag( event ) {
+            document.onselectstart = function(){ return false; };
             target = event.currentTarget;
             offset = new lola.geometry.Point(-event.localX,-event.localY);
+            var parentOffset = lola.geometry.getOffset($(target).parent());
+            offset = offset.subtract( parentOffset );
             dragging = false;
 
             var $target = $(event.currentTarget);
@@ -169,11 +168,25 @@
             data.parent = $target.parent();
             data.zIndex = $target.style('zIndex');
             data.cursor = $target.style('cursor');
+
+            var cursor = $target.dataset('dragcursor');
+            var drgb = $target.dataset('dragbounds');
+            if (drgb == "parent"){
+                boundsFn = parentalBoundsFn;
+                bounds = [];
+            }
+            else{
+                boundsFn = (data.boundsFn) ? data.boundsFn : defaultBoundsFn;
+                bounds = drgb ? drgb.split(','): [];
+             }
+
             $target.style('zIndex', 10000 );
-            $target.style('cursor', 'none' );
+            $target.style('cursor', cursor?cursor:'none' );
 
             $(document).addListener('mousemove', doDrag, true, undefined, self );
             $(document).addListener('mouseup', endDrag, true, undefined, self );
+            $('body').addClass('dragging');
+
         }
 
         /**
@@ -184,27 +197,24 @@
         function doDrag( event ){
             var $target = $(target);
 
-            if (!dragging) {
-                dragging = true;
-                $target.style('position', 'absolute');
-                $('body').appendChild(target);
-                $target.trigger( "dragstart", false, false );
-            }
 
             var newX = event.globalX + offset.x;
             var newY = event.globalY + offset.y;
-
-            if (bounds) {
-                newX = lola.math.normalizeRange( bounds.xMin, newX, bounds.xMax );
-                newY = lola.math.normalizeRange( bounds.yMin, newY, bounds.yMax );
+            if (bounds.length == 4) {
+                newX = lola.math.normalizeRange( bounds[0], newX, bounds[2] - $target.width() );
+                newY = lola.math.normalizeRange( bounds[1], newY, bounds[3] - $target.height() );
             }
-            else {
-                newX = event.globalX;
-                newY = event.globalY;
+            var pos = boundsFn(target,newX,newY);
+
+            if (!dragging) {
+                dragging = true;
+                $target.style('position', 'absolute');
+                //$('html').appendChild(target);
+                $target.trigger( "dragstart", false, false, { x:newX, y:newY } );
             }
 
-            $target.style('left',newX+'px');
-            $target.style('top',newY+'px');
+            $target.style('left', pos.x+'px');
+            $target.style('top', pos.y+'px');
 
             $target.trigger( "dragmove", false, false, { x:newX, y:newY } );
         }
@@ -219,12 +229,14 @@
             var data = $target.getData(namespace, true );
             $target.style('cursor', data.cursor );
             $target.style('zIndex', data.zIndex );
+            //$(data.parent).appendChild( target );
             dragging = false;
             target = null;
             $(document).removeListener('mousemove', doDrag, true );
             $(document).removeListener('mouseup', endDrag, true );
+            document.onselectstart = null;
+            $('body').removeClass('dragging');
             $target.trigger( "dragend", false, false );
-
         }
 
         this.initialize = function(){

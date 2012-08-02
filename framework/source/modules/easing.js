@@ -124,7 +124,7 @@
             } );
             var complete = lola.now();
             lola.debug('easing preinitialization took',(complete-start), 'ms');
-            self.setDefaultEase('bounce-in-out');
+            self.setDefaultEase('ease-in-out');
         }
 
         /**

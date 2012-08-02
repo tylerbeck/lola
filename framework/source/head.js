@@ -42,18 +42,22 @@
      * @param overwrite {Boolean|undefined}
      * @param errors {Boolean|undefined}
      * @param deep {Boolean|undefined}
+     * @param deep {Array|undefined}
      * @return {void}
      */
-    lola.extend = function( target, source, overwrite, errors, deep ) {
+    lola.extend = function( target, source, overwrite, errors, deep, ignore ) {
         //TODO: make deep copy an option
         if ( overwrite == undefined ) overwrite = false;
         if ( errors == undefined ) errors = false;
         if ( deep == undefined ) deep = false;
+        if ( ignore == undefined ) ignore = [];
         for ( var k in source ) {
-            if ( overwrite || target[ k ] == null )
-                target[ k ] = source[ k ];
-            else if ( errors )
-                throw new Error( "property " + k + " already exists on extend target!" );
+            if (ignore.indexOf(k) == -1){
+                if ( overwrite || target[ k ] == null )
+                    target[ k ] = source[ k ];
+                else if ( errors )
+                    throw new Error( "property " + k + " already exists on extend target!" );
+            }
         }
     };
 

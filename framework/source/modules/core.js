@@ -357,6 +357,17 @@
             },
 
             /**
+             * returns selector with element at the specified index
+             * @param {int} index
+             * @return {lola.Selector}
+             */
+            at: function( index ) {
+                if ( index == undefined )
+                    index = 0;
+                return lola(this[ index ]);
+            },
+
+            /**
              * returns all of the selected elements
              * @return {Array}
              */

@@ -7,8 +7,14 @@
  ***********************************************************************/
 "use strict";
 ( function( window ) {
-
     var startTime = (new Date()).getTime();
+
+    if (window.console == undefined ){
+        var console = {};
+        console.log = function(){};
+        console.info = function(){};
+        window.console = console;
+    }
 
     /**
      * @namespace lola

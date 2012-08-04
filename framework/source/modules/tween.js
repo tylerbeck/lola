@@ -639,11 +639,14 @@
          * @type {Object}
          */
         this.selectorMethods = {
-
-            tween: function( properties, duration, delay, easing, collisions ){
+            tween: function( properties, duration, delay, easing, collisions, returnId ){
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
                 self.addTarget( tweenId, this.getAll(), properties, collisions );
                 self.start(tweenId);
+
+                if (returnId === true)
+                    return tweenId;
+
                 return this;
             }
         };

@@ -97,9 +97,6 @@
                 self.registerStyleHook( item, dimensionalHook );
             });
 
-            //add default stylesheet for dynamic rules
-            self.addStyleSheet( "_default" );
-
             //add default mappings
             propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
@@ -271,15 +268,25 @@
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            var stylesheet = (lola.support.cssRules) ? document.createElement( 'style' ) : document.createStyleSheet();
+            lola.debug('addStyleSheet',lola.support.cssRules, id, source );
+            var stylesheet;
+            if (lola.support.cssRules){
+                stylesheet = document.createElement( 'style' );
+                lola.dom.attr(stylesheet, "type", "text/css");
+            }
+            else{
+                stylesheet = document.createStyleSheet();
+            }
+            var head = document.getElementsByTagName("head")[0];
+            head.appendChild( stylesheet );
+
+
             if (source) {
                 stylesheet.source = source;
             }
             if (id) {
                 self.registerStyleSheet( stylesheet, id );
             }
-            var head = document.getElementsByTagName("head")[0];
-            head.appendChild( stylesheet );
         };
 
 
@@ -752,6 +759,15 @@
             parseValue(value);
             return this;
         };
+
+
+        //==================================================================
+        // Preinitialization
+        //==================================================================
+        //TODO:this breaks in IE browsers and needs to be fixed
+        //add default stylesheet for dynamic rules
+        //self.addStyleSheet( "_default" );
+
 
     };
 

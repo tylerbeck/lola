@@ -102,6 +102,7 @@
 
                 //add listeners
                 $client.addListener( 'mousedown', startDrag, true, undefined, self );
+                $client.addListener( 'touchstart', startDrag, true, undefined, self );
 
             }
         };
@@ -117,6 +118,7 @@
 
                 //remove listeners
                 $client.removeListener( 'mousedown', startDrag, true );
+                $client.removeListener( 'touchstart', startDrag, true );
                 delete clients[ client.id ];
             }
         };
@@ -183,11 +185,14 @@
             $target.style('zIndex', 10000 );
             $target.style('cursor', cursor?cursor:'none' );
 
-            $(document).addListener('mousemove', doDrag, true, undefined, self );
-            $(document).addListener('mouseup', endDrag, true, undefined, self );
+            $(document).addListener('mousemove', doDrag, true, undefined, self)
+                .addListener('mouseup', endDrag, true, undefined, self )
+                .addListener('touchmove', doDrag, true, undefined, self )
+                .addListener('touchend', endDrag, true, undefined, self );
             $('body').addClass('dragging');
 
         }
+
 
         /**
          * do drag
@@ -195,6 +200,7 @@
          * @private
          */
         function doDrag( event ){
+            event.preventDefault();
             var $target = $(target);
 
 
@@ -232,8 +238,11 @@
             //$(data.parent).appendChild( target );
             dragging = false;
             target = null;
-            $(document).removeListener('mousemove', doDrag, true );
-            $(document).removeListener('mouseup', endDrag, true );
+            $(document).removeListener('mousemove', doDrag, true )
+                .removeListener('mouseup', endDrag, true )
+                .removeListener('touchmove', doDrag, true )
+                .removeListener('touchend', endDrag, true );
+
             document.onselectstart = null;
             $('body').removeClass('dragging');
             $target.trigger( "dragend", false, false );

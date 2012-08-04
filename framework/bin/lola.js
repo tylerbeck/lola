@@ -7,8 +7,14 @@
  ***********************************************************************/
 "use strict";
 ( function( window ) {
-
     var startTime = (new Date()).getTime();
+
+    if (window.console == undefined ){
+        var console = {};
+        console.log = function(){};
+        console.info = function(){};
+        window.console = console;
+    }
 
     /**
      * @namespace lola
@@ -3565,7 +3571,7 @@ if ( !String.prototype.trim ) {
 
                 this.key = self.getDOMKey( event );
 
-                if (event.hasOwnProperty('wheelDelta') || event.axis){
+                if (event.wheelDelta || event.axis){
                     var wdo = { x:event.wheelDeltaX, y:event.wheelDeltaY };
                     if (event.axis){
                         wdo.x = -3 * ((event.axis === 2) ? 0 : event.detail);
@@ -3582,7 +3588,9 @@ if ( !String.prototype.trim ) {
              * prevents an events default behavior
              */
             preventDefault: function(){
-                this.originalEvent.preventDefault();
+                if (this.originalEvent.preventDefault)
+                    this.originalEvent.preventDefault();
+                return false;
             },
 
             /**
@@ -4716,9 +4724,6 @@ if ( !String.prototype.trim ) {
                 self.registerStyleHook( item, dimensionalHook );
             });
 
-            //add default stylesheet for dynamic rules
-            self.addStyleSheet( "_default" );
-
             //add default mappings
             propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
@@ -4890,15 +4895,25 @@ if ( !String.prototype.trim ) {
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            var stylesheet = (lola.support.cssRules) ? document.createElement( 'style' ) : document.createStyleSheet();
+            lola.debug('addStyleSheet',lola.support.cssRules, id, source );
+            var stylesheet;
+            if (lola.support.cssRules){
+                stylesheet = document.createElement( 'style' );
+                lola.dom.attr(stylesheet, "type", "text/css");
+            }
+            else{
+                stylesheet = document.createStyleSheet();
+            }
+            var head = document.getElementsByTagName("head")[0];
+            head.appendChild( stylesheet );
+
+
             if (source) {
                 stylesheet.source = source;
             }
             if (id) {
                 self.registerStyleSheet( stylesheet, id );
             }
-            var head = document.getElementsByTagName("head")[0];
-            head.appendChild( stylesheet );
         };
 
 
@@ -5371,6 +5386,15 @@ if ( !String.prototype.trim ) {
             parseValue(value);
             return this;
         };
+
+
+        //==================================================================
+        // Preinitialization
+        //==================================================================
+        //TODO:this breaks in IE browsers and needs to be fixed
+        //add default stylesheet for dynamic rules
+        //self.addStyleSheet( "_default" );
+
 
     };
 
@@ -9372,11 +9396,14 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-
-            tween: function( properties, duration, delay, easing, collisions ){
+            tween: function( properties, duration, delay, easing, collisions, returnId ){
                 var tweenId = self.registerTween( new self.Tween( duration, easing, delay ) );
                 self.addTarget( tweenId, this.getAll(), properties, collisions );
                 self.start(tweenId);
+
+                if (returnId === true)
+                    return tweenId;
+
                 return this;
             }
         };

@@ -645,7 +645,7 @@
 
                 this.key = self.getDOMKey( event );
 
-                if (event.hasOwnProperty('wheelDelta') || event.axis){
+                if (event.wheelDelta || event.axis){
                     var wdo = { x:event.wheelDeltaX, y:event.wheelDeltaY };
                     if (event.axis){
                         wdo.x = -3 * ((event.axis === 2) ? 0 : event.detail);
@@ -662,7 +662,9 @@
              * prevents an events default behavior
              */
             preventDefault: function(){
-                this.originalEvent.preventDefault();
+                if (this.originalEvent.preventDefault)
+                    this.originalEvent.preventDefault();
+                return false;
             },
 
             /**

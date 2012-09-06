@@ -12,6 +12,7 @@
 	 * @namespace lola.array
 	 */
 	var Module = function(){
+		var $ = lola;
         var self = this;
         //==================================================================
         // Attributes
@@ -68,7 +69,7 @@
         // Methods
         //==================================================================
         this.initialize = function(){
-            lola.debug( 'lola.support::initialize' );
+            $.debug( 'lola.support::initialize' );
             self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
         };
 
@@ -89,12 +90,12 @@
         root.insertBefore( script, root.firstChild );
         root.removeChild( script );
 
-        self.domEval = lola.window[ uid ];
+        self.domEval = $.window[ uid ];
         try {
-            delete lola.window[ uid ];
+            delete $.window[ uid ];
         }
         catch(e){
-            lola.window[ uid ] = null;
+            $.window[ uid ] = null;
         }
 
         //create div for testing

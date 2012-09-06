@@ -12,7 +12,8 @@
      * @namespace lola.template
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -66,19 +67,16 @@
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug('lola.template::initialize');
-            //this framework is dependent on lola framework
-            if ( !lola ) throw new Error( 'lola not defined!' );
+            $.debug('lola.template::initialize');
 
             //do module initialization
-
             //get all predefined templates
-            var start = lola.now();
-            lola('script[type="text/x-lola-template"]').forEach( function( item ){
+            var start = $.now();
+            $('script[type="text/x-lola-template"]').forEach( function( item ){
                 self.add( item.id, item.innerHTML );
             });
-            var complete = lola.now();
-            lola.debug( "templates parsed in "+(complete-start)+" ms" );
+            var complete = $.now();
+            $.debug( "templates parsed in "+(complete-start)+" ms" );
 
 
             //remove initialization method
@@ -150,7 +148,7 @@
              * @param {Object} data
              */
             applyTemplate: function( name, data ){
-                this.html( lola.template.apply(name,data) );
+                this.html( $.template.apply(name,data) );
             }
         };
 
@@ -172,9 +170,9 @@
          * @param {String} str
          */
         function Tag( str ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
-
             /**
              * part splitter
              * @private
@@ -265,7 +263,7 @@
                 var value = (property == "INDEX") ? index : data[ property ];
 
                 if (Object.keys(options).length > 0){
-                    var type = lola.type.get( value );
+                    var type = $.type.get( value );
                     switch(type){
                         case "boolean":
                             value = options[ value ? "0" : "1" ];
@@ -300,7 +298,8 @@
          * @param {Function} fn
          */
         function Hook( fn ){
-            if ( typeof fn != "function" )
+	        var $ = lola;
+	        if ( typeof fn != "function" )
                 throw new Error("invalid hook.");
 
             /**
@@ -310,7 +309,7 @@
              */
             this.evaluate = function( value, index ) {
                 //return value
-                return fn.apply( lola.window, arguments );
+                return fn.apply( $.window, arguments );
             }
         }
 
@@ -320,8 +319,8 @@
          * @param {String} tmpStr
          */
         function TemplateHook( tmpStr ) {
-
-            /**
+	        var $ = lola;
+	        /**
              * tag regex
              * @private
              * @type {RegExp}
@@ -381,7 +380,7 @@
              */
             this.evaluate = function( value, index ) {
                 var built = [];
-                var type = lola.type.get( value );
+                var type = $.type.get( value );
                 if ( type != "array" ){
                     value = [ value ];
                 }

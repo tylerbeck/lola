@@ -81,8 +81,8 @@
     <test name="$().isTableCaption: check" equals="true" type="bool"><![CDATA[ $( map['TableCaption'] ).isTableCaption(); ]]></test>
     <test name="lola.type.get: TableCol" equals="tablecol" type="string"><![CDATA[ lola.type.get( map['TableCol'] ); ]]></test>
     <test name="$().isTableCol: check" equals="true" type="bool"><![CDATA[ $( map['TableCol'] ).isTableCol(); ]]></test>
-    <test name="lola.type.get: DataList" equals="datalist" type="string"><![CDATA[ lola.type.get( map['DataList'] ); ]]></test>
-    <test name="$().isDataList: check" equals="true" type="bool"><![CDATA[ $( map['DataList'] ).isDataList(); ]]></test>
+    <!--<test name="lola.type.get: DataList" equals="datalist" type="string"><![CDATA[ lola.type.get( map['DataList'] ); ]]></test>-->
+    <!--<test name="$().isDataList: check" equals="true" type="bool"><![CDATA[ $( map['DataList'] ).isDataList(); ]]></test>-->
     <test name="lola.type.get: Element" equals="element" type="string"><![CDATA[ lola.type.get( map['Element'] ); ]]></test>
     <test name="$().isElement: check" equals="true" type="bool"><![CDATA[ $( map['Element'] ).isElement(); ]]></test>
     <test name="lola.type.get: Mod" equals="mod" type="string"><![CDATA[ lola.type.get( map['Mod'] ); ]]></test>

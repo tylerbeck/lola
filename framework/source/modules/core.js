@@ -12,7 +12,8 @@
      * @namespace lola
      */
 	var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -122,8 +123,8 @@
          * @param {Function} fn
          */
         this.addInitializer = function( fn ){
-            if (lola.isInitialized())
-                fn( lola );
+            if ($.isInitialized())
+                fn( $ );
             else {
                 initializers.push( fn );
             }
@@ -196,7 +197,7 @@
             var missing = [];
 
             Object.forEach(modules, function(item){
-                if (!lola.hasPackage( lola, item ))
+                if (!$.hasPackage( $, item ))
                     missing.push(item);
             });
 
@@ -207,13 +208,13 @@
          * framework initialization function
          */
         this.executeInitializers = function() {
-            lola.debug('core::executeInitializers');
+            $.debug('core::executeInitializers');
             var i;
             var stackSize = initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn(initializers,i)){
-                    initializers[i]( lola );
+                if ($.hasFn(initializers,i)){
+                    initializers[i]( $ );
                     delete initializers[i];
                 }
             }
@@ -235,7 +236,7 @@
             var script = document.createElement( 'script' );
             script.type = "text/javascript";
 
-            if ( lola.support.domEval ) {
+            if ( $.support.domEval ) {
                 script.appendChild( document.createTextNode( expression ) );
             }
             else {
@@ -260,7 +261,7 @@
             var script = document.createElement( 'script' );
 
             if (typeof callback == "function")
-                lola.event.addListener(script, 'load', function(){callback.apply()} );
+                $.event.addListener(script, 'load', function(){callback.apply()} );
 
             script.src = src;
             node.insertBefore( script, node.firstChild );
@@ -339,7 +340,7 @@
             identify: function() {
                 this.forEach( function( item ) {
                     if ( !item.id )
-                        item.id = "lola-guid-" + lola.getGUID()
+                        item.id = "lola-guid-" + $.getGUID()
                 } );
 
                 return this;
@@ -364,7 +365,7 @@
             at: function( index ) {
                 if ( index == undefined )
                     index = 0;
-                return lola(this[ index ]);
+                return $(this[ index ]);
             },
 
             /**
@@ -392,7 +393,7 @@
             concat: function( obj, unique ) {
                 var self = this;
 
-                if ( obj instanceof lola.Selector ){
+                if ( obj instanceof $.Selector ){
                     obj.forEach( function(item){
                         self.push( item );
                     })
@@ -407,7 +408,7 @@
                 }
 
                 if (unique == undefined || unique === true){
-                    var uni = lola.array.unique( this );
+                    var uni = $.array.unique( this );
                     this.splice(0,this.length);
                     uni.forEach( function(item){
                         self.push( item );
@@ -421,7 +422,7 @@
              * @private
              */
             g: function( /*arguments*/ ){
-                return lola.__( this.i.apply( this, arguments ) );
+                return $.__( this.i.apply( this, arguments ) );
             },
 
             /**
@@ -443,7 +444,7 @@
             _: function( /*arguments*/ ){
                 //console.log('_: ', arguments);
                 var result = this.i.apply( this, arguments );
-                return ( arguments[arguments.length - 1] == undefined ) ? lola.__( result ) : this;
+                return ( arguments[arguments.length - 1] == undefined ) ? $.__( result ) : this;
             },
 
 

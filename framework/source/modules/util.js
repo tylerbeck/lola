@@ -12,7 +12,8 @@
 	 * @namespace lola.util
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -60,7 +61,7 @@
          */
         this.copyPrimitives = function( source, target ){
             for (var k in source){
-                if (lola.type.isPrimitive(source[k])){
+                if ($.type.isPrimitive(source[k])){
                     target[k] = source[k];
                 }
             }
@@ -92,7 +93,7 @@
                     console.group( group );
 
                 //error info
-                if (lola.type.get(info) == 'array'){
+                if ($.type.get(info) == 'array'){
                     info.forEach( function(item){
                         console.info( item );
                     });
@@ -120,11 +121,11 @@
          * @return {*}
          */
         this.getInlineValue = function( scope, name, type, defaultValue ){
-            var $inline = $('script[type="text/x-lola-'+name+'"]', scope );
+            var $inline = $('script[type="text/x-$-'+name+'"]', scope );
             if ( $inline.length ){
                 //inline property was found
                 var value = eval( $inline[0].innerHTML );
-                if ( lola.type.get( value ) === type.toLowerCase() ){
+                if ( $.type.get( value ) === type.toLowerCase() ){
                     return value;
                 }
             }

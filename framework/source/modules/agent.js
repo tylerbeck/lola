@@ -12,7 +12,8 @@
      * @namespace lola.agent
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -85,16 +86,16 @@
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug('lola.agent::initialize');
+            $.debug('lola.agent::initialize');
 
             //check agent dependencies
-            lola.checkDependencies( this.dependencies );
+            $.checkDependencies( this.dependencies );
 
             //execute agent initialization stack
             var stackSize = initializers.length;
 
             for ( var i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn( initializers, i )){
+                if ($.hasFn( initializers, i )){
                     initializers[i]();
                     delete initializers[i];
                 }
@@ -110,27 +111,27 @@
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            lola.debug('register agent: '+ns);
-            if ( ns && lola.hasFn( agent,"sign" ) && lola.hasFn( agent,"drop" ) ) {
+            $.debug('register agent: '+ns);
+            if ( ns && $.hasFn( agent,"sign" ) && $.hasFn( agent,"drop" ) ) {
                 //setup module
-                var pkg = lola.getPackage( lola.agent, ns, agent );
+                var pkg = $.getPackage( $.agent, ns, agent );
 
                 //add dependencies
-                if (lola.hasFn(agent,'getDependencies'))
+                if ($.hasFn(agent,'getDependencies'))
                     this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
 
                 //map agent
                 map[ ns ] = pkg;
 
                 //add initializer
-                if (lola.hasFn( agent,'initialize' )) {
+                if ($.hasFn( agent,'initialize' )) {
                     initializers.push( function() {
                         agent.initialize();
                     });
                 }
 
                 //run preinitialization method if available
-                if (lola.hasFn( agent,'preinitialize' )) {
+                if ($.hasFn( agent,'preinitialize' )) {
                     agent.preinitialize();
                 }
 
@@ -205,7 +206,7 @@
         //==================================================================
         // Preinitialization
         //==================================================================
-        lola.addSafeDeleteHook( this.drop, this );
+        $.addSafeDeleteHook( this.drop, this );
 
     };
 

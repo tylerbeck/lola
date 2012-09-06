@@ -10,7 +10,8 @@
 #set( $ans = "agentNamespace()" )
 (function( lola ) {
     var Agent = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
 
         //==================================================================
         // Attributes
@@ -54,7 +55,7 @@
         this.dependencies = function() {
             return dependencies;
         };
-        
+
         /**
          * get namespace including "agent."
          */
@@ -76,7 +77,7 @@
 
                 //setup client
                 clients[ client.id ] = client;
-                $client.putData( {}, $ans );
+                $client.putData( {}, agentNamespace() );
 
                 //add listeners
 
@@ -90,11 +91,11 @@
         this.drop = function( client ) {
             if (clients[ client.id ] ) {
                 var $client = $(client);
-                var data = $client.getData( $ans );
+                var data = $client.getData( agentNamespace() );
                 //remove listeners
 
                 //teardown client
-                $client.removeData( $ans );
+                $client.removeData( agentNamespace() );
                 delete clients[ client.id ];
             }
         };
@@ -112,7 +113,7 @@
          * agent initializer
          */
         this.initialize = function(){
-            lola("$UIselector").assignAgent( namespace );
+            $("$UIselector").assignAgent( namespace );
         };
 
     };

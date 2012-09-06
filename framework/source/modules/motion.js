@@ -14,9 +14,10 @@
      * @namespace lola.motion
      */
     var Module = function () {
-        var self = this;
+	    var $ = lola;
+	    var self = this;
 
-        //==================================================================
+	    //==================================================================
         // Attributes
         //==================================================================
 
@@ -63,7 +64,7 @@
          * module initializer
          */
         this.initialize = function(){
-            lola.debug('motion::initialize');
+            $.debug('motion::initialize');
 
             delete self.initialize;
         };
@@ -191,10 +192,10 @@
         // Classes
         //==================================================================
         var Group = function( name ){
-
+			var $ = lola;
             var self = this;
-            var anim = new lola.animation.Animation( tick, self );
-            lola.animation.register( namespace+'.'+name, anim );
+            var anim = new $.animation.Animation( tick, self );
+            $.animation.register( namespace+'.'+name, anim );
             var frameCount = 10000;
             var maxRate = 5000;
             var loop = false;
@@ -352,7 +353,7 @@
 
                 var start = (options.start) ? options.start : 0;
                 var end = (options.end) ? options.end : frameCount;
-                var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
+                var ease = $.easing.get( options.ease ? options.ease : 'linear' );
 
                 delete options.start;
                 delete options.end;
@@ -369,7 +370,7 @@
                                     pObj.forEach(function(item){
                                         var s = item.start == undefined ? start : item.start;
                                         var e = item.end == undefined ? end : item.end;
-                                        var es =  item.ease == undefined ? ease : lola.easing.get(item.ease);
+                                        var es =  item.ease == undefined ? ease : $.easing.get(item.ease);
                                         var st = item.step;
                                         targets.push( new RangeTween( obj, g, p, item, es, s, e, st ) );
                                     });
@@ -401,7 +402,7 @@
              */
             self.destroy = function(){
                 targets = [];
-                lola.animation.remove( namespace+'.'+name );
+                $.animation.remove( namespace+'.'+name );
             }
 
         };
@@ -417,8 +418,9 @@
          * @param end
          */
         var RangeTween = function( target, group, property, value, ease, start, end, step ){
-            var self = this;
-            var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
+	        var $ = lola;
+	        var self = this;
+            var tweenObject = new $.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;
             var lastPosition = 0;

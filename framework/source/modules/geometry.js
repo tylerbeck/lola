@@ -12,7 +12,8 @@
      * @namespace lola.geometry
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -92,16 +93,16 @@
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
-            //console.log('lola.geometry.width', arguments );
+            //console.log('$.geometry.width', arguments );
             if ( value != undefined ){
                 //setting
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 value -= bl+br+pl+pr;
 
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -134,7 +135,7 @@
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -143,10 +144,10 @@
                 else
                     w = elem.clientWidth;
 
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 w -= bl+br+pl+pr;
 
                 return w;
@@ -161,13 +162,13 @@
         this.height = function( elem, value ) {
             if ( value != undefined ){
                 //setting
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 value -= bt+bb+pt+pb;
 
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -200,7 +201,7 @@
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -209,10 +210,10 @@
                 else
                     h = elem.clientHeight;
 
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 h -= bt+bb+pt+pb;
 
                 return h;

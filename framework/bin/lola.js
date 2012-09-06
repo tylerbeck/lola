@@ -516,7 +516,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola
      */
 	var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -626,8 +627,8 @@ if ( !String.prototype.trim ) {
          * @param {Function} fn
          */
         this.addInitializer = function( fn ){
-            if (lola.isInitialized())
-                fn( lola );
+            if ($.isInitialized())
+                fn( $ );
             else {
                 initializers.push( fn );
             }
@@ -700,7 +701,7 @@ if ( !String.prototype.trim ) {
             var missing = [];
 
             Object.forEach(modules, function(item){
-                if (!lola.hasPackage( lola, item ))
+                if (!$.hasPackage( $, item ))
                     missing.push(item);
             });
 
@@ -711,13 +712,13 @@ if ( !String.prototype.trim ) {
          * framework initialization function
          */
         this.executeInitializers = function() {
-            lola.debug('core::executeInitializers');
+            $.debug('core::executeInitializers');
             var i;
             var stackSize = initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn(initializers,i)){
-                    initializers[i]( lola );
+                if ($.hasFn(initializers,i)){
+                    initializers[i]( $ );
                     delete initializers[i];
                 }
             }
@@ -739,7 +740,7 @@ if ( !String.prototype.trim ) {
             var script = document.createElement( 'script' );
             script.type = "text/javascript";
 
-            if ( lola.support.domEval ) {
+            if ( $.support.domEval ) {
                 script.appendChild( document.createTextNode( expression ) );
             }
             else {
@@ -764,7 +765,7 @@ if ( !String.prototype.trim ) {
             var script = document.createElement( 'script' );
 
             if (typeof callback == "function")
-                lola.event.addListener(script, 'load', function(){callback.apply()} );
+                $.event.addListener(script, 'load', function(){callback.apply()} );
 
             script.src = src;
             node.insertBefore( script, node.firstChild );
@@ -843,7 +844,7 @@ if ( !String.prototype.trim ) {
             identify: function() {
                 this.forEach( function( item ) {
                     if ( !item.id )
-                        item.id = "lola-guid-" + lola.getGUID()
+                        item.id = "lola-guid-" + $.getGUID()
                 } );
 
                 return this;
@@ -868,7 +869,7 @@ if ( !String.prototype.trim ) {
             at: function( index ) {
                 if ( index == undefined )
                     index = 0;
-                return lola(this[ index ]);
+                return $(this[ index ]);
             },
 
             /**
@@ -896,7 +897,7 @@ if ( !String.prototype.trim ) {
             concat: function( obj, unique ) {
                 var self = this;
 
-                if ( obj instanceof lola.Selector ){
+                if ( obj instanceof $.Selector ){
                     obj.forEach( function(item){
                         self.push( item );
                     })
@@ -911,7 +912,7 @@ if ( !String.prototype.trim ) {
                 }
 
                 if (unique == undefined || unique === true){
-                    var uni = lola.array.unique( this );
+                    var uni = $.array.unique( this );
                     this.splice(0,this.length);
                     uni.forEach( function(item){
                         self.push( item );
@@ -925,7 +926,7 @@ if ( !String.prototype.trim ) {
              * @private
              */
             g: function( /*arguments*/ ){
-                return lola.__( this.i.apply( this, arguments ) );
+                return $.__( this.i.apply( this, arguments ) );
             },
 
             /**
@@ -947,7 +948,7 @@ if ( !String.prototype.trim ) {
             _: function( /*arguments*/ ){
                 //console.log('_: ', arguments);
                 var result = this.i.apply( this, arguments );
-                return ( arguments[arguments.length - 1] == undefined ) ? lola.__( result ) : this;
+                return ( arguments[arguments.length - 1] == undefined ) ? $.__( result ) : this;
             },
 
 
@@ -1058,6 +1059,7 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.array
 	 */
 	var Module = function(){
+		var $ = lola;
         var self = this;
         //==================================================================
         // Attributes
@@ -1114,7 +1116,7 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         this.initialize = function(){
-            lola.debug( 'lola.support::initialize' );
+            $.debug( 'lola.support::initialize' );
             self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
         };
 
@@ -1135,12 +1137,12 @@ if ( !String.prototype.trim ) {
         root.insertBefore( script, root.firstChild );
         root.removeChild( script );
 
-        self.domEval = lola.window[ uid ];
+        self.domEval = $.window[ uid ];
         try {
-            delete lola.window[ uid ];
+            delete $.window[ uid ];
         }
         catch(e){
-            lola.window[ uid ] = null;
+            $.window[ uid ] = null;
         }
 
         //create div for testing
@@ -1209,7 +1211,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.array
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -1403,6 +1406,7 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.type
 	 */
 	var Module = function() {
+		var $ = lola;
         var self = this;
         //==================================================================
         // Attributes
@@ -1498,7 +1502,7 @@ if ( !String.prototype.trim ) {
             var cn = document.createComment( 'test' );
             var tntype = Object.prototype.toString.call( tn );
             var cntype = Object.prototype.toString.call( cn );
-            var windowtype = Object.prototype.toString.call( lola.window );
+            var windowtype = Object.prototype.toString.call( $.window );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
             map[ windowtype ] = 'window';
@@ -1520,7 +1524,7 @@ if ( !String.prototype.trim ) {
             map[ type ] = name.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + name + "'] = " +
                 "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**
@@ -1537,7 +1541,7 @@ if ( !String.prototype.trim ) {
             map[ type ] = name.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + name + "'] = " +
                 "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**
@@ -1551,7 +1555,7 @@ if ( !String.prototype.trim ) {
             map[ type ] = item.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + item + "'] = " +
                 "function(index){ return this.isType('" + item.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**
@@ -1647,7 +1651,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.dom
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -1710,7 +1715,7 @@ if ( !String.prototype.trim ) {
             }
             else if (object) {
                 if ( value || value == "") {   //set value
-                    if (lola.type.isPrimitive(value)) {
+                    if ($.type.isPrimitive(value)) {
                         return object[name] = value;
                     }
                     else {
@@ -1749,7 +1754,7 @@ if ( !String.prototype.trim ) {
             if (value != undefined){
                 var result = self.attr(object, name, value, false);
                 if (oldValue != value)
-                    lola.event.trigger( object, 'change', false, false );
+                    $.event.trigger( object, 'change', false, false );
                 return result;
             }
 
@@ -1762,7 +1767,7 @@ if ( !String.prototype.trim ) {
          * @param {String} name
          */
         this.deleteExpando =function( object, name ) {
-            if ( lola.support.deleteExpando )
+            if ( $.support.deleteExpando )
                 delete object[name];
             else
                 object[name] = null;
@@ -1856,7 +1861,7 @@ if ( !String.prototype.trim ) {
                     this.forEach( function( item ) {
                         values.push( (item) ? item.innerHTML : null );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
                 else {
                     this.forEach( function( item ) {
@@ -1864,9 +1869,9 @@ if ( !String.prototype.trim ) {
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
-                                lola.safeDelete( child );
+                                $.safeDelete( child );
                             }
-                            switch ( lola.type.get( content ) ) {
+                            switch ( $.type.get( content ) ) {
                                 case 'null':
                                 case 'undefined':
                                     item.innerHTML = "";
@@ -1961,7 +1966,7 @@ if ( !String.prototype.trim ) {
              */
             removeChild: function( node ) {
                 if ( this.length > 0 ) {
-                    lola.safeDelete( node );
+                    $.safeDelete( node );
                     this.get().removeChild( node );
                 }
                 return contentChanged( this );
@@ -1975,9 +1980,9 @@ if ( !String.prototype.trim ) {
              */
             replaceChild: function( newChild, oldChild ) {
                 if ( this.length > 0 ) {
-                    lola.safeDelete( oldChild );
+                    $.safeDelete( oldChild );
                     //TODO: check if call to below line is needed
-                    //lola.data.destroyCache( oldChild, true );
+                    //$.data.destroyCache( oldChild, true );
                     this.get().replaceChild( newChild, oldChild );
                 }
                 return contentChanged( this );
@@ -2001,7 +2006,7 @@ if ( !String.prototype.trim ) {
                     this.forEach( function( item ) {
                         values.push( self.attr( item, name ) );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
             },
 
@@ -2035,7 +2040,7 @@ if ( !String.prototype.trim ) {
                     this.forEach( function( item ) {
                         values.push( item?item.parentNode:null );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
             },
 
@@ -2097,7 +2102,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.data
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -2174,9 +2180,9 @@ if ( !String.prototype.trim ) {
         function getCacheId( object, create ) {
             create = (create == undefined) ? true : create;
             //assume if create cache is being called that ther is no cache
-            var cacheId = lola.dom.attr( object, cacheIDProp );
+            var cacheId = $.dom.attr( object, cacheIDProp );
             if ( cacheId == null ) {
-                switch ( lola.type.get( object ) ) {
+                switch ( $.type.get( object ) ) {
                     case 'function':
                     case 'object':
                         cacheId = object[cacheIDProp];
@@ -2202,10 +2208,10 @@ if ( !String.prototype.trim ) {
                         break;
                     default:
                         //get attribute
-                        cacheId = lola.dom.attr( object, cacheIDProp );
+                        cacheId = $.dom.attr( object, cacheIDProp );
                         if ( cacheId == null && create ) {
                             cacheId = nextUid();
-                            lola.dom.attr( object, cacheIDProp, cacheId );
+                            $.dom.attr( object, cacheIDProp, cacheId );
                         }
                         break;
                 }
@@ -2260,7 +2266,7 @@ if ( !String.prototype.trim ) {
             if ( overwite || cache[namespace][cacheId] == null )
                 cache[namespace][cacheId] = data;
             else
-                lola.extend(cache[namespace][cacheId], data, true );
+                $.extend(cache[namespace][cacheId], data, true );
 
             return cache[namespace][cacheId];
         };
@@ -2283,7 +2289,7 @@ if ( !String.prototype.trim ) {
                     }
                 }
                 else {
-                    if ( lola.type.get(namespace) != "array" )
+                    if ( $.type.get(namespace) != "array" )
                         namespace = [namespace];
                 }
 
@@ -2296,7 +2302,7 @@ if ( !String.prototype.trim ) {
                 recurse = true;
 
             if ( recurse ) {
-                if ( object.childNodes && lola.type.get(object.childNodes) == "array") {
+                if ( object.childNodes && $.type.get(object.childNodes) == "array") {
                     object.childNodes.forEach( function( item ) {
                         self.remove( item, namespace, true );
                     } )
@@ -2307,15 +2313,15 @@ if ( !String.prototype.trim ) {
 
         this.dataset = function( elem, name, value ){
             if (value != undefined ){
-                if (lola.support.dataset){
+                if ($.support.dataset){
                     elem.dataset[name] = value;
                 }
                 else{
-                    lola(elem).attr('data-'+name, value);
+                    $(elem).attr('data-'+name, value);
                 }
             }
             else{
-                if (lola.support.dataset){
+                if ($.support.dataset){
                     try {
                         return elem.dataset[name];
                     }
@@ -2323,7 +2329,7 @@ if ( !String.prototype.trim ) {
                     return undefined;
                 }
                 else{
-                    return lola(elem).attr('data-'+name);
+                    return $(elem).attr('data-'+name);
                 }
             }
         };
@@ -2394,7 +2400,7 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Preinitialize
         //==================================================================
-        lola.addSafeDeleteHook( this.remove, this );
+        $.addSafeDeleteHook( this.remove, this );
 
     };
 
@@ -2417,7 +2423,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.util
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -2465,7 +2472,7 @@ if ( !String.prototype.trim ) {
          */
         this.copyPrimitives = function( source, target ){
             for (var k in source){
-                if (lola.type.isPrimitive(source[k])){
+                if ($.type.isPrimitive(source[k])){
                     target[k] = source[k];
                 }
             }
@@ -2497,7 +2504,7 @@ if ( !String.prototype.trim ) {
                     console.group( group );
 
                 //error info
-                if (lola.type.get(info) == 'array'){
+                if ($.type.get(info) == 'array'){
                     info.forEach( function(item){
                         console.info( item );
                     });
@@ -2525,11 +2532,11 @@ if ( !String.prototype.trim ) {
          * @return {*}
          */
         this.getInlineValue = function( scope, name, type, defaultValue ){
-            var $inline = $('script[type="text/x-lola-'+name+'"]', scope );
+            var $inline = $('script[type="text/x-$-'+name+'"]', scope );
             if ( $inline.length ){
                 //inline property was found
                 var value = eval( $inline[0].innerHTML );
-                if ( lola.type.get( value ) === type.toLowerCase() ){
+                if ( $.type.get( value ) === type.toLowerCase() ){
                     return value;
                 }
             }
@@ -2611,7 +2618,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.string
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -2822,14 +2830,15 @@ if ( !String.prototype.trim ) {
  *
  ***********************************************************************/
 (function( lola ) {
-	var $ = lola;
 	/**
 	 * Regular Expression Module
 	 * @namespace lola.regex
 	 */
 	var Module = function(){
+		var $ = lola;
+		var self = this;
 
-        //==================================================================
+		//==================================================================
         // Attributes
         //==================================================================
         /**
@@ -2939,7 +2948,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.event
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -3035,16 +3045,16 @@ if ( !String.prototype.trim ) {
         this.addListener = function( target, type, handler, useCapture, priority, scope, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
-            if ( lola.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
+            if ( $.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
                 if (useHooks !== false && hooks[type] != null){
                     var hook = hooks[type];
                     return hook.addListener( target, type, handler, useCapture, priority, hook );
                 }
                 else {
-                    var data = lola.data.get( target, dataNamespace );
+                    var data = $.data.get( target, dataNamespace );
                     if ( !data ) {
                         data = { capture:{}, bubble:{} };
-                        lola.data.set( target, data, dataNamespace, true );
+                        $.data.set( target, data, dataNamespace, true );
                     }
 
                     var phase = self.phaseString( target, useCapture );
@@ -3085,18 +3095,18 @@ if ( !String.prototype.trim ) {
         this.removeListener = function( target, type, handler, useCapture, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
-            if ( lola.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
+            if ( $.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
                 if (useHooks !== false && hooks[type] != null){
                     hooks[type]['removeListener'].call( hooks[type], target, type, handler, useCapture );
                 }
                 else {
-                    var data = lola.data.get( target, dataNamespace );
+                    var data = $.data.get( target, dataNamespace );
                     if ( !data ) data = { capture:{}, bubble:{} };
 
                     var phase = self.phaseString( target, useCapture );
 
                     //get handler uid
-                    var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
+                    var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
 
                     if (data && data[phase] && data[phase][type] ){
                         delete data[phase][type][uid];
@@ -3122,21 +3132,21 @@ if ( !String.prototype.trim ) {
          * @param {Boolean|undefined} useCapture
          */
         this.removeHandler = function( handler, types, useCapture ) {
-            //console.info( 'lola.event.removeHandler: '+type+' '+capture );
+            //console.info( '$.event.removeHandler: '+type+' '+capture );
             var required = [['handler',handler]];
             var info = [];
-            if ( lola.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
+            if ( $.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
                 //get handler uid
-                var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
+                var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
 
                 //get event data
-                var data = lola.data.getNamespace( dataNamespace );
+                var data = $.data.getNamespace( dataNamespace );
                 if ( data ) {
                     var ctypes = (useCapture == undefined) ? ['capture','bubble'] : useCapture ? ['capture'] : ['bubble'];
                     //iterate data
                     for ( var oid in data ) {
                         if ( types != undefined )
-                            types = lola.type.get( types ) == 'array' ? types : [types];
+                            types = $.type.get( types ) == 'array' ? types : [types];
                         for ( var phase in ctypes ) {
                             var type;
                             if ( types ) {
@@ -3165,7 +3175,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function captureHandler( event ) {
-            event = event || lola.window.event;
+            event = event || $.window.event;
             handler( event, 'capture' )
         }
 
@@ -3175,7 +3185,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function bubbleHandler( event ) {
-            event = event || lola.window.event;
+            event = event || $.window.event;
             handler( event, 'bubble' )
         }
 
@@ -3187,18 +3197,18 @@ if ( !String.prototype.trim ) {
          */
         function handler( event, phase ) {
             event = event ? event : window.event;
-           //console.log( 'lola.event.handler: '+event.type+' '+phase );
+           //console.log( '$.event.handler: '+event.type+' '+phase );
 
             var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
-            var data = lola.data.get( e.currentTarget, dataNamespace );
+            var data = $.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
                 //console.info('    found event');
                 var stack = [];
                 for ( var uid in data[phase][event.type] ) {
                     stack.push( data[phase][event.type][uid] );
                 }
-                //stack = stack.sort( lola.util.prioritySort );
-                stack = lola.array.sortOn( 'priority', stack );
+                //stack = stack.sort( $.util.prioritySort );
+                stack = $.array.sortOn( 'priority', stack );
                 for ( var i in stack ) {
                     if ( e._immediatePropagationStopped )
                         break;
@@ -3220,11 +3230,11 @@ if ( !String.prototype.trim ) {
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type, object);
+            //console.log('$.event.trigger:',type, object);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
-            if ( lola.util.checkArgs(args, names, group) ){
+            if ( $.util.checkArgs(args, names, group) ){
                 //console.log('   valid');
                 if ( bubbles == undefined )
                     bubbles = true;
@@ -3232,7 +3242,7 @@ if ( !String.prototype.trim ) {
                     cancelable = true;
 
                 var event = type;
-                if ( lola.type.get( event ) === 'string' ) {
+                if ( $.type.get( event ) === 'string' ) {
                     //console.log('   event is string');
                     event = document.createEvent( "Event" );
                     event.initEvent( type, bubbles, cancelable );
@@ -3244,7 +3254,7 @@ if ( !String.prototype.trim ) {
                     object.dispatchEvent( event );
                 }
                 else {
-                    //console.log('   dispatching lola event');
+                    //console.log('   dispatching $ event');
                     event = new LolaEvent( event, object );
                     handler( event, 'capture' );
                     if (bubbles)
@@ -3264,15 +3274,15 @@ if ( !String.prototype.trim ) {
             type = map[type] ? map[type] : [type];
             type.forEach( function(t) {
                 try {
-                    if ( lola.support.domEvent && target.addEventListener )
+                    if ( $.support.domEvent && target.addEventListener )
                         target.addEventListener( t, handler, useCapture );
-                    else if ( lola.support.msEvent && target.attachEvent )
+                    else if ( $.support.msEvent && target.attachEvent )
                         target.attachEvent( 'on' + t, handler );
                     else if ( target['on' + t.toLowerCase()] == null )
                         target['on' + type.toLowerCase()] = handler;
                 }
                 catch( error ) {
-                    lola.debug( 'lola.event.addDOMListener error:', target, type, handler, useCapture );
+                    $.debug( 'lola.event.addDOMListener error:', target, type, handler, useCapture );
                 }
             } );
         };
@@ -3288,15 +3298,15 @@ if ( !String.prototype.trim ) {
             type = map[type] ? map[type] : [type];
             type.forEach( function() {
                 try {
-                    if ( lola.support.domEvent && target.removeEventListener )
+                    if ( $.support.domEvent && target.removeEventListener )
                         target.removeEventListener( type, handler, useCapture );
-                    else if ( lola.support.msEvent && target.detachEvent )
+                    else if ( $.support.msEvent && target.detachEvent )
                         target.detachEvent( 'on' + type, handler );
                     else if ( target['on' + type.toLowerCase()] == null )
                         delete target['on' + type.toLowerCase()];
                 }
                 catch( error ) {
-                    lola.debug( 'lola.event.removeDOMListener error:', target, type, handler, useCapture );
+                    $.debug( 'lola.event.removeDOMListener error:', target, type, handler, useCapture );
                 }
             } );
         };
@@ -3386,7 +3396,7 @@ if ( !String.prototype.trim ) {
             var yPos = e.offsetY || undefined;
 
             if (e.currentTarget != undefined && (xPos == undefined || yPos == undefined)){
-                var trgOffset = lola.geometry.getOffset( e.currentTarget );
+                var trgOffset = $.geometry.getOffset( e.currentTarget );
                 var clickPt = self.getDOMGlobalXY( e );
 
                 xPos = clickPt.x - trgOffset.x;
@@ -3402,7 +3412,7 @@ if ( !String.prototype.trim ) {
          * @return {String}
          */
         this.phaseString = function( target, useCapture ) {
-            return ((useCapture && (lola.support.domEvent || lola.support.msEvent)) || (!target.dispatchEvent && !target.attachEvent)) ? 'capture' : 'bubble';
+            return ((useCapture && ($.support.domEvent || $.support.msEvent)) || (!target.dispatchEvent && !target.attachEvent)) ? 'capture' : 'bubble';
         };
 
         /**
@@ -3619,22 +3629,24 @@ if ( !String.prototype.trim ) {
          * event alias hook
          */
         this.AliasHook = function( events ){
-            this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                lola.debug('alias hook addListener',type);
+	        var $ = lola;
+
+	        this.addListener = function( target, type, handler, useCapture, priority, scope ){
+                $.debug('alias hook addListener',type);
                 var uid;
                 events.forEach( function(item){
-                    lola.debug('    ',item);
-                    uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                    $.debug('    ',item);
+                    uid = $.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
                 return uid;
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                lola.debug('alias hook removeListener',type);
+                $.debug('alias hook removeListener',type);
                 events.forEach( function(item){
-                    lola.debug('    ',item);
-                    uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                    $.debug('    ',item);
+                    uid = $.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
 
@@ -3656,17 +3668,17 @@ if ( !String.prototype.trim ) {
          * @event hover
          */
         var HoverHook = function() {
-            var hookEvent = "hover";
-
+	        var $ = lola;
+	        var hookEvent = "hover";
             var ns = 'eventHover';
 
             function getData( target ){
-                var wait = lola.dom.attr( target, "hoverDelay" );
+                var wait = $.dom.attr( target, "hoverDelay" );
                 wait = (wait == null || wait == undefined) ? 250 : parseInt(wait);
-                var data = lola.data.get( target, ns );
+                var data = $.data.get( target, ns );
                 if ( !data ) {
                     data = { hasIntent:false, wait:wait, timeout:-1 };
-                    lola.data.set( target, data, ns, true );
+                    $.data.set( target, data, ns, true );
                 }
                 return data;
             }
@@ -3702,13 +3714,13 @@ if ( !String.prototype.trim ) {
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                var edata = lola.data.get( target, dataNamespace );
+                var edata = $.data.get( target, dataNamespace );
                 self.removeListener( target, hookEvent, handler, useCapture, false );
                 var phase = self.phaseString( target, useCapture );
                 //check for other hook listeners before removeing
                 if (edata[phase][hookEvent] == null || Object.keys(edata[phase][hookEvent]).length == 0){
                     self.removeListener( target, 'mouseover', mouseOver, false );
-                    lola.data.remove( target, ns );
+                    $.data.remove( target, ns );
                 }
             };
 
@@ -3722,21 +3734,22 @@ if ( !String.prototype.trim ) {
          * @event mouseenterstate
          */
         var MouseEnterStateHook = function(){
-            var e1 = 'domouseenter';
+	        var $ = lola;
+	        var e1 = 'domouseenter';
             var e2 = 'domouseleave';
             var ns = 'eventMouseEnterState';
 
             function getData( target ){
-                var data = lola.data.get( target, ns );
+                var data = $.data.get( target, ns );
                 if ( !data ) {
                     data = { within:false };
-                    lola.data.set( target, data, ns, true );
+                    $.data.set( target, data, ns, true );
                 }
                 return data;
             }
 
             function getEnhancedType ( type ){
-                if (!lola.support.msEvent) {
+                if (!$.support.msEvent) {
                     type = 'do'+type;
                 }
                 return type;
@@ -3753,7 +3766,7 @@ if ( !String.prototype.trim ) {
             function mouseOut( event ){
                 var data = getData( event.currentTarget );
                 if ( data.within &&
-                    !lola.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
+                    !$.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
                     event.currentTarget != event.relatedTarget ){
                     data.within = false;
                     self.trigger( event.currentTarget, e2, false );
@@ -3762,7 +3775,7 @@ if ( !String.prototype.trim ) {
 
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
                 //IE has it already
-                if (!lola.support.msEvent){
+                if (!$.support.msEvent){
                     //deal with other browsers
                     self.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
                     self.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
@@ -3772,13 +3785,13 @@ if ( !String.prototype.trim ) {
 
             this.removeListener = function( target, type, handler, useCapture ){
 
-                var edata = lola.data.get( target, dataNamespace );
+                var edata = $.data.get( target, dataNamespace );
                 var phase = self.phaseString( target, useCapture );
                 type = getEnhancedType( type );
                 self.removeListener( target, type, handler, useCapture, false );
 
                 //check for other hook listeners before removeing
-                if (!lola.support.msEvent &&
+                if (!$.support.msEvent &&
                     edata[phase][type] == null ||
                     edata[phase][type].keys().length == 0){
                     //deal with other browsers
@@ -3822,7 +3835,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.math
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -3971,7 +3985,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.math.color
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -4303,7 +4318,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.animation
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -4396,7 +4412,7 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         this.initialize = function(){
-            getFrameType = lola.support.animationFrameType;
+            getFrameType = $.support.animationFrameType;
         };
 
         /**
@@ -4424,13 +4440,13 @@ if ( !String.prototype.trim ) {
          */
         function requestFrame(callback){
             if ( getFrameType == 1 )
-                lola.window.requestAnimationFrame( callback );
+                $.window.requestAnimationFrame( callback );
             else if ( getFrameType == 2 )
-                lola.window.mozRequestAnimationFrame( callback );
+                $.window.mozRequestAnimationFrame( callback );
             else if ( getFrameType == 3 )
-                lola.window.webkitRequestAnimationFrame( callback );
+                $.window.webkitRequestAnimationFrame( callback );
             else if ( getFrameType == 4 )
-                lola.window.oRequestAnimationFrame( callback );
+                $.window.oRequestAnimationFrame( callback );
             else
                 setTimeout( callback, timeout );
         }
@@ -4441,7 +4457,7 @@ if ( !String.prototype.trim ) {
          * @param {lola.animation.Animation} animation
          */
         this.register = function( name, animation ){
-            //console.log('lola.animation.registerAnimation', name, animation );
+            //console.log('$.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
         };
 
@@ -4449,7 +4465,7 @@ if ( !String.prototype.trim ) {
          * removes a registered animation
          */
         this.remove = function( name ){
-            //console.log('lola.animation.registerAnimation', name, animation );
+            //console.log('$.animation.registerAnimation', name, animation );
             if (animations[name]){
                 delete animations[name];
             }
@@ -4461,7 +4477,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.start = function( name ){
-            //console.log('lola.animation.start', name );
+            //console.log('$.animation.start', name );
             if (animations[ name ]){
 
                 animations[ name ].start();
@@ -4473,7 +4489,7 @@ if ( !String.prototype.trim ) {
          * @param {uint} name
          */
         this.stop = function( name ){
-            //console.log('lola.animation.stop', name );
+            //console.log('$.animation.stop', name );
             if (animations[ name ]){
                 animations[ name ].stop();
             }
@@ -4484,7 +4500,7 @@ if ( !String.prototype.trim ) {
          * @param {uint} name
          */
         this.pause = function( name ){
-            //console.log('lola.animation.pause', name );
+            //console.log('$.animation.pause', name );
             if (animations[ name ]){
                 animations[ name ].pause();
             }
@@ -4495,7 +4511,7 @@ if ( !String.prototype.trim ) {
          * @param {uint} name
          */
         this.resume = function( name ){
-            //console.log('lola.animation.resume', name );
+            //console.log('$.animation.resume', name );
             if (animations[ name ]){
                 animations[ name ].resume();
             }
@@ -4510,8 +4526,8 @@ if ( !String.prototype.trim ) {
            //iterate through animations and check for active state
             //if active, run position calculation on animations
             var activityCheck = false;
-            var now = lola.now();
-            //console.log('lola.animation.tick', now );
+            var now = $.now();
+            //console.log('$.animation.tick', now );
 
             for (var k in animations){
                 //console.log('   ',k,animations[k].isActive());
@@ -4524,7 +4540,7 @@ if ( !String.prototype.trim ) {
                     else{
                         //console.log('   ','complete');
                         //catch complete on next tick
-                        lola.event.trigger(animations[k],'animationcomplete',false,false);
+                        $.event.trigger(animations[k],'animationcomplete',false,false);
                         delete animations[k];
                         freeAnimationIds.push( parseInt(k) );
                     }
@@ -4555,6 +4571,7 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         this.Animation = function( tickFn, tickScope ) {
+	        var $ = lola;
             var startTime = -1;
             var pauseTime = -1;
             var delay = 0;
@@ -4586,32 +4603,32 @@ if ( !String.prototype.trim ) {
             this.pause = function(){
                 if (active){
                     active = false;
-                    pauseTime = lola.now();
-                    lola.event.trigger( self, 'animationpause',false,false);
+                    pauseTime = $.now();
+                    $.event.trigger( self, 'animationpause',false,false);
                 }
             };
 
             this.resume = function(){
                 if (!active){
                     active = true;
-                    startTime += lola.now() - pauseTime;
+                    startTime += $.now() - pauseTime;
                     startTicking();
-                    lola.event.trigger( self, 'animationresume',false,false);
+                    $.event.trigger( self, 'animationresume',false,false);
                 }
             };
 
             this.restart = function(){
                 active = true;
                 complete = false;
-                startTime = lastTime = lola.now();
+                startTime = lastTime = $.now();
                 startTicking();
-                lola.event.trigger( self, 'animationstart',false,false);
+                $.event.trigger( self, 'animationstart',false,false);
             };
 
             this.stop = function(){
                 active = false;
                 complete = true;
-                lola.event.trigger( self, 'animationstop',false,false);
+                $.event.trigger( self, 'animationstop',false,false);
             };
 
             return this;
@@ -4639,7 +4656,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.css
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -4711,7 +4729,7 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug( 'lola.css::initialize' );
+            $.debug( 'lola.css::initialize' );
 
             //add default hooks
             var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
@@ -4725,14 +4743,14 @@ if ( !String.prototype.trim ) {
             });
 
             //add default mappings
-            propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
+            propertyCache['float'] = ($.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
             //register default hooks
             var getOffsetStyle = function( node, style, value, type ){
                 var result = self.style( node, style, value, false );
                 if (result == "auto"){
                     //get actual value
-                    var offset = lola.geometry.getOffset( node, node.offsetParent );
+                    var offset = $.geometry.getOffset( node, node.offsetParent );
                     return offset[type]+'px';
                 }
                 return result;
@@ -4764,7 +4782,7 @@ if ( !String.prototype.trim ) {
 
         function getSelector( selector ) {
             if ( !selectorCache[selector] )
-                selectorCache[selector] = lola.string.camelCase( selector );
+                selectorCache[selector] = $.string.camelCase( selector );
             return selectorCache[selector];
         }*/
 
@@ -4775,7 +4793,7 @@ if ( !String.prototype.trim ) {
          */
         function getProperty( property ) {
             if ( !propertyCache[property] )
-                propertyCache[property] = lola.string.camelCase( property );
+                propertyCache[property] = $.string.camelCase( property );
             return propertyCache[ property ];
         }
 
@@ -4816,7 +4834,7 @@ if ( !String.prototype.trim ) {
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+            //console.log( 'getting raw style', '"'+prop+'"', '"'+$.string.dashed( prop )+'"', node );
 
             var result = node.style[prop];
             if ( !result || result == "" ){
@@ -4831,7 +4849,7 @@ if ( !String.prototype.trim ) {
 
                 if (compStyle){
                     //console.log( 'using getComputedStyle', compStyle );
-                    result = compStyle.getPropertyValue( lola.string.dashed(prop) );
+                    result = compStyle.getPropertyValue( $.string.dashed(prop) );
                 }
                 else if ( typeof(document.body.currentStyle) !== "undefined") {
                     //console.log( 'using currentStyle', node["currentStyle"] );
@@ -4879,10 +4897,10 @@ if ( !String.prototype.trim ) {
             var result;
             if (value == undefined) {
                 result = self.getRawStyle( obj, style );
-                result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
+                result = parseFloat(result.replace( $.regex.isDimension, "$1"));
             }
             else {
-                value = (String(value).match(lola.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
+                value = (String(value).match($.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
                 result = self.setRawStyle( obj, style, value );
             }
 
@@ -4895,11 +4913,11 @@ if ( !String.prototype.trim ) {
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            lola.debug('addStyleSheet',lola.support.cssRules, id, source );
+            $.debug('addStyleSheet',$.support.cssRules, id, source );
             var stylesheet;
-            if (lola.support.cssRules){
+            if ($.support.cssRules){
                 stylesheet = document.createElement( 'style' );
-                lola.dom.attr(stylesheet, "type", "text/css");
+                $.dom.attr(stylesheet, "type", "text/css");
             }
             else{
                 stylesheet = document.createStyleSheet();
@@ -4934,19 +4952,19 @@ if ( !String.prototype.trim ) {
          * @return {Object}
          */
         this.addSelector = function( selector, styles, stylesheet ) {
-            if (lola.type.get(stylesheet) == "string" ){
+            if ($.type.get(stylesheet) == "string" ){
                 stylesheet = stylesheets["_default"];
             }
             stylesheet = stylesheet || stylesheets["_default"];
             styles = styles || [];
 
-            var ri = lola.support.cssRules ? stylesheet.cssRules.length : stylesheet.rules.length;
+            var ri = $.support.cssRules ? stylesheet.cssRules.length : stylesheet.rules.length;
             if ( stylesheet.addRule )
                 stylesheet.addRule( selector, null, ri );
             else
                 stylesheet.insertRule( selector + ' { }', ri );
 
-            var rule = lola.support.cssRules ? stylesheet.cssRules[ri] : stylesheet.rules[ri];
+            var rule = $.support.cssRules ? stylesheet.cssRules[ri] : stylesheet.rules[ri];
             if ( styles ){
                 var props = styles.keys();
                 props.forEach( function( item ){
@@ -4970,7 +4988,7 @@ if ( !String.prototype.trim ) {
                 var ss = document.styleSheets[si];
                 //match media
                 if ( !media || media == ss.mediaText ) {
-                    var rules = (lola.support.cssRules) ? ss.cssRules : ss.rules;
+                    var rules = ($.support.cssRules) ? ss.cssRules : ss.rules;
                     for ( var ri in rules ) {
                         if ( rules.hasOwnProperty(ri)){
                             if ( rules[ri] && rules[ri].selectorText ) {
@@ -4994,7 +5012,7 @@ if ( !String.prototype.trim ) {
         this.getRules = function( selector, media ) {
             var rules = [];
             self.performRuleAction( selector, function( si, ri ) {
-                if ( lola.support.cssRules )
+                if ( $.support.cssRules )
                     rules.push( document.styleSheets[ si ].cssRules[ ri ] );
                 else
                     rules.push( document.styleSheets[ si ].rules[ ri ] );
@@ -5028,7 +5046,7 @@ if ( !String.prototype.trim ) {
          */
         this.deleteRules = function( selector, media ) {
             self.performRuleAction( selector, function( si, ri ) {
-                if ( lola.support.cssRules )
+                if ( $.support.cssRules )
                     document.styleSheets[ si ].deleteRule( ri );
                 else
                     document.styleSheets[ si ].removeRule( ri );
@@ -5044,8 +5062,8 @@ if ( !String.prototype.trim ) {
         this.classes = function( obj, classes ) {
             if ( classes != undefined ) {
                 //console.log('setting classes:', classes);
-                if ( lola.type.get( classes ) != 'array' ) {
-                    if ( lola.type.get( classes ) == 'string' )
+                if ( $.type.get( classes ) != 'array' ) {
+                    if ( $.type.get( classes ) == 'string' )
                         classes = [classes];
                     else
                         classes = [];
@@ -5055,7 +5073,7 @@ if ( !String.prototype.trim ) {
 
             }
             else {
-                var names = (obj && obj.className) ? obj.className.replace( lola.regex.extraSpace , " " ): "";
+                var names = (obj && obj.className) ? obj.className.replace( $.regex.extraSpace , " " ): "";
                 return names.split( " " ).reverse();
             }
         };
@@ -5067,7 +5085,7 @@ if ( !String.prototype.trim ) {
          */
         this.hasClass = function( obj, className ) {
             var names = self.classes( obj );
-            return lola.array.isIn( names, className );
+            return $.array.isIn( names, className );
         };
 
         /**
@@ -5167,8 +5185,9 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         this.Color = function( value ){
-            var self = this;
-            var c = lola.math.color;
+	        var $ = lola;
+	        var self = this;
+            var c = $.math.color;
             /**
              * rgba color value object
              * @private
@@ -5218,12 +5237,12 @@ if ( !String.prototype.trim ) {
              */
             function parseValue( val ) {
                 if (typeof val == "string"){
-                    var cparts = val.match( lola.regex.isColor );
+                    var cparts = val.match( $.regex.isColor );
                     if ( cparts ) {
                         var parts;
                         switch ( cparts[1] ) {
                             case '#':
-                                parts = val.match( lola.regex.isHexColor );
+                                parts = val.match( $.regex.isHexColor );
                                 hex = ( parts != null ) ? parts[1] : "000000";
                                 rgb = c.hex2rgb(hex);
                                 hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
@@ -5277,7 +5296,7 @@ if ( !String.prototype.trim ) {
              */
             function parseHSLColorString( val ) {
                 var c = { h:0, s:0, l:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
+                var parts = val.match( $.regex.isHSLColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );
@@ -5297,7 +5316,7 @@ if ( !String.prototype.trim ) {
              */
             function parseRGBColorString( val ) {
                 var c = { r:0, g:0, b:0, a:1 };
-                var parts = val.match( lola.regex.isRGBColor );
+                var parts = val.match( $.regex.isRGBColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );
@@ -5416,7 +5435,8 @@ if ( !String.prototype.trim ) {
 	 * @namespace lola.http
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -5548,7 +5568,7 @@ if ( !String.prototype.trim ) {
          */
         this.getParamString = function( paramObj ){
             if ( paramObj != undefined ) {
-                if ( lola.type.get( paramObj ) != 'string' ) {
+                if ( $.type.get( paramObj ) != 'string' ) {
                     var temp = [];
                     for ( var k in paramObj ) {
                         if (paramObj.hasOwnProperty(k)){
@@ -5575,10 +5595,10 @@ if ( !String.prototype.trim ) {
             applyTransform: function( transform, interimContent, faultContent ) {
                 this.html( interimContent );
                 this.forEach( function(item){
-                    lola.event.addListener( transform, 'result', function( event ) {
+                    $.event.addListener( transform, 'result', function( event ) {
                         $( item ).html( event.data );
                     } );
-                    lola.event.addListener( transform, 'fault', function() {
+                    $.event.addListener( transform, 'fault', function() {
                         $( item ).html( faultContent );
                     } );
                 });
@@ -5597,10 +5617,10 @@ if ( !String.prototype.trim ) {
             applyRequest: function( request, requestParams, interimContent, faultContent ) {
                 this.html( interimContent );
                 this.forEach( function(item){
-                    lola.event.addListener( request, 'result', function( event ) {
+                    $.event.addListener( request, 'result', function( event ) {
                         $( item ).html( event.currentTarget.responseText() );
                     } );
-                    lola.event.addListener( request, 'fault', function() {
+                    $.event.addListener( request, 'fault', function() {
                         $( item ).html( faultContent );
                     } );
                 });
@@ -5616,7 +5636,7 @@ if ( !String.prototype.trim ) {
              * @param {*} faultContent
              */
             loadContent: function( url, interimContent, faultContent ){
-                var request = new lola.http.AsyncRequest( url, 'get', [] );
+                var request = new $.http.AsyncRequest( url, 'get', [] );
                 this.applyRequest( request, {}, interimContent, faultContent);
                 return this;
             }
@@ -5638,7 +5658,8 @@ if ( !String.prototype.trim ) {
          * @param {String} password credentials password
          */
         var Request = function( url, method, headers, async, user, password ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
             /**
              * DOM xmlhttprequest
@@ -5749,26 +5770,26 @@ if ( !String.prototype.trim ) {
                             break;
                         case 1:
                             //loading
-                            lola.event.trigger( self, 'loading', true, true, request );
+                            $.event.trigger( self, 'loading', true, true, request );
                             break;
                         case 2:
                             //loaded
-                            lola.event.trigger( self, 'loaded', true, true, request );
+                            $.event.trigger( self, 'loaded', true, true, request );
                             break;
                         case 3:
                             //interactive
-                            lola.event.trigger( self, 'interactive', true, true, request );
+                            $.event.trigger( self, 'interactive', true, true, request );
                             break;
                         case 4:
                             //complete
-                            lola.event.trigger( self, 'statecomplete', true, true, request );
+                            $.event.trigger( self, 'statecomplete', true, true, request );
                             if ( request.status == 200 && !ready ) {
                                 ready = true;
-                                lola.event.trigger( self, 'result', true, true, request );
+                                $.event.trigger( self, 'result', true, true, request );
                             }
                             else if ( request.status >= 400 ) {
                                 console.info( 'AsyncRequest.readyStateChange.fault:', url );
-                                lola.event.trigger( self, 'fault', false, false, request );
+                                $.event.trigger( self, 'fault', false, false, request );
                             }
                             break;
                     }
@@ -5839,7 +5860,8 @@ if ( !String.prototype.trim ) {
          * @param {String|undefined} xslCacheId if set xsl will be cached with the specified id
          */
         this.Transform = function( xml, xsl, transformParams, xslCacheId ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
             /**
              * holds transformation result
@@ -5861,7 +5883,7 @@ if ( !String.prototype.trim ) {
              */
             function initialize() {
                 xslCacheId = xslCacheId || "";
-                if ( lola.type.get( xsl ) == 'string' ) {
+                if ( $.type.get( xsl ) == 'string' ) {
                     var xslId = xsl;
                     xsl = parent.getCachedXsl( xslId );
                     if ( !xsl ) {
@@ -5873,10 +5895,10 @@ if ( !String.prototype.trim ) {
                 }
 
                 if ( this.xsl && this.xml ) {
-                    lola.event.addListener( this.xsl, 'result', checkStates, true, 0, this );
-                    lola.event.addListener( this.xsl, 'fault', handleXSLFault, true, 0, this );
-                    lola.event.addListener( this.xml, 'result', checkStates, true, 0, this );
-                    lola.event.addListener( this.xml, 'fault', handleXMLFault, true, 0, this );
+                    $.event.addListener( this.xsl, 'result', checkStates, true, 0, this );
+                    $.event.addListener( this.xsl, 'fault', handleXSLFault, true, 0, this );
+                    $.event.addListener( this.xml, 'result', checkStates, true, 0, this );
+                    $.event.addListener( this.xml, 'fault', handleXMLFault, true, 0, this );
 
                     checkStates();
                 }
@@ -5898,7 +5920,7 @@ if ( !String.prototype.trim ) {
 
                     //both requests are ready, do transform
                     resultNodes = parent.transform( xml.responseXML(), xsl.responseXML(), transformParams );
-                    lola.event.trigger( self, 'result', true, true, resultNodes );
+                    $.event.trigger( self, 'result', true, true, resultNodes );
                 }
             }
 
@@ -5907,7 +5929,7 @@ if ( !String.prototype.trim ) {
              * @private
              */
             function handleXSLFault() {
-                lola.event.trigger( self, 'fault', true, true, 'xsl fault' );
+                $.event.trigger( self, 'fault', true, true, 'xsl fault' );
             }
 
             /**
@@ -5915,7 +5937,7 @@ if ( !String.prototype.trim ) {
              * @private
              */
             function handleXMLFault() {
-                lola.event.trigger( self, 'fault', true, true, 'xml fault' );
+                $.event.trigger( self, 'fault', true, true, 'xml fault' );
             }
 
             /**
@@ -5936,10 +5958,10 @@ if ( !String.prototype.trim ) {
              * @public
              */
             this.cancel = function() {
-                lola.event.removeListener( xsl, 'result', checkStates, true );
-                lola.event.removeListener( xsl, 'fault', handleXSLFault, true );
-                lola.event.removeListener( xml, 'result', checkStates, true );
-                lola.event.removeListener( xml, 'fault', handleXMLFault, true );
+                $.event.removeListener( xsl, 'result', checkStates, true );
+                $.event.removeListener( xsl, 'fault', handleXSLFault, true );
+                $.event.removeListener( xml, 'result', checkStates, true );
+                $.event.removeListener( xml, 'fault', handleXMLFault, true );
                 try {
                     xsl.abort();
                 }
@@ -5977,7 +5999,8 @@ if ( !String.prototype.trim ) {
 	 * @memberof lola
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -6331,14 +6354,14 @@ if ( !String.prototype.trim ) {
         this.get = function( urlStr, callback, jsonpParam ){
             console.log('json.get: '+urlStr);
 
-            var url = new lola.URL(urlStr);
+            var url = new $.URL(urlStr);
 
             //determine how to load json
             if (url.protocol == "____" ||
-                (false && url.protocol == lola.url.protocol && url.domain == lola.url.domain) ){
+                (false && url.protocol == $.url.protocol && url.domain == $.url.domain) ){
                 //console.log('    same domain');
                 //same protocol & domain... just do async call
-                var r = new lola.http.AsyncRequest(urlStr);
+                var r = new $.http.AsyncRequest(urlStr);
                 if (callback) {
                     $(r).addListener('result', function(event){
                         console.log('    result');
@@ -6360,7 +6383,7 @@ if ( !String.prototype.trim ) {
                     delete self.handleResponse[uid];
                 };
                 url.vars[jsonpParam] = "lola.json.handleResponse["+uid+"]";
-                lola.loadScript( url.toString() );
+                $.loadScript( url.toString() );
             }
         };
 
@@ -6378,11 +6401,11 @@ if ( !String.prototype.trim ) {
             Date.prototype.toJSON = function ( key ) {
                 return isFinite( this.valueOf() ) ?
                     this.getUTCFullYear() + '-' +
-                        lola.string.padFront( this.getUTCMonth() + 1,"0",2 ) + '-' +
-                        lola.string.padFront( this.getUTCDate(),"0",2 ) + 'T' +
-                        lola.string.padFront( this.getUTCHours(),"0",2 ) + ':' +
-                        lola.string.padFront( this.getUTCMinutes(),"0",2 ) + ':' +
-                        lola.string.padFront( this.getUTCSeconds(),"0",2 ) + 'Z' : null;
+                        $.string.padFront( this.getUTCMonth() + 1,"0",2 ) + '-' +
+                        $.string.padFront( this.getUTCDate(),"0",2 ) + 'T' +
+                        $.string.padFront( this.getUTCHours(),"0",2 ) + ':' +
+                        $.string.padFront( this.getUTCMinutes(),"0",2 ) + ':' +
+                        $.string.padFront( this.getUTCSeconds(),"0",2 ) + 'Z' : null;
             };
 
             String.prototype.toJSON =
@@ -6413,7 +6436,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.agent
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -6486,16 +6510,16 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug('lola.agent::initialize');
+            $.debug('lola.agent::initialize');
 
             //check agent dependencies
-            lola.checkDependencies( this.dependencies );
+            $.checkDependencies( this.dependencies );
 
             //execute agent initialization stack
             var stackSize = initializers.length;
 
             for ( var i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn( initializers, i )){
+                if ($.hasFn( initializers, i )){
                     initializers[i]();
                     delete initializers[i];
                 }
@@ -6511,27 +6535,27 @@ if ( !String.prototype.trim ) {
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            lola.debug('register agent: '+ns);
-            if ( ns && lola.hasFn( agent,"sign" ) && lola.hasFn( agent,"drop" ) ) {
+            $.debug('register agent: '+ns);
+            if ( ns && $.hasFn( agent,"sign" ) && $.hasFn( agent,"drop" ) ) {
                 //setup module
-                var pkg = lola.getPackage( lola.agent, ns, agent );
+                var pkg = $.getPackage( $.agent, ns, agent );
 
                 //add dependencies
-                if (lola.hasFn(agent,'getDependencies'))
+                if ($.hasFn(agent,'getDependencies'))
                     this.dependencies[ 'agent.'+ns ] = agent.getDependencies();
 
                 //map agent
                 map[ ns ] = pkg;
 
                 //add initializer
-                if (lola.hasFn( agent,'initialize' )) {
+                if ($.hasFn( agent,'initialize' )) {
                     initializers.push( function() {
                         agent.initialize();
                     });
                 }
 
                 //run preinitialization method if available
-                if (lola.hasFn( agent,'preinitialize' )) {
+                if ($.hasFn( agent,'preinitialize' )) {
                     agent.preinitialize();
                 }
 
@@ -6606,7 +6630,7 @@ if ( !String.prototype.trim ) {
         //==================================================================
         // Preinitialization
         //==================================================================
-        lola.addSafeDeleteHook( this.drop, this );
+        $.addSafeDeleteHook( this.drop, this );
 
     };
 
@@ -6631,7 +6655,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.cmd
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -6696,14 +6721,14 @@ if ( !String.prototype.trim ) {
                 name = tmp.getName();
             }
 
-            lola.debug('register command: '+name);
+            $.debug('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
                 console.warn( 'command "'+name+'" has already been registered... overwriting' );
 
             //register command class or url
             registry[name] = cmd;
 
-            lola.event.addListener( self, name, executeCommand  );
+            $.event.addListener( self, name, executeCommand  );
         };
 
         this.call = function( name, params, onResult, onFault, onStatus ){
@@ -6723,8 +6748,8 @@ if ( !String.prototype.trim ) {
                     //add execution params to call later queue for the unloaded command
                     if ( !callLater[ name ] ){
                         //try to load command
-                        lola.loadScript( registry[name], function(e){
-                            if ( lola.hasFn( registry, name ) ) {
+                        $.loadScript( registry[name], function(e){
+                            if ( $.hasFn( registry, name ) ) {
                                 //command successfully loaded - iterate through queued calls
                                 var s = callLater[ name ].length;
                                 for (var i = 0; i < s; i++){
@@ -6749,9 +6774,9 @@ if ( !String.prototype.trim ) {
                     if (cmdClass) {
                         var cmd = new cmdClass();
                         if (responder) {
-                            lola.event.addListener( cmd, 'result', responder.handleResult );
-                            lola.event.addListener( cmd, 'fault', responder.handleFault );
-                            lola.event.addListener( cmd, 'status', responder.handleStatus );
+                            $.event.addListener( cmd, 'result', responder.handleResult );
+                            $.event.addListener( cmd, 'fault', responder.handleFault );
+                            $.event.addListener( cmd, 'status', responder.handleStatus );
                         }
                         cmd.execute( params );
                     }
@@ -6807,7 +6832,7 @@ if ( !String.prototype.trim ) {
                 if (!lastResponse || lastResponse.type == 'status' )
                     lastResponse = event;
                 if (typeof statusHandler == 'function')
-                    statusHandler.apply( lola.window, [event] );
+                    statusHandler.apply( $.window, [event] );
             };
 
             /**
@@ -6818,7 +6843,7 @@ if ( !String.prototype.trim ) {
             this.handleResult = function( event ){
                 lastResponse = event;
                 if (typeof resultHandler == 'function')
-                    resultHandler.apply(lola.window, [event] );
+                    resultHandler.apply($.window, [event] );
             };
 
             /**
@@ -6829,7 +6854,7 @@ if ( !String.prototype.trim ) {
             this.handleFault = function( event ){
                 lastResponse = event;
                 if (typeof faultHandler == 'function')
-                    faultHandler.apply(lola.window, [event] );
+                    faultHandler.apply($.window, [event] );
             };
 
             return this;
@@ -6869,7 +6894,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.template
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -6923,19 +6949,16 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug('lola.template::initialize');
-            //this framework is dependent on lola framework
-            if ( !lola ) throw new Error( 'lola not defined!' );
+            $.debug('lola.template::initialize');
 
             //do module initialization
-
             //get all predefined templates
-            var start = lola.now();
-            lola('script[type="text/x-lola-template"]').forEach( function( item ){
+            var start = $.now();
+            $('script[type="text/x-lola-template"]').forEach( function( item ){
                 self.add( item.id, item.innerHTML );
             });
-            var complete = lola.now();
-            lola.debug( "templates parsed in "+(complete-start)+" ms" );
+            var complete = $.now();
+            $.debug( "templates parsed in "+(complete-start)+" ms" );
 
 
             //remove initialization method
@@ -7007,7 +7030,7 @@ if ( !String.prototype.trim ) {
              * @param {Object} data
              */
             applyTemplate: function( name, data ){
-                this.html( lola.template.apply(name,data) );
+                this.html( $.template.apply(name,data) );
             }
         };
 
@@ -7029,9 +7052,9 @@ if ( !String.prototype.trim ) {
          * @param {String} str
          */
         function Tag( str ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
-
             /**
              * part splitter
              * @private
@@ -7122,7 +7145,7 @@ if ( !String.prototype.trim ) {
                 var value = (property == "INDEX") ? index : data[ property ];
 
                 if (Object.keys(options).length > 0){
-                    var type = lola.type.get( value );
+                    var type = $.type.get( value );
                     switch(type){
                         case "boolean":
                             value = options[ value ? "0" : "1" ];
@@ -7157,7 +7180,8 @@ if ( !String.prototype.trim ) {
          * @param {Function} fn
          */
         function Hook( fn ){
-            if ( typeof fn != "function" )
+	        var $ = lola;
+	        if ( typeof fn != "function" )
                 throw new Error("invalid hook.");
 
             /**
@@ -7167,7 +7191,7 @@ if ( !String.prototype.trim ) {
              */
             this.evaluate = function( value, index ) {
                 //return value
-                return fn.apply( lola.window, arguments );
+                return fn.apply( $.window, arguments );
             }
         }
 
@@ -7177,8 +7201,8 @@ if ( !String.prototype.trim ) {
          * @param {String} tmpStr
          */
         function TemplateHook( tmpStr ) {
-
-            /**
+	        var $ = lola;
+	        /**
              * tag regex
              * @private
              * @type {RegExp}
@@ -7238,7 +7262,7 @@ if ( !String.prototype.trim ) {
              */
             this.evaluate = function( value, index ) {
                 var built = [];
-                var type = lola.type.get( value );
+                var type = $.type.get( value );
                 if ( type != "array" ){
                     value = [ value ];
                 }
@@ -7292,7 +7316,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.geometry
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -7372,16 +7397,16 @@ if ( !String.prototype.trim ) {
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
-            //console.log('lola.geometry.width', arguments );
+            //console.log('$.geometry.width', arguments );
             if ( value != undefined ){
                 //setting
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 value -= bl+br+pl+pr;
 
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -7414,7 +7439,7 @@ if ( !String.prototype.trim ) {
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -7423,10 +7448,10 @@ if ( !String.prototype.trim ) {
                 else
                     w = elem.clientWidth;
 
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 w -= bl+br+pl+pr;
 
                 return w;
@@ -7441,13 +7466,13 @@ if ( !String.prototype.trim ) {
         this.height = function( elem, value ) {
             if ( value != undefined ){
                 //setting
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 value -= bt+bb+pt+pb;
 
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -7480,7 +7505,7 @@ if ( !String.prototype.trim ) {
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -7489,10 +7514,10 @@ if ( !String.prototype.trim ) {
                 else
                     h = elem.clientHeight;
 
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 h -= bt+bb+pt+pb;
 
                 return h;
@@ -8033,7 +8058,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.graphics
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -8111,7 +8137,7 @@ if ( !String.prototype.trim ) {
          */
         this.registerContext = function( canvas, id ){
             var ctx = canvas.getContext('2d');
-            id = (id==undefined)?lola(canvas).identify().attr('id'):id;
+            id = (id==undefined)?$(canvas).identify().attr('id'):id;
             //console.log('register context:',id);
             var gdata = $(canvas).getData( "_"+namespace, true );
             if (gdata.contexts == null)
@@ -8126,7 +8152,7 @@ if ( !String.prototype.trim ) {
          * @param canvas
          */
         this.removeContext = function( canvas ){
-            var gdata = lola(canvas).getData( "_"+namespace, false );
+            var gdata = $(canvas).getData( "_"+namespace, false );
             if (gdata && gdata.contexts) {
                 var id;
                 while ( id = gdata.contexts.pop() ){
@@ -8173,7 +8199,7 @@ if ( !String.prototype.trim ) {
             if (typeof ctx == "string")
                 context = resolveContext(ctx);
 
-            if (context) lola.util.copyPrimitives( reset, context );
+            if (context) $.util.copyPrimitives( reset, context );
         };
 
         /**
@@ -8183,7 +8209,7 @@ if ( !String.prototype.trim ) {
          */
         this.registerStyle = function( name, styleObj ) {
             var obj = {};
-            lola.util.copyPrimitives( styleObj, obj );
+            $.util.copyPrimitives( styleObj, obj );
             styles[ name ] = obj;
         };
 
@@ -8217,7 +8243,7 @@ if ( !String.prototype.trim ) {
          * @param {String} name
          */
         this.executeRoutine = function( name ) {
-            if ( lola.hasFn(routines,name) ){
+            if ( $.hasFn(routines,name) ){
                 routines[name]( context );
             }
         };
@@ -8230,8 +8256,8 @@ if ( !String.prototype.trim ) {
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );
             var sty = (typeof style == "string") ?  styles[ style ] || reset : style;
-            lola.util.copyPrimitives( reset, ctx );
-            lola.util.copyPrimitives( sty, ctx );
+            $.util.copyPrimitives( reset, ctx );
+            $.util.copyPrimitives( sty, ctx );
         };
 
         /**
@@ -8239,7 +8265,7 @@ if ( !String.prototype.trim ) {
          * @param {Object|Array} objects
          */
         this.draw = function( object, flags ){
-            if ( lola.hasFn( object, 'draw')){
+            if ( $.hasFn( object, 'draw')){
                 object.draw( context, flags );
             }
         };
@@ -8285,18 +8311,18 @@ if ( !String.prototype.trim ) {
         // Preinitialization
         //==================================================================
 
-        if (lola.support.canvas){
-            lola.addSafeDeleteHook( self.removeContext, self );
+        if ($.support.canvas){
+            $.addSafeDeleteHook( self.removeContext, self );
 
             //get reset context
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
             for ( var prop in ctx ){
                 //if (ctx.hasOwnProperty(prop)){
-                    if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                    if ( $.type.isPrimitive( ctx[ prop ] ) ){
                         reset[ prop ] = ctx[ prop ];
                     }
-                    else if (lola.type.get( ctx[prop] ) == 'function'){
+                    else if ($.type.get( ctx[prop] ) == 'function'){
                         createContextMethod( prop );
                     }
                 //}
@@ -8323,7 +8349,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.array
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -8407,8 +8434,8 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         function preinitialize() {
-            var start = lola.now();
-            lola.debug( 'lola.easing::preinitialize' );
+            var start = $.now();
+            $.debug( 'lola.easing::preinitialize' );
 
             //do module initialization
             //easing that simulates css timing
@@ -8433,8 +8460,8 @@ if ( !String.prototype.trim ) {
                     self.registerEasingFn(k+'-in-out', eio );
                 }
             } );
-            var complete = lola.now();
-            lola.debug('easing preinitialization took',(complete-start), 'ms');
+            var complete = $.now();
+            $.debug('easing preinitialization took',(complete-start), 'ms');
             self.setDefaultEase('ease-in-out');
         }
 
@@ -8565,7 +8592,7 @@ if ( !String.prototype.trim ) {
          * @param p2y
          */
         this.registerSimpleEasing = function(id,p1x,p1y,p2x,p2y){
-            var geo = lola.geometry;
+            var geo = $.geometry;
             var spline = new geo.Spline();
             var c1 = new geo.Point( p1x, p1y );
             var c2 = new geo.Point( 1-p2x, 1-p2y );
@@ -8596,12 +8623,12 @@ if ( !String.prototype.trim ) {
          * @param {String} id
          */
         this.get = function( id ){
-            //console.log("lola.easing.get: "+id);
+            //console.log("$.easing.get: "+id);
             if (methods[ id ]){
                 return methods[ id ];
             }
             else {
-                lola.debug('easing method "'+id+'" not found.');
+                $.debug('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };
@@ -8769,7 +8796,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.array
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -8864,8 +8892,8 @@ if ( !String.prototype.trim ) {
          * module initializer
          */
         this.initialize = function(){
-            var anim = new lola.animation.Animation( tick, self );
-            lola.animation.register(namespace, anim);
+            var anim = new $.animation.Animation( tick, self );
+            $.animation.register(namespace, anim);
             if ( Object.keys( tweens ).length > 0 ){
                 startTicking();
             }
@@ -8875,7 +8903,7 @@ if ( !String.prototype.trim ) {
          * start ticking
          */
         function startTicking(){
-            lola.animation.start( namespace );
+            $.animation.start( namespace );
         }
 
         /**
@@ -8895,7 +8923,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         this.start = function( id ){
-            //console.log('lola.tween.start',id,tweens[ id ]);
+            //console.log('$.tween.start',id,tweens[ id ]);
             if (tweens[ id ]){
                 tweens[ id ].start();
             }
@@ -8943,7 +8971,7 @@ if ( !String.prototype.trim ) {
             //console.log('tween.addTarget',targets);
             if (tweens[ tweenId ]){
                 collisions = collisions === true;
-                if (lola.type.get(objects) != 'array')
+                if ($.type.get(objects) != 'array')
                     objects = [objects];
 
                 var ol = objects.length;
@@ -9000,7 +9028,7 @@ if ( !String.prototype.trim ) {
 
             if (!value.from){
                 //try to get "from" value
-                var f = lola(target)[group]( property );
+                var f = $(target)[group]( property );
                 //console.log('test f:',f);
                 //console.log()
                 if (typeof value == "object" ){
@@ -9088,7 +9116,7 @@ if ( !String.prototype.trim ) {
                 }
             }
             if (!type) {
-                proxy = lola.tween.setAfterProxy;
+                proxy = $.tween.setAfterProxy;
                 delta = to;
             }
 
@@ -9102,7 +9130,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function tick( now, delta, elapsed ){
-            //console.log('lola.tween.tick', now, lola.now(), delta, elapsed );
+            //console.log('$.tween.tick', now, $.now(), delta, elapsed );
             //iterate through tweens and check for active state
             //if active, run position calculation on tweens
             var activityCheck = false;
@@ -9114,7 +9142,7 @@ if ( !String.prototype.trim ) {
             pFn = function(t,g,p,obj){
                 var dispatcher = obj[0].target;
                 if (dispatcher){
-                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                    $.event.trigger(dispatcher,'tweencomplete',false,false);
                 }
                 return true;
             };
@@ -9128,7 +9156,7 @@ if ( !String.prototype.trim ) {
                         //catch complete on next tick
 
                         //trigger events
-                        lola.event.trigger(tweens[k],'tweencomplete',false,false);
+                        $.event.trigger(tweens[k],'tweencomplete',false,false);
                         iterateTargets( tFn, gFn, pFn );
 
                         delete tweens[k];
@@ -9244,7 +9272,7 @@ if ( !String.prototype.trim ) {
         // Tween Types
         //==================================================================
         this.addTweenType('simple', {
-            match: lola.regex.isNumber,
+            match: $.regex.isNumber,
             parse: function(val){
                 return parseFloat( val );
             },
@@ -9265,9 +9293,9 @@ if ( !String.prototype.trim ) {
         });
 
         this.addTweenType('dimensional', {
-            match: lola.regex.isDimension,
+            match: $.regex.isDimension,
             parse: function(val){
-                var parts = String( val ).match( lola.regex.isDimension );
+                var parts = String( val ).match( $.regex.isDimension );
                 return { value: parseFloat( parts[1] ), units: parts[2] };
             },
             canTween: function(a,b){
@@ -9289,10 +9317,10 @@ if ( !String.prototype.trim ) {
         });
 
         this.addTweenType('color', {
-            match: lola.regex.isColor,
+            match: $.regex.isColor,
             parse: function(val){
                 //console.log ('color.parse: ',val);
-                var color = new lola.css.Color( val );
+                var color = new $.css.Color( val );
                 //console.log( '    ', color.rgbValue );
                 return color.getRgbValue();
             },
@@ -9319,7 +9347,7 @@ if ( !String.prototype.trim ) {
                 var a = (i.a + d.a * progress);
                 //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
 
-                if ( lola.support.colorAlpha )
+                if ( $.support.colorAlpha )
                     obj.$target[ obj.type ]( obj.property, "rgba(" + [r,g,b,a].join( ',' ) + ")");
                 else
                     obj.$target[ obj.type ]( obj.property, "rgb(" + [r,g,b].join( ',' ) + ")");
@@ -9432,9 +9460,9 @@ if ( !String.prototype.trim ) {
                 if (typeof easing == "function")
                     this.easing = easing;
                 else if (typeof easing == "string")
-                    this.easing = lola.easing.get( easing );
+                    this.easing = $.easing.get( easing );
                 else
-                    this.easing = lola.easing.get('default');
+                    this.easing = $.easing.get('default');
                 this.delay = delay || 0;
                 if (!easing){
                     this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
@@ -9455,29 +9483,29 @@ if ( !String.prototype.trim ) {
                 //console.log('Tween.start', this.active);
                 if (!this.active){
                     this.active = true;
-                    this.startTime = lola.now();
+                    this.startTime = $.now();
                     startTicking();
-                    lola.event.trigger(this,'tweenstart',false,false);
+                    $.event.trigger(this,'tweenstart',false,false);
                 }
             },
             stop: function(){
                 this.active = false;
                 this.complete = true;
-                lola.event.trigger(this,'tweenstop',false,false);
+                $.event.trigger(this,'tweenstop',false,false);
             },
             pause: function(){
                 if (this.active){
                     this.active = false;
-                    this.pauseTime = lola.now();
-                    lola.event.trigger(this,'tweenpause',false,false);
+                    this.pauseTime = $.now();
+                    $.event.trigger(this,'tweenpause',false,false);
                 }
             },
             resume: function(){
                 if (!this.active){
                     this.active = true;
-                    this.startTime += lola.now() - this.pauseTime;
+                    this.startTime += $.now() - this.pauseTime;
                     startTicking();
-                    lola.event.trigger(this,'tweenresume',false,false);
+                    $.event.trigger(this,'tweenresume',false,false);
                 }
             }
 
@@ -9541,9 +9569,10 @@ if ( !String.prototype.trim ) {
      * @namespace lola.motion
      */
     var Module = function () {
-        var self = this;
+	    var $ = lola;
+	    var self = this;
 
-        //==================================================================
+	    //==================================================================
         // Attributes
         //==================================================================
 
@@ -9590,7 +9619,7 @@ if ( !String.prototype.trim ) {
          * module initializer
          */
         this.initialize = function(){
-            lola.debug('motion::initialize');
+            $.debug('motion::initialize');
 
             delete self.initialize;
         };
@@ -9718,10 +9747,10 @@ if ( !String.prototype.trim ) {
         // Classes
         //==================================================================
         var Group = function( name ){
-
+			var $ = lola;
             var self = this;
-            var anim = new lola.animation.Animation( tick, self );
-            lola.animation.register( namespace+'.'+name, anim );
+            var anim = new $.animation.Animation( tick, self );
+            $.animation.register( namespace+'.'+name, anim );
             var frameCount = 10000;
             var maxRate = 5000;
             var loop = false;
@@ -9879,7 +9908,7 @@ if ( !String.prototype.trim ) {
 
                 var start = (options.start) ? options.start : 0;
                 var end = (options.end) ? options.end : frameCount;
-                var ease = lola.easing.get( options.ease ? options.ease : 'linear' );
+                var ease = $.easing.get( options.ease ? options.ease : 'linear' );
 
                 delete options.start;
                 delete options.end;
@@ -9896,7 +9925,7 @@ if ( !String.prototype.trim ) {
                                     pObj.forEach(function(item){
                                         var s = item.start == undefined ? start : item.start;
                                         var e = item.end == undefined ? end : item.end;
-                                        var es =  item.ease == undefined ? ease : lola.easing.get(item.ease);
+                                        var es =  item.ease == undefined ? ease : $.easing.get(item.ease);
                                         var st = item.step;
                                         targets.push( new RangeTween( obj, g, p, item, es, s, e, st ) );
                                     });
@@ -9928,7 +9957,7 @@ if ( !String.prototype.trim ) {
              */
             self.destroy = function(){
                 targets = [];
-                lola.animation.remove( namespace+'.'+name );
+                $.animation.remove( namespace+'.'+name );
             }
 
         };
@@ -9944,8 +9973,9 @@ if ( !String.prototype.trim ) {
          * @param end
          */
         var RangeTween = function( target, group, property, value, ease, start, end, step ){
-            var self = this;
-            var tweenObject = new lola.tween.getTweenObject( -1, target, group, property, value );
+	        var $ = lola;
+	        var self = this;
+            var tweenObject = new $.tween.getTweenObject( -1, target, group, property, value );
             var active = false;
             var delta = end - start;
             var lastPosition = 0;
@@ -10009,7 +10039,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.chart
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -10165,7 +10196,8 @@ if ( !String.prototype.trim ) {
      * @namespace lola.array
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -10284,7 +10316,10 @@ if ( !String.prototype.trim ) {
      * @namespace lola.test
      */
     var Module = function(){
-        var self = this;
+
+	    var $ = lola;
+	    var self = this;
+
         //==================================================================
         // Attributes
         //==================================================================
@@ -10409,7 +10444,7 @@ if ( !String.prototype.trim ) {
          */
         function loadExternalXML( source ){
 
-            var req = new lola.http.SyncRequest( source );
+            var req = new $.http.SyncRequest( source );
             req.send();
             var xml = req.responseXML();
             var list = [];
@@ -10486,13 +10521,14 @@ if ( !String.prototype.trim ) {
          * @param {Node} node
          */
         function Script( node ){
-            var name = "";
+	        var $ = lola;
+	        var name = "";
             var value = "";
 
             this.execute = function(){
                 logFn('executing', '"'+name+'"', 'script');
                 //try {
-                lola.evaluate( value );
+                $.evaluate( value );
                 //}
                 //catch( e ){
                 //   errorFn('error evaluating', name, 'script:', e.message );
@@ -10519,7 +10555,8 @@ if ( !String.prototype.trim ) {
          * @param {Node} node
          */
         function Test( node ){
-            var name;
+	        var $ = lola;
+	        var name;
             var result;
             var assert = "==";
             var compareTo;
@@ -10532,7 +10569,7 @@ if ( !String.prototype.trim ) {
                 logFn( name );
                 try {
                     if ( async ){
-                        lola.evaluate( test );
+                        $.evaluate( test );
                         return false;
                     }
                     else {
@@ -10605,7 +10642,7 @@ if ( !String.prototype.trim ) {
                 }
                 else {
                     error = 'failed, '+error;
-                    errorFn( '    ', error );
+                    errorFn( '    ', "["+name+"] "+error );
                 }
             }
 
@@ -10671,13 +10708,14 @@ if ( !String.prototype.trim ) {
          * @param {Node} node
          */
         function ExternalXML( node ){
-            var source;
+	        var $ = lola;
+	        var source;
 
             if ((node.hasAttribute('src')))
                 source = node.attributes.getNamedItem("src").nodeValue;
 
             this.execute = function(){
-                var ls = lola.string;
+                var ls = $.string;
             	var div = ls.padFront( ls.padEnd("\nsource\n",'=',56), '=',104);
                 logFn(div);
                 if (source){

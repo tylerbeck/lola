@@ -71,6 +71,10 @@
         this.initialize = function(){
             $.debug( 'lola.support::initialize' );
             self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
+
+	        var div = document.createElement( 'div' );
+	        div.innerHTML = "<div data-test='yes'></div>";
+
         };
 
         //==================================================================
@@ -100,15 +104,21 @@
 
         //create div for testing
         var div = document.createElement( 'div' );
-        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);' test='true' data-test='yes' >test</div>";
-        var target = div.firstChild;
+        div.innerHTML = "<div style='color:black;opacity:.25;float:left;background-color:rgba(255,0,0,0.5);display:none;position: absolute;' test='true' data-test='yes' data-test2=\"yes\" >test</div>";
+		var target = div.firstChild;
 
         //style tests
         self['style'] = (typeof target.getAttribute( 'style' ) === 'string');
         self.cssFloat = /^left$/.test( target.style.cssFloat );
         self.colorAlpha = /^rgba.*/.test( target.style.backgroundColor );
 
-        //delete expandos
+		//dataset support
+		if ( target.hasOwnProperty && target.hasOwnProperty('dataset') && target.dataset['test'] == 'yes'){
+			self.dataset = true;
+		}
+
+
+		//delete expandos
         try {
             delete target.test;
         }
@@ -116,12 +126,7 @@
             self.deleteExpando = false;
         }
 
-        //dataset support
-        if ( div.hasOwnProperty && div.hasOwnProperty('dataset') && div.dataset['test'] == 'yes'){
-            self.dataset = true;
-        }
-
-        //event model
+		//event model
         if ( document.addEventListener )
             self.domEvent = true;
         else if ( document.attachEvent )
@@ -140,7 +145,6 @@
         //canvas
         var canvas = document.createElement('canvas');
         self.canvas = /canvas/.test( Object.prototype.toString.call(canvas).toLowerCase() );
-
 
 
     };

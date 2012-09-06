@@ -143,10 +143,12 @@
          * @return {Object}
          */
         function parentalBoundsFn(t,x,y){
+	        //TODO: take border box into account
             var $t = $(t);
             var $p = $($t.parent());
             x = lola.math.normalizeRange( 0, x, $p.width() - $t.width() );
             y = lola.math.normalizeRange( 0, y, $p.height() - $t.height() );
+	        //console.log('[',x,',',y,']');
             return {x:x,y:y};
         }
 
@@ -173,14 +175,14 @@
 
             var cursor = $target.dataset('dragcursor');
             var drgb = $target.dataset('dragbounds');
-            if (drgb == "parent"){
+	        if (drgb == "parent"){
                 boundsFn = parentalBoundsFn;
                 bounds = [];
             }
             else{
                 boundsFn = (data.boundsFn) ? data.boundsFn : defaultBoundsFn;
                 bounds = drgb ? drgb.split(','): [];
-             }
+            }
 
             $target.style('zIndex', 10000 );
             $target.style('cursor', cursor?cursor:'none' );
@@ -216,13 +218,13 @@
                 dragging = true;
                 $target.style('position', 'absolute');
                 //$('html').appendChild(target);
-                $target.trigger( "dragstart", false, false, { x:newX, y:newY } );
+                $target.trigger( "dragstart", false, false, { x:pos.x, y:pos.y } );
             }
 
             $target.style('left', pos.x+'px');
             $target.style('top', pos.y+'px');
 
-            $target.trigger( "dragmove", false, false, { x:newX, y:newY } );
+            $target.trigger( "dragmove", false, false, { x:pos.x, y:pos.y } );
         }
 
         /**

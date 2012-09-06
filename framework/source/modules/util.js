@@ -62,7 +62,8 @@
         this.copyPrimitives = function( source, target ){
             for (var k in source){
                 if ($.type.isPrimitive(source[k])){
-                    target[k] = source[k];
+	                try{ target[k] = source[k] }
+	                catch(e){}
                 }
             }
         };

@@ -78,7 +78,7 @@
                 name = tmp.getName();
             }
 
-            $.debug('register command: '+name);
+            $.syslog('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
                 console.warn( 'command "'+name+'" has already been registered... overwriting' );
 

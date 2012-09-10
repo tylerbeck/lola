@@ -347,7 +347,8 @@
                         target['on' + type.toLowerCase()] = handler;
                 }
                 catch( error ) {
-                    $.debug( 'lola.event.addDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't add dom events to some object types
+                    //$.syslog( 'lola.event.addDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -361,17 +362,18 @@
          */
         this.removeDOMListener = function( target, type, handler, useCapture ) {
             type = map[type] ? map[type] : [type];
-            type.forEach( function() {
+            type.forEach( function(t) {
                 try {
                     if ( $.support.domEvent && target.removeEventListener )
-                        target.removeEventListener( type, handler, useCapture );
+                        target.removeEventListener( t, handler, useCapture );
                     else if ( $.support.msEvent && target.detachEvent )
-                        target.detachEvent( 'on' + type, handler );
-                    else if ( target['on' + type.toLowerCase()] == null )
-                        delete target['on' + type.toLowerCase()];
+                        target.detachEvent( 'on' + t, handler );
+                    else if ( target['on' + t.toLowerCase()] == null )
+                        delete target['on' + t.toLowerCase()];
                 }
                 catch( error ) {
-                    $.debug( 'lola.event.removeDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't remove dom events from some object types
+	                //$.syslog( 'lola.event.removeDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -697,10 +699,10 @@
 	        var $ = lola;
 
 	        this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                $.debug('alias hook addListener',type);
+                //$.syslog('alias hook addListener',type);
                 var uid;
                 events.forEach( function(item){
-                    $.debug('    ',item);
+                    //$.syslog('    ',item);
                     uid = $.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
@@ -708,9 +710,9 @@
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                $.debug('alias hook removeListener',type);
+                //$.syslog('alias hook removeListener',type);
                 events.forEach( function(item){
-                    $.debug('    ',item);
+                    //$.syslog('    ',item);
                     uid = $.event.removeListener( target, item, handler, useCapture, false );
                 });
             };

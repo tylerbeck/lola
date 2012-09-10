@@ -49,13 +49,21 @@
          */
         var safeDeleteHooks = [];
 
-        /**
-         * @private
-         * @type {Boolean}
-         */
-        var debugMode = false;
+	    self.DEBUG_NONE = 0;
+	    self.DEBUG_ERROR = 1;
+	    self.DEBUG_WARN = 2;
+	    self.DEBUG_INFO = 3;
+	    self.DEBUG_DEBUG = 4;
+	    self.DEBUG_ALL = 5;
 
-        /**
+	    /**
+         * @private
+         * @type {int}
+         */
+        var debugLevel = self.DEBUG_NONE;
+
+
+	    /**
          * @private
          * @type {lola.URL}
          */
@@ -95,15 +103,40 @@
          */
         this.setURL = function( str ){
             url = new self.URL( str );
-            debugMode = url.vars['debug'] == "true";
+	        if ( url.vars['debug'] != undefined ){
+		        var debug = url.vars['debug'];
+		        switch( debug.toLowerCase() ){
+			        case "all":
+				        debugLevel = self.DEBUG_ALL;
+				        break;
+			        case "debug":
+				        debugLevel = self.DEBUG_DEBUG;
+				        break;
+			        case "info":
+				        debugLevel = self.DEBUG_INFO;
+				        break;
+			        case "warn":
+				        debugLevel = self.DEBUG_WARN;
+				        break;
+			        case "error":
+				        debugLevel = self.DEBUG_ERROR;
+				        break;
+			        case "none":
+				        debugLevel = self.DEBUG_NONE;
+				        break;
+			        default:
+				        debugLevel = parseInt( url.vars['debug'] );
+				        break;
+		        }
+	        }
         };
 
         /**
-         * gets debug mode
-         * @return {Boolean}
+         * gets debug level
+         * @return {int}
          */
-        this.debugMode = function(){
-            return debugMode;
+        this.debugLevel = function(){
+            return debugLevel;
         };
 
 
@@ -208,7 +241,7 @@
          * framework initialization function
          */
         this.executeInitializers = function() {
-            $.debug('core::executeInitializers');
+            $.syslog('core::executeInitializers');
             var i;
             var stackSize = initializers.length;
 
@@ -299,16 +332,59 @@
             return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
         };
 
-        /**
-         * outputs debug statement
-         */
-        this.debug = function(/*args*/){
-            if (debugMode) {
-                console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
-            }
-        };
+	    /**
+	     * outputs log statement
+	     */
+	    function getErrorObj(){
+		    try{ throw Error("")}catch(err){ return err }
+	    }
+	    function logArguments( args ){
+		    var err = getErrorObj();
+		    //var caller_line = err.stack.split("\n")[4];
+		    //var index = caller_line.indexOf("at ");
+		    //var clean = caller_line.slice(index+2, caller_line.length);
+		    var stack = err.stack.split("\n" ).slice(3);
+		    var stackObj = {};
+		    var i = stack.length;
+		    while (i) {
+			    i--;
+			    stackObj[i] = stack[i];
+		    }
+		    var pre = ["["+ $.now()+"][", stackObj,"] " ];
+		    var argArray = Array.prototype.slice.call(args);
+		    return pre.concat( argArray );
+	    }
 
-        /**
+	    this.log = function(/*args*/){
+			console.log.apply(console, logArguments(arguments) );
+	    };
+	    this.sysLog = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_ALL ){
+			    console.log.apply(console, logArguments(arguments) );
+		    }
+	    };
+	    this.debug = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_DEBUG )
+			    console.log.apply(console, logArguments(arguments) );
+	    };
+	    this.info = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_INFO )
+			    console.info.apply(console, logArguments(arguments) );
+	    };
+
+	    this.warn = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_WARN ){
+			    console.warn.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    this.error = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_INFO ){
+			    console.error.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    /**
          * get current time in milliseconds
          * @return {uint}
          */

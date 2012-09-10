@@ -64,7 +64,7 @@
          * module initializer
          */
         this.initialize = function(){
-            $.debug('motion::initialize');
+            $.syslog('motion::initialize');
 
             delete self.initialize;
         };

@@ -86,7 +86,7 @@
          * @return {void}
          */
         this.initialize = function() {
-            $.debug('lola.agent::initialize');
+            $.syslog('lola.agent::initialize');
 
             //check agent dependencies
             $.checkDependencies( this.dependencies );
@@ -111,7 +111,7 @@
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            $.debug('register agent: '+ns);
+            $.syslog('register agent: '+ns);
             if ( ns && $.hasFn( agent,"sign" ) && $.hasFn( agent,"drop" ) ) {
                 //setup module
                 var pkg = $.getPackage( $.agent, ns, agent );

@@ -640,18 +640,34 @@
              */
             var exit;
 
-            /**
-             * sets the SplinePont's entry and exit angles
-             * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
-             * @param {Number} entryAngle
-             * @param {Number|undefined} exitAngle
-             */
-            this.setAngle = function( entryAngle, exitAngle) {
-                entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
-            };
+	        /**
+	         * sets the SplinePont's entry and exit angles
+	         * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
+	         * @param {Number|undefined} entryAngle
+	         * @param {Number|undefined} exitAngle
+	         */
+	        this.setAngle = function( entryAngle, exitAngle) {
+		        entry.angle = entryAngle;
+		        exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
+	        };
 
-            /**
+	        /**
+	         * sets the SplinePont's entry vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setEntry = function( vector ) {
+		        entry = vector;
+	        };
+
+	        /**
+	         * sets the SplinePont's exit vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setExit = function( vector ) {
+		        exit = vector;
+	        };
+
+	        /**
              * gets the spline point's anchor
              * @return {lola.geometry.Point}
              */

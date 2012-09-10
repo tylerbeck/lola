@@ -12,8 +12,7 @@
     if (window.console == undefined ){
         var console = {};
         console.log = function(){};
-        console.info = function(){};
-        window.console = console;
+	    window.console = console;
     }
 
     /**
@@ -76,7 +75,7 @@
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {
-        //lola.debug('lola::getPackage');
+        //lola.sysLog('lola::getPackage');
         var result = base;
         if ( typeof chain === 'string' ) {
             var parts = chain.split( '.' );
@@ -127,7 +126,7 @@
             lola.addInitializer( module.initialize );
         }
 
-        lola.debug('module registered:', namespace );
+        lola.sysLog('module registered:', namespace );
 
     };
 
@@ -155,7 +154,7 @@
 
         var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
-        lola.debug('initialization completed in', elapsedTime, 'ms');
+        lola.sysLog('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;

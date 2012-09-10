@@ -204,7 +204,7 @@
          * @private
          */
         function complete(){
-            console.log('lola.test.complete');
+            $.syslog('lola.test.complete');
 
         }
 

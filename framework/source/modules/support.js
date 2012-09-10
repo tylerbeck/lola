@@ -69,7 +69,7 @@
         // Methods
         //==================================================================
         this.initialize = function(){
-            $.debug( 'lola.support::initialize' );
+            $.syslog( 'lola.support::initialize' );
             self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
 
 	        var div = document.createElement( 'div' );

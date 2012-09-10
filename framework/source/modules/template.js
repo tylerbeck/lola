@@ -67,7 +67,7 @@
          * @return {void}
          */
         this.initialize = function() {
-            $.debug('lola.template::initialize');
+            $.syslog('lola.template::initialize');
 
             //do module initialization
             //get all predefined templates
@@ -76,7 +76,7 @@
                 self.add( item.id, item.innerHTML );
             });
             var complete = $.now();
-            $.debug( "templates parsed in "+(complete-start)+" ms" );
+            $.syslog( "templates parsed in "+(complete-start)+" ms" );
 
 
             //remove initialization method

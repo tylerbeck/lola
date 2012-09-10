@@ -366,7 +366,7 @@
          * @param {String} jsonpParam
          */
         this.get = function( urlStr, callback, jsonpParam ){
-            console.log('json.get: '+urlStr);
+            $.syslog('json.get: '+urlStr);
 
             var url = new $.URL(urlStr);
 
@@ -378,7 +378,7 @@
                 var r = new $.http.AsyncRequest(urlStr);
                 if (callback) {
                     $(r).addListener('result', function(event){
-                        console.log('    result');
+                        $.syslog('    result');
                         var obj = self.parse( event.data.responseText );
                         callback(obj);
                     } );
@@ -388,7 +388,7 @@
 
             }
             else {
-                console.log('    cross domain');
+                $.syslog('    cross domain');
                 jsonpParam = jsonpParam ? jsonpParam : "jsonp";
                 //assume this is a jsonp call and the server supports it.
                 var uid = ruid++;

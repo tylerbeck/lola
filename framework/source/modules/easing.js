@@ -98,7 +98,7 @@
          */
         function preinitialize() {
             var start = $.now();
-            $.debug( 'lola.easing::preinitialize' );
+            $.syslog( 'lola.easing::preinitialize' );
 
             //do module initialization
             //easing that simulates css timing
@@ -124,7 +124,7 @@
                 }
             } );
             var complete = $.now();
-            $.debug('easing preinitialization took',(complete-start), 'ms');
+            $.syslog('easing preinitialization took',(complete-start), 'ms');
             self.setDefaultEase('ease-in-out');
         }
 
@@ -291,7 +291,7 @@
                 return methods[ id ];
             }
             else {
-                $.debug('easing method "'+id+'" not found.');
+                $.warn('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };

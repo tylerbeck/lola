@@ -85,7 +85,7 @@
          * @return {void}
          */
         this.initialize = function() {
-            $.debug( 'lola.css::initialize' );
+            $.syslog( 'lola.css::initialize' );
 
             //add default hooks
             var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
@@ -269,7 +269,7 @@
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            $.debug('addStyleSheet',$.support.cssRules, id, source );
+            $.syslog('addStyleSheet',$.support.cssRules, id, source );
             var stylesheet;
             if ($.support.cssRules){
                 stylesheet = document.createElement( 'style' );

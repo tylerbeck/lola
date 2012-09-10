@@ -12,8 +12,7 @@
     if (window.console == undefined ){
         var console = {};
         console.log = function(){};
-        console.info = function(){};
-        window.console = console;
+	    window.console = console;
     }
 
     /**
@@ -76,7 +75,7 @@
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {
-        //lola.debug('lola::getPackage');
+        //lola.sysLog('lola::getPackage');
         var result = base;
         if ( typeof chain === 'string' ) {
             var parts = chain.split( '.' );
@@ -127,7 +126,7 @@
             lola.addInitializer( module.initialize );
         }
 
-        lola.debug('module registered:', namespace );
+        lola.sysLog('module registered:', namespace );
 
     };
 
@@ -155,7 +154,7 @@
 
         var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
-        lola.debug('initialization completed in', elapsedTime, 'ms');
+        lola.sysLog('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;
@@ -553,13 +552,21 @@ if ( !String.prototype.trim ) {
          */
         var safeDeleteHooks = [];
 
-        /**
-         * @private
-         * @type {Boolean}
-         */
-        var debugMode = false;
+	    self.DEBUG_NONE = 0;
+	    self.DEBUG_ERROR = 1;
+	    self.DEBUG_WARN = 2;
+	    self.DEBUG_INFO = 3;
+	    self.DEBUG_DEBUG = 4;
+	    self.DEBUG_ALL = 5;
 
-        /**
+	    /**
+         * @private
+         * @type {int}
+         */
+        var debugLevel = self.DEBUG_NONE;
+
+
+	    /**
          * @private
          * @type {lola.URL}
          */
@@ -599,15 +606,40 @@ if ( !String.prototype.trim ) {
          */
         this.setURL = function( str ){
             url = new self.URL( str );
-            debugMode = url.vars['debug'] == "true";
+	        if ( url.vars['debug'] != undefined ){
+		        var debug = url.vars['debug'];
+		        switch( debug.toLowerCase() ){
+			        case "all":
+				        debugLevel = self.DEBUG_ALL;
+				        break;
+			        case "debug":
+				        debugLevel = self.DEBUG_DEBUG;
+				        break;
+			        case "info":
+				        debugLevel = self.DEBUG_INFO;
+				        break;
+			        case "warn":
+				        debugLevel = self.DEBUG_WARN;
+				        break;
+			        case "error":
+				        debugLevel = self.DEBUG_ERROR;
+				        break;
+			        case "none":
+				        debugLevel = self.DEBUG_NONE;
+				        break;
+			        default:
+				        debugLevel = parseInt( url.vars['debug'] );
+				        break;
+		        }
+	        }
         };
 
         /**
-         * gets debug mode
-         * @return {Boolean}
+         * gets debug level
+         * @return {int}
          */
-        this.debugMode = function(){
-            return debugMode;
+        this.debugLevel = function(){
+            return debugLevel;
         };
 
 
@@ -803,16 +835,59 @@ if ( !String.prototype.trim ) {
             return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
         };
 
-        /**
-         * outputs debug statement
-         */
-        this.debug = function(/*args*/){
-            if (debugMode) {
-                console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
-            }
-        };
+	    /**
+	     * outputs log statement
+	     */
+	    function getErrorObj(){
+		    try{ throw Error("")}catch(err){ return err }
+	    }
+	    function logArguments( args ){
+		    var err = getErrorObj();
+		    //var caller_line = err.stack.split("\n")[4];
+		    //var index = caller_line.indexOf("at ");
+		    //var clean = caller_line.slice(index+2, caller_line.length);
+		    var stack = err.stack.split("\n" ).slice(3);
+		    var stackObj = {};
+		    var i = stack.length;
+		    while (i) {
+			    i--;
+			    stackObj[i] = stack[i];
+		    }
+		    var pre = ["["+ $.now()+"][", stackObj,"] " ];
+		    var argArray = Array.prototype.slice.call(args);
+		    return pre.concat( argArray );
+	    }
 
-        /**
+	    this.log = function(/*args*/){
+			console.log.apply(console, logArguments(arguments) );
+	    };
+	    this.sysLog = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_ALL ){
+			    console.log.apply(console, logArguments(arguments) );
+		    }
+	    };
+	    this.debug = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_DEBUG )
+			    console.log.apply(console, logArguments(arguments) );
+	    };
+	    this.info = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_INFO )
+			    console.info.apply(console, logArguments(arguments) );
+	    };
+
+	    this.warn = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_WARN ){
+			    console.warn.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    this.error = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_INFO ){
+			    console.error.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    /**
          * get current time in milliseconds
          * @return {uint}
          */
@@ -3287,7 +3362,8 @@ if ( !String.prototype.trim ) {
                         target['on' + type.toLowerCase()] = handler;
                 }
                 catch( error ) {
-                    $.debug( 'lola.event.addDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't add dom events to some object types
+                    //$.syslog( 'lola.event.addDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -3301,17 +3377,18 @@ if ( !String.prototype.trim ) {
          */
         this.removeDOMListener = function( target, type, handler, useCapture ) {
             type = map[type] ? map[type] : [type];
-            type.forEach( function() {
+            type.forEach( function(t) {
                 try {
                     if ( $.support.domEvent && target.removeEventListener )
-                        target.removeEventListener( type, handler, useCapture );
+                        target.removeEventListener( t, handler, useCapture );
                     else if ( $.support.msEvent && target.detachEvent )
-                        target.detachEvent( 'on' + type, handler );
-                    else if ( target['on' + type.toLowerCase()] == null )
-                        delete target['on' + type.toLowerCase()];
+                        target.detachEvent( 'on' + t, handler );
+                    else if ( target['on' + t.toLowerCase()] == null )
+                        delete target['on' + t.toLowerCase()];
                 }
                 catch( error ) {
-                    $.debug( 'lola.event.removeDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't remove dom events from some object types
+	                //$.syslog( 'lola.event.removeDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -7949,18 +8026,34 @@ if ( !String.prototype.trim ) {
              */
             var exit;
 
-            /**
-             * sets the SplinePont's entry and exit angles
-             * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
-             * @param {Number} entryAngle
-             * @param {Number|undefined} exitAngle
-             */
-            this.setAngle = function( entryAngle, exitAngle) {
-                entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
-            };
+	        /**
+	         * sets the SplinePont's entry and exit angles
+	         * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
+	         * @param {Number|undefined} entryAngle
+	         * @param {Number|undefined} exitAngle
+	         */
+	        this.setAngle = function( entryAngle, exitAngle) {
+		        entry.angle = entryAngle;
+		        exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
+	        };
 
-            /**
+	        /**
+	         * sets the SplinePont's entry vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setEntry = function( vector ) {
+		        entry = vector;
+	        };
+
+	        /**
+	         * sets the SplinePont's exit vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setExit = function( vector ) {
+		        exit = vector;
+	        };
+
+	        /**
              * gets the spline point's anchor
              * @return {lola.geometry.Point}
              */

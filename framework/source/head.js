@@ -75,7 +75,7 @@
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {
-        //lola.sysLog('lola::getPackage');
+        //lola.syslog('lola::getPackage');
         var result = base;
         if ( typeof chain === 'string' ) {
             var parts = chain.split( '.' );
@@ -126,7 +126,7 @@
             lola.addInitializer( module.initialize );
         }
 
-        lola.sysLog('module registered:', namespace );
+        lola.syslog('module registered:', namespace );
 
     };
 
@@ -154,7 +154,7 @@
 
         var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
-        lola.sysLog('initialization completed in', elapsedTime, 'ms');
+        lola.syslog('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;

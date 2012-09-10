@@ -358,7 +358,7 @@
 	    this.log = function(/*args*/){
 			console.log.apply(console, logArguments(arguments) );
 	    };
-	    this.sysLog = function(/*args*/){
+	    this.syslog = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_ALL ){
 			    console.log.apply(console, logArguments(arguments) );
 		    }

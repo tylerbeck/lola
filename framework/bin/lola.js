@@ -75,7 +75,7 @@
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {
-        //lola.sysLog('lola::getPackage');
+        //lola.syslog('lola::getPackage');
         var result = base;
         if ( typeof chain === 'string' ) {
             var parts = chain.split( '.' );
@@ -126,7 +126,7 @@
             lola.addInitializer( module.initialize );
         }
 
-        lola.sysLog('module registered:', namespace );
+        lola.syslog('module registered:', namespace );
 
     };
 
@@ -154,7 +154,7 @@
 
         var elapsedTime = (new Date()).getTime() - startTime;
         delete lola['initialize'];
-        lola.sysLog('initialization completed in', elapsedTime, 'ms');
+        lola.syslog('initialization completed in', elapsedTime, 'ms');
     };
 
     window['lola'] = lola;
@@ -744,7 +744,7 @@ if ( !String.prototype.trim ) {
          * framework initialization function
          */
         this.executeInitializers = function() {
-            $.debug('core::executeInitializers');
+            $.syslog('core::executeInitializers');
             var i;
             var stackSize = initializers.length;
 
@@ -861,7 +861,7 @@ if ( !String.prototype.trim ) {
 	    this.log = function(/*args*/){
 			console.log.apply(console, logArguments(arguments) );
 	    };
-	    this.sysLog = function(/*args*/){
+	    this.syslog = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_ALL ){
 			    console.log.apply(console, logArguments(arguments) );
 		    }
@@ -1191,7 +1191,7 @@ if ( !String.prototype.trim ) {
         // Methods
         //==================================================================
         this.initialize = function(){
-            $.debug( 'lola.support::initialize' );
+            $.syslog( 'lola.support::initialize' );
             self.cssRules = ( (document.styleSheets.length > 0 && document.styleSheets[0].cssRules) || document.createStyleSheet == undefined  ) ? true : false;
 
 	        var div = document.createElement( 'div' );
@@ -1982,7 +1982,7 @@ if ( !String.prototype.trim ) {
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    console.log("appendChild:",node);
+                    //console.log("appendChild:",node);
                     var p = this.get(0);
                     if ( p && p.appendChild )
                         p.appendChild( node );
@@ -3714,10 +3714,10 @@ if ( !String.prototype.trim ) {
 	        var $ = lola;
 
 	        this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                $.debug('alias hook addListener',type);
+                //$.syslog('alias hook addListener',type);
                 var uid;
                 events.forEach( function(item){
-                    $.debug('    ',item);
+                    //$.syslog('    ',item);
                     uid = $.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
@@ -3725,9 +3725,9 @@ if ( !String.prototype.trim ) {
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                $.debug('alias hook removeListener',type);
+                //$.syslog('alias hook removeListener',type);
                 events.forEach( function(item){
-                    $.debug('    ',item);
+                    //$.syslog('    ',item);
                     uid = $.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
@@ -4811,7 +4811,7 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            $.debug( 'lola.css::initialize' );
+            $.syslog( 'lola.css::initialize' );
 
             //add default hooks
             var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
@@ -4995,7 +4995,7 @@ if ( !String.prototype.trim ) {
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            $.debug('addStyleSheet',$.support.cssRules, id, source );
+            $.syslog('addStyleSheet',$.support.cssRules, id, source );
             var stylesheet;
             if ($.support.cssRules){
                 stylesheet = document.createElement( 'style' );
@@ -6434,7 +6434,7 @@ if ( !String.prototype.trim ) {
          * @param {String} jsonpParam
          */
         this.get = function( urlStr, callback, jsonpParam ){
-            console.log('json.get: '+urlStr);
+            $.syslog('json.get: '+urlStr);
 
             var url = new $.URL(urlStr);
 
@@ -6446,7 +6446,7 @@ if ( !String.prototype.trim ) {
                 var r = new $.http.AsyncRequest(urlStr);
                 if (callback) {
                     $(r).addListener('result', function(event){
-                        console.log('    result');
+                        $.syslog('    result');
                         var obj = self.parse( event.data.responseText );
                         callback(obj);
                     } );
@@ -6456,7 +6456,7 @@ if ( !String.prototype.trim ) {
 
             }
             else {
-                console.log('    cross domain');
+                $.syslog('    cross domain');
                 jsonpParam = jsonpParam ? jsonpParam : "jsonp";
                 //assume this is a jsonp call and the server supports it.
                 var uid = ruid++;
@@ -6592,7 +6592,7 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            $.debug('lola.agent::initialize');
+            $.syslog('lola.agent::initialize');
 
             //check agent dependencies
             $.checkDependencies( this.dependencies );
@@ -6617,7 +6617,7 @@ if ( !String.prototype.trim ) {
          */
         this.registerAgent = function( agent ) {
             var ns = agent.namespace();
-            $.debug('register agent: '+ns);
+            $.syslog('register agent: '+ns);
             if ( ns && $.hasFn( agent,"sign" ) && $.hasFn( agent,"drop" ) ) {
                 //setup module
                 var pkg = $.getPackage( $.agent, ns, agent );
@@ -6803,7 +6803,7 @@ if ( !String.prototype.trim ) {
                 name = tmp.getName();
             }
 
-            $.debug('register command: '+name);
+            $.syslog('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
                 console.warn( 'command "'+name+'" has already been registered... overwriting' );
 
@@ -7031,7 +7031,7 @@ if ( !String.prototype.trim ) {
          * @return {void}
          */
         this.initialize = function() {
-            $.debug('lola.template::initialize');
+            $.syslog('lola.template::initialize');
 
             //do module initialization
             //get all predefined templates
@@ -7040,7 +7040,7 @@ if ( !String.prototype.trim ) {
                 self.add( item.id, item.innerHTML );
             });
             var complete = $.now();
-            $.debug( "templates parsed in "+(complete-start)+" ms" );
+            $.syslog( "templates parsed in "+(complete-start)+" ms" );
 
 
             //remove initialization method
@@ -8533,7 +8533,7 @@ if ( !String.prototype.trim ) {
          */
         function preinitialize() {
             var start = $.now();
-            $.debug( 'lola.easing::preinitialize' );
+            $.syslog( 'lola.easing::preinitialize' );
 
             //do module initialization
             //easing that simulates css timing
@@ -8559,7 +8559,7 @@ if ( !String.prototype.trim ) {
                 }
             } );
             var complete = $.now();
-            $.debug('easing preinitialization took',(complete-start), 'ms');
+            $.syslog('easing preinitialization took',(complete-start), 'ms');
             self.setDefaultEase('ease-in-out');
         }
 
@@ -8726,7 +8726,7 @@ if ( !String.prototype.trim ) {
                 return methods[ id ];
             }
             else {
-                $.debug('easing method "'+id+'" not found.');
+                $.warn('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };
@@ -9717,7 +9717,7 @@ if ( !String.prototype.trim ) {
          * module initializer
          */
         this.initialize = function(){
-            $.debug('motion::initialize');
+            $.syslog('motion::initialize');
 
             delete self.initialize;
         };
@@ -10606,7 +10606,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         function complete(){
-            console.log('lola.test.complete');
+            $.syslog('lola.test.complete');
 
         }
 

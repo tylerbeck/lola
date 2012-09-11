@@ -205,7 +205,7 @@
         /**
          * copies properties of styleObject into style cache with given name
          * @param {Object|String} style
-         * @param {Object|String} ctx
+         * @param {Object|String|undefined} ctx
          */
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );

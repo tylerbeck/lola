@@ -7822,7 +7822,7 @@ if ( !String.prototype.trim ) {
              * spline flags
              * @type {Boolean}
              */
-            flags = flags == undefined ? 0 : flags;
+            flags = flags == undefined ? self.Spline.BEGIN|self.Spline.END : flags;
 
             /**
              * adds a point at the specified index.
@@ -7907,7 +7907,8 @@ if ( !String.prototype.trim ) {
                         //d(n,n+1);
                     }
 
-                    ctx.beginPath();
+                    if (!(flgs & self.Spline.NOBEGIN))
+	                    ctx.beginPath();
                     ctx.moveTo( p[1].x,p[1].y );
                     for (var i=2; i<pl-3; i+=3){
                         ctx.bezierCurveTo(
@@ -7933,7 +7934,8 @@ if ( !String.prototype.trim ) {
                         ctx.stroke();
                     }
 
-                    ctx.closePath();
+	                if (!(flgs & self.Spline.NOEND))
+		                ctx.closePath();
 
                 }
                 else{
@@ -7988,15 +7990,30 @@ if ( !String.prototype.trim ) {
                 return norm;
             };
 
+	        /**
+	         * converts object to object list of strings
+	         * @return {Object}
+	         */
+	        this.listPoints= function(){
+		        var pts = {};
+		        var ct = 0;
+		        points.forEach(function(item){
+			        pts[ct++] = item.toString();
+		        });
+		        return pts;
+	        };
 
-            return this;
+	        return this;
         };
-        this.Spline.CLOSED = 0x1;
-        this.Spline.FILL = 0x2;
+	    this.Spline.CLOSED = 0x1;
+	    this.Spline.FILL = 0x2;
         this.Spline.STROKE = 0x4;
         this.Spline.CONTROLS =0x8;
+	    this.Spline.NOBEGIN = 0x10;
+	    this.Spline.NOEND = 0x11;
 
-        /**
+
+	    /**
          * SplinePoint class
          * @class
          * @param anchorX
@@ -8081,6 +8098,14 @@ if ( !String.prototype.trim ) {
                 return anchor.add( exit.toPoint() );
             };
 
+	        /**
+	         * converts object to readable string
+	         * @return {String}
+	         */
+	        this.toString = function(){
+		        return [anchor,entry,exit].join(" ");
+	        };
+
             //initialize
             anchor = new self.Point( anchorX, anchorY );
             entry = new self.Vector( entryStrength, entryAngle );
@@ -8115,10 +8140,15 @@ if ( !String.prototype.trim ) {
                 return new self.Vector( this.velocity, this.angle );
             };
 
-
+	        /**
+	         * adds two vectors
+	         * @param v
+	         */
             this.add = function( v ){
-                this.velocity += v.velocity;
-                this.angle += v.angle;
+	            var c = this.copy();
+                c.velocity += v.velocity;
+                c.angle += v.angle;
+	            return c;
             };
 
             /**
@@ -8132,7 +8162,17 @@ if ( !String.prototype.trim ) {
                 )
             };
 
-            return this;
+	        /**
+	         * converts vector to object notation
+	         * @return {String}
+	         */
+	        this.toString = function(){
+		        return "{v:"+this.velocity+",a:"+this.angle+"}";
+	        };
+
+
+
+	        return this;
         };
 
     };
@@ -8349,7 +8389,7 @@ if ( !String.prototype.trim ) {
         /**
          * copies properties of styleObject into style cache with given name
          * @param {Object|String} style
-         * @param {Object|String} ctx
+         * @param {Object|String|undefined} ctx
          */
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );

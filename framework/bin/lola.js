@@ -612,6 +612,7 @@ if ( !String.prototype.trim ) {
 			        case "all":
 				        debugLevel = self.DEBUG_ALL;
 				        break;
+			        case "true":
 			        case "debug":
 				        debugLevel = self.DEBUG_DEBUG;
 				        break;
@@ -841,12 +842,18 @@ if ( !String.prototype.trim ) {
 	    function getErrorObj(){
 		    try{ throw Error("")}catch(err){ return err }
 	    }
+
+	    /**
+	     * gets error object arguments
+	     * @param args
+	     * @return {Array}
+	     */
 	    function logArguments( args ){
 		    var err = getErrorObj();
 		    //var caller_line = err.stack.split("\n")[4];
 		    //var index = caller_line.indexOf("at ");
 		    //var clean = caller_line.slice(index+2, caller_line.length);
-		    var stack = err.stack.split("\n" ).slice(3);
+		    var stack = (err.stack)?err.stack.split("\n" ).slice(3):[];
 		    var stackObj = {};
 		    var i = stack.length;
 		    while (i) {
@@ -858,31 +865,51 @@ if ( !String.prototype.trim ) {
 		    return pre.concat( argArray );
 	    }
 
+	    /**
+	     * output to log, independent of log-level and debug status
+	     */
 	    this.log = function(/*args*/){
 			console.log.apply(console, logArguments(arguments) );
 	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_ALL
+	     */
 	    this.syslog = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_ALL ){
 			    console.log.apply(console, logArguments(arguments) );
 		    }
 	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_DEBUG
+	     */
 	    this.debug = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_DEBUG )
 			    console.log.apply(console, logArguments(arguments) );
 	    };
+	    /**
+	     * output to log if log-level is DEBUG_INFO
+	     */
 	    this.info = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_INFO )
 			    console.info.apply(console, logArguments(arguments) );
 	    };
 
+	    /**
+	     * output to log if log-level is DEBUG_WARN
+	     */
 	    this.warn = function(/*args*/){
 		    if ( debugLevel >= self.DEBUG_WARN ){
 			    console.warn.apply(console, logArguments(arguments) );
 		    }
 	    };
 
+	    /**
+	     * output to log if log-level is DEBUG_ERROR
+	     */
 	    this.error = function(/*args*/){
-		    if ( debugLevel >= self.DEBUG_INFO ){
+		    if ( debugLevel >= self.DEBUG_ERROR ){
 			    console.error.apply(console, logArguments(arguments) );
 		    }
 	    };

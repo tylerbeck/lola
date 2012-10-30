@@ -81,8 +81,8 @@
                         $('canvas').registerContext();
                         this.drawGrid(400,400);
                         this.createPoints();
-                        this.drawCurves();
-                        this.updateFunctions();
+                        //this.drawCurves();
+                        //this.updateFunctions();
 
                         //add listeners
                         $("#box").addListener('click',this.test);
@@ -166,10 +166,11 @@
                     g.applyStyle( (index == 0 || last)?'endPt':'middlePt' );
                     g.executeRoutine( 'point' );
                     var c2p = point.getAnchor().add( -6 );
+	                console.log('pos:',c2p.x)
                     $(c2).identify().
                             addClass('point').
-                            style('top',c2p.y).
-                            style('left',c2p.x);
+                            style('top',c2p.y+'px').
+                            style('left',c2p.x+'px');
 
                     if (index > 0 && !last ){
                         //moveable point
@@ -252,7 +253,7 @@
                     xMax -= 6;
                     xMin -= 6;
 
-                    lola.agent.drag.setBounds(xMin, xMax, yMin, yMax);
+                    //lola.agent.drag.setBounds(xMin, xMax, yMin, yMax);
                 },
 
 
@@ -262,7 +263,8 @@
                     var $c1 = $(data.entry);
                     var $c2 = $(data.anchor);
                     var $c3 = $(data.exit);
-                    var bounds = lola.agent.drag.getBounds();
+
+	                var bounds = {xMin:0,xMax:500,yMin:0,yMax:500};
                     var prev, next, pnt, vct, entry, exit, anchor = point.getAnchor();
 
                     if (data.index > 0){
@@ -420,7 +422,7 @@
                                                              p(1,1),
                                                              false, true );
 
-                    lola.easing.register( 'custom', normSpline, 1000, true );
+                    lola.easing.registerEasingSpline( 'custom', normSpline, 1000, true );
 
                     var pts = this.getRawPoints( normSpline );
                     var sections = [];

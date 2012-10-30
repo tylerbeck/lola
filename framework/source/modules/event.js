@@ -13,7 +13,8 @@
 	 * @namespace lola.event
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -109,16 +110,16 @@
         this.addListener = function( target, type, handler, useCapture, priority, scope, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
-            if ( lola.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
+            if ( $.util.checkArgs('ERROR: lola.event.addListener( '+type+' )', required, info) ){
                 if (useHooks !== false && hooks[type] != null){
                     var hook = hooks[type];
                     return hook.addListener( target, type, handler, useCapture, priority, hook );
                 }
                 else {
-                    var data = lola.data.get( target, dataNamespace );
+                    var data = $.data.get( target, dataNamespace );
                     if ( !data ) {
                         data = { capture:{}, bubble:{} };
-                        lola.data.set( target, data, dataNamespace, true );
+                        $.data.set( target, data, dataNamespace, true );
                     }
 
                     var phase = self.phaseString( target, useCapture );
@@ -159,18 +160,18 @@
         this.removeListener = function( target, type, handler, useCapture, useHooks ) {
             var required = [['target',target],['type',type],['handler',handler]];
             var info = [target,'type: '+type,'useCapture: '+useCapture];
-            if ( lola.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
+            if ( $.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
                 if (useHooks !== false && hooks[type] != null){
                     hooks[type]['removeListener'].call( hooks[type], target, type, handler, useCapture );
                 }
                 else {
-                    var data = lola.data.get( target, dataNamespace );
+                    var data = $.data.get( target, dataNamespace );
                     if ( !data ) data = { capture:{}, bubble:{} };
 
                     var phase = self.phaseString( target, useCapture );
 
                     //get handler uid
-                    var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
+                    var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
 
                     if (data && data[phase] && data[phase][type] ){
                         delete data[phase][type][uid];
@@ -196,21 +197,21 @@
          * @param {Boolean|undefined} useCapture
          */
         this.removeHandler = function( handler, types, useCapture ) {
-            //console.info( 'lola.event.removeHandler: '+type+' '+capture );
+            //console.info( '$.event.removeHandler: '+type+' '+capture );
             var required = [['handler',handler]];
             var info = [];
-            if ( lola.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
+            if ( $.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
                 //get handler uid
-                var uid = lola.type.get( handler ) == 'function' ? handler.uid : handler;
+                var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
 
                 //get event data
-                var data = lola.data.getNamespace( dataNamespace );
+                var data = $.data.getNamespace( dataNamespace );
                 if ( data ) {
                     var ctypes = (useCapture == undefined) ? ['capture','bubble'] : useCapture ? ['capture'] : ['bubble'];
                     //iterate data
                     for ( var oid in data ) {
                         if ( types != undefined )
-                            types = lola.type.get( types ) == 'array' ? types : [types];
+                            types = $.type.get( types ) == 'array' ? types : [types];
                         for ( var phase in ctypes ) {
                             var type;
                             if ( types ) {
@@ -239,7 +240,7 @@
          * @private
          */
         function captureHandler( event ) {
-            event = event || lola.window.event;
+            event = event || $.window.event;
             handler( event, 'capture' )
         }
 
@@ -249,7 +250,7 @@
          * @private
          */
         function bubbleHandler( event ) {
-            event = event || lola.window.event;
+            event = event || $.window.event;
             handler( event, 'bubble' )
         }
 
@@ -261,18 +262,18 @@
          */
         function handler( event, phase ) {
             event = event ? event : window.event;
-           //console.log( 'lola.event.handler: '+event.type+' '+phase );
+           //console.log( '$.event.handler: '+event.type+' '+phase );
 
             var e = (event.originalEvent) ? event : new LolaEvent( event, {} );
-            var data = lola.data.get( e.currentTarget, dataNamespace );
+            var data = $.data.get( e.currentTarget, dataNamespace );
             if ( data && data[phase] && data[phase][event.type] ) {
                 //console.info('    found event');
                 var stack = [];
                 for ( var uid in data[phase][event.type] ) {
                     stack.push( data[phase][event.type][uid] );
                 }
-                //stack = stack.sort( lola.util.prioritySort );
-                stack = lola.array.sortOn( 'priority', stack );
+                //stack = stack.sort( $.util.prioritySort );
+                stack = $.array.sortOn( 'priority', stack );
                 for ( var i in stack ) {
                     if ( e._immediatePropagationStopped )
                         break;
@@ -294,11 +295,11 @@
          * @param {Object|undefined} data
          */
         this.trigger = function( object, type, bubbles, cancelable, data ) {
-            //console.log('lola.event.trigger:',type, object);
+            //console.log('$.event.trigger:',type, object);
             var args = [object, type];
             var names = ['target','type'];
             var group = 'lola.event.trigger: type='+type+' bubbles='+bubbles;
-            if ( lola.util.checkArgs(args, names, group) ){
+            if ( $.util.checkArgs(args, names, group) ){
                 //console.log('   valid');
                 if ( bubbles == undefined )
                     bubbles = true;
@@ -306,7 +307,7 @@
                     cancelable = true;
 
                 var event = type;
-                if ( lola.type.get( event ) === 'string' ) {
+                if ( $.type.get( event ) === 'string' ) {
                     //console.log('   event is string');
                     event = document.createEvent( "Event" );
                     event.initEvent( type, bubbles, cancelable );
@@ -318,7 +319,7 @@
                     object.dispatchEvent( event );
                 }
                 else {
-                    //console.log('   dispatching lola event');
+                    //console.log('   dispatching $ event');
                     event = new LolaEvent( event, object );
                     handler( event, 'capture' );
                     if (bubbles)
@@ -338,15 +339,16 @@
             type = map[type] ? map[type] : [type];
             type.forEach( function(t) {
                 try {
-                    if ( lola.support.domEvent && target.addEventListener )
+                    if ( $.support.domEvent && target.addEventListener )
                         target.addEventListener( t, handler, useCapture );
-                    else if ( lola.support.msEvent && target.attachEvent )
+                    else if ( $.support.msEvent && target.attachEvent )
                         target.attachEvent( 'on' + t, handler );
                     else if ( target['on' + t.toLowerCase()] == null )
                         target['on' + type.toLowerCase()] = handler;
                 }
                 catch( error ) {
-                    lola.debug( 'lola.event.addDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't add dom events to some object types
+                    //$.syslog( 'lola.event.addDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -360,17 +362,18 @@
          */
         this.removeDOMListener = function( target, type, handler, useCapture ) {
             type = map[type] ? map[type] : [type];
-            type.forEach( function() {
+            type.forEach( function(t) {
                 try {
-                    if ( lola.support.domEvent && target.removeEventListener )
-                        target.removeEventListener( type, handler, useCapture );
-                    else if ( lola.support.msEvent && target.detachEvent )
-                        target.detachEvent( 'on' + type, handler );
-                    else if ( target['on' + type.toLowerCase()] == null )
-                        delete target['on' + type.toLowerCase()];
+                    if ( $.support.domEvent && target.removeEventListener )
+                        target.removeEventListener( t, handler, useCapture );
+                    else if ( $.support.msEvent && target.detachEvent )
+                        target.detachEvent( 'on' + t, handler );
+                    else if ( target['on' + t.toLowerCase()] == null )
+                        delete target['on' + t.toLowerCase()];
                 }
                 catch( error ) {
-                    lola.debug( 'lola.event.removeDOMListener error:', target, type, handler, useCapture );
+	                //errors here are because we can't remove dom events from some object types
+	                //$.syslog( 'lola.event.removeDOMListener error:', target, t, handler, useCapture );
                 }
             } );
         };
@@ -460,7 +463,7 @@
             var yPos = e.offsetY || undefined;
 
             if (e.currentTarget != undefined && (xPos == undefined || yPos == undefined)){
-                var trgOffset = lola.geometry.getOffset( e.currentTarget );
+                var trgOffset = $.geometry.getOffset( e.currentTarget );
                 var clickPt = self.getDOMGlobalXY( e );
 
                 xPos = clickPt.x - trgOffset.x;
@@ -476,7 +479,7 @@
          * @return {String}
          */
         this.phaseString = function( target, useCapture ) {
-            return ((useCapture && (lola.support.domEvent || lola.support.msEvent)) || (!target.dispatchEvent && !target.attachEvent)) ? 'capture' : 'bubble';
+            return ((useCapture && ($.support.domEvent || $.support.msEvent)) || (!target.dispatchEvent && !target.attachEvent)) ? 'capture' : 'bubble';
         };
 
         /**
@@ -693,22 +696,24 @@
          * event alias hook
          */
         this.AliasHook = function( events ){
-            this.addListener = function( target, type, handler, useCapture, priority, scope ){
-                lola.debug('alias hook addListener',type);
+	        var $ = lola;
+
+	        this.addListener = function( target, type, handler, useCapture, priority, scope ){
+                //$.syslog('alias hook addListener',type);
                 var uid;
                 events.forEach( function(item){
-                    lola.debug('    ',item);
-                    uid = lola.event.addListener( target, item, handler, useCapture, priority, scope, false );
+                    //$.syslog('    ',item);
+                    uid = $.event.addListener( target, item, handler, useCapture, priority, scope, false );
                 });
 
                 return uid;
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                lola.debug('alias hook removeListener',type);
+                //$.syslog('alias hook removeListener',type);
                 events.forEach( function(item){
-                    lola.debug('    ',item);
-                    uid = lola.event.removeListener( target, item, handler, useCapture, false );
+                    //$.syslog('    ',item);
+                    uid = $.event.removeListener( target, item, handler, useCapture, false );
                 });
             };
 
@@ -730,17 +735,17 @@
          * @event hover
          */
         var HoverHook = function() {
-            var hookEvent = "hover";
-
+	        var $ = lola;
+	        var hookEvent = "hover";
             var ns = 'eventHover';
 
             function getData( target ){
-                var wait = lola.dom.attr( target, "hoverDelay" );
+                var wait = $.dom.attr( target, "hoverDelay" );
                 wait = (wait == null || wait == undefined) ? 250 : parseInt(wait);
-                var data = lola.data.get( target, ns );
+                var data = $.data.get( target, ns );
                 if ( !data ) {
                     data = { hasIntent:false, wait:wait, timeout:-1 };
-                    lola.data.set( target, data, ns, true );
+                    $.data.set( target, data, ns, true );
                 }
                 return data;
             }
@@ -776,13 +781,13 @@
             };
 
             this.removeListener = function( target, type, handler, useCapture ){
-                var edata = lola.data.get( target, dataNamespace );
+                var edata = $.data.get( target, dataNamespace );
                 self.removeListener( target, hookEvent, handler, useCapture, false );
                 var phase = self.phaseString( target, useCapture );
                 //check for other hook listeners before removeing
                 if (edata[phase][hookEvent] == null || Object.keys(edata[phase][hookEvent]).length == 0){
                     self.removeListener( target, 'mouseover', mouseOver, false );
-                    lola.data.remove( target, ns );
+                    $.data.remove( target, ns );
                 }
             };
 
@@ -796,21 +801,22 @@
          * @event mouseenterstate
          */
         var MouseEnterStateHook = function(){
-            var e1 = 'domouseenter';
+	        var $ = lola;
+	        var e1 = 'domouseenter';
             var e2 = 'domouseleave';
             var ns = 'eventMouseEnterState';
 
             function getData( target ){
-                var data = lola.data.get( target, ns );
+                var data = $.data.get( target, ns );
                 if ( !data ) {
                     data = { within:false };
-                    lola.data.set( target, data, ns, true );
+                    $.data.set( target, data, ns, true );
                 }
                 return data;
             }
 
             function getEnhancedType ( type ){
-                if (!lola.support.msEvent) {
+                if (!$.support.msEvent) {
                     type = 'do'+type;
                 }
                 return type;
@@ -827,7 +833,7 @@
             function mouseOut( event ){
                 var data = getData( event.currentTarget );
                 if ( data.within &&
-                    !lola.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
+                    !$.dom.isAncestor( event.currentTarget, event.relatedTarget ) &&
                     event.currentTarget != event.relatedTarget ){
                     data.within = false;
                     self.trigger( event.currentTarget, e2, false );
@@ -836,7 +842,7 @@
 
             this.addListener = function( target, type, handler, useCapture, priority, scope ){
                 //IE has it already
-                if (!lola.support.msEvent){
+                if (!$.support.msEvent){
                     //deal with other browsers
                     self.addListener( target, 'mouseover', mouseOver, useCapture, priority, scope );
                     self.addListener( target, 'mouseout', mouseOut, useCapture, priority, scope );
@@ -846,13 +852,13 @@
 
             this.removeListener = function( target, type, handler, useCapture ){
 
-                var edata = lola.data.get( target, dataNamespace );
+                var edata = $.data.get( target, dataNamespace );
                 var phase = self.phaseString( target, useCapture );
                 type = getEnhancedType( type );
                 self.removeListener( target, type, handler, useCapture, false );
 
                 //check for other hook listeners before removeing
-                if (!lola.support.msEvent &&
+                if (!$.support.msEvent &&
                     edata[phase][type] == null ||
                     edata[phase][type].keys().length == 0){
                     //deal with other browsers

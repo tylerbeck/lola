@@ -12,7 +12,8 @@
      * @namespace lola.array
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -107,8 +108,8 @@
          * module initializer
          */
         this.initialize = function(){
-            var anim = new lola.animation.Animation( tick, self );
-            lola.animation.register(namespace, anim);
+            var anim = new $.animation.Animation( tick, self );
+            $.animation.register(namespace, anim);
             if ( Object.keys( tweens ).length > 0 ){
                 startTicking();
             }
@@ -118,8 +119,7 @@
          * start ticking
          */
         function startTicking(){
-
-            lola.animation.start( namespace );
+            $.animation.start( namespace );
         }
 
         /**
@@ -139,7 +139,7 @@
          * @private
          */
         this.start = function( id ){
-            //console.log('lola.tween.start',id,tweens[ id ]);
+            //console.log('$.tween.start',id,tweens[ id ]);
             if (tweens[ id ]){
                 tweens[ id ].start();
             }
@@ -187,7 +187,7 @@
             //console.log('tween.addTarget',targets);
             if (tweens[ tweenId ]){
                 collisions = collisions === true;
-                if (lola.type.get(objects) != 'array')
+                if ($.type.get(objects) != 'array')
                     objects = [objects];
 
                 var ol = objects.length;
@@ -244,7 +244,7 @@
 
             if (!value.from){
                 //try to get "from" value
-                var f = lola(target)[group]( property );
+                var f = $(target)[group]( property );
                 //console.log('test f:',f);
                 //console.log()
                 if (typeof value == "object" ){
@@ -332,7 +332,7 @@
                 }
             }
             if (!type) {
-                proxy = lola.tween.setAfterProxy;
+                proxy = $.tween.setAfterProxy;
                 delta = to;
             }
 
@@ -346,7 +346,7 @@
          * @private
          */
         function tick( now, delta, elapsed ){
-            //console.log('lola.tween.tick', now, lola.now(), delta, elapsed );
+            //console.log('$.tween.tick', now, $.now(), delta, elapsed );
             //iterate through tweens and check for active state
             //if active, run position calculation on tweens
             var activityCheck = false;
@@ -358,7 +358,7 @@
             pFn = function(t,g,p,obj){
                 var dispatcher = obj[0].target;
                 if (dispatcher){
-                    lola.event.trigger(dispatcher,'tweencomplete',false,false);
+                    $.event.trigger(dispatcher,'tweencomplete',false,false);
                 }
                 return true;
             };
@@ -372,7 +372,7 @@
                         //catch complete on next tick
 
                         //trigger events
-                        lola.event.trigger(tweens[k],'tweencomplete',false,false);
+                        $.event.trigger(tweens[k],'tweencomplete',false,false);
                         iterateTargets( tFn, gFn, pFn );
 
                         delete tweens[k];
@@ -488,7 +488,7 @@
         // Tween Types
         //==================================================================
         this.addTweenType('simple', {
-            match: lola.regex.isNumber,
+            match: $.regex.isNumber,
             parse: function(val){
                 return parseFloat( val );
             },
@@ -509,9 +509,9 @@
         });
 
         this.addTweenType('dimensional', {
-            match: lola.regex.isDimension,
+            match: $.regex.isDimension,
             parse: function(val){
-                var parts = String( val ).match( lola.regex.isDimension );
+                var parts = String( val ).match( $.regex.isDimension );
                 return { value: parseFloat( parts[1] ), units: parts[2] };
             },
             canTween: function(a,b){
@@ -533,10 +533,10 @@
         });
 
         this.addTweenType('color', {
-            match: lola.regex.isColor,
+            match: $.regex.isColor,
             parse: function(val){
                 //console.log ('color.parse: ',val);
-                var color = new lola.css.Color( val );
+                var color = new $.css.Color( val );
                 //console.log( '    ', color.rgbValue );
                 return color.getRgbValue();
             },
@@ -563,7 +563,7 @@
                 var a = (i.a + d.a * progress);
                 //console.log ('color.proxy: ',from, delta, progress, r, g, b, a);
 
-                if ( lola.support.colorAlpha )
+                if ( $.support.colorAlpha )
                     obj.$target[ obj.type ]( obj.property, "rgba(" + [r,g,b,a].join( ',' ) + ")");
                 else
                     obj.$target[ obj.type ]( obj.property, "rgb(" + [r,g,b].join( ',' ) + ")");
@@ -676,9 +676,9 @@
                 if (typeof easing == "function")
                     this.easing = easing;
                 else if (typeof easing == "string")
-                    this.easing = lola.easing.get( easing );
+                    this.easing = $.easing.get( easing );
                 else
-                    this.easing = lola.easing.get('default');
+                    this.easing = $.easing.get('default');
                 this.delay = delay || 0;
                 if (!easing){
                     this.easing = {exec:function(t,v,c,d){ return (t/d)*c + v;} };
@@ -699,29 +699,29 @@
                 //console.log('Tween.start', this.active);
                 if (!this.active){
                     this.active = true;
-                    this.startTime = lola.now();
+                    this.startTime = $.now();
                     startTicking();
-                    lola.event.trigger(this,'tweenstart',false,false);
+                    $.event.trigger(this,'tweenstart',false,false);
                 }
             },
             stop: function(){
                 this.active = false;
                 this.complete = true;
-                lola.event.trigger(this,'tweenstop',false,false);
+                $.event.trigger(this,'tweenstop',false,false);
             },
             pause: function(){
                 if (this.active){
                     this.active = false;
-                    this.pauseTime = lola.now();
-                    lola.event.trigger(this,'tweenpause',false,false);
+                    this.pauseTime = $.now();
+                    $.event.trigger(this,'tweenpause',false,false);
                 }
             },
             resume: function(){
                 if (!this.active){
                     this.active = true;
-                    this.startTime += lola.now() - this.pauseTime;
+                    this.startTime += $.now() - this.pauseTime;
                     startTicking();
-                    lola.event.trigger(this,'tweenresume',false,false);
+                    $.event.trigger(this,'tweenresume',false,false);
                 }
             }
 

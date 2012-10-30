@@ -9,3 +9,5 @@ webroot/lola
 examples/examples.iml
 tmp/*
 tmp/unified.js
+assets/*
+

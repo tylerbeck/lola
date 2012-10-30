@@ -12,7 +12,8 @@
      * @namespace lola.graphics
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -90,7 +91,7 @@
          */
         this.registerContext = function( canvas, id ){
             var ctx = canvas.getContext('2d');
-            id = (id==undefined)?lola(canvas).identify().attr('id'):id;
+            id = (id==undefined)?$(canvas).identify().attr('id'):id;
             //console.log('register context:',id);
             var gdata = $(canvas).getData( "_"+namespace, true );
             if (gdata.contexts == null)
@@ -105,7 +106,7 @@
          * @param canvas
          */
         this.removeContext = function( canvas ){
-            var gdata = lola(canvas).getData( "_"+namespace, false );
+            var gdata = $(canvas).getData( "_"+namespace, false );
             if (gdata && gdata.contexts) {
                 var id;
                 while ( id = gdata.contexts.pop() ){
@@ -152,7 +153,7 @@
             if (typeof ctx == "string")
                 context = resolveContext(ctx);
 
-            if (context) lola.util.copyPrimitives( reset, context );
+            if (context) $.util.copyPrimitives( reset, context );
         };
 
         /**
@@ -162,7 +163,7 @@
          */
         this.registerStyle = function( name, styleObj ) {
             var obj = {};
-            lola.util.copyPrimitives( styleObj, obj );
+            $.util.copyPrimitives( styleObj, obj );
             styles[ name ] = obj;
         };
 
@@ -196,7 +197,7 @@
          * @param {String} name
          */
         this.executeRoutine = function( name ) {
-            if ( lola.hasFn(routines,name) ){
+            if ( $.hasFn(routines,name) ){
                 routines[name]( context );
             }
         };
@@ -204,13 +205,13 @@
         /**
          * copies properties of styleObject into style cache with given name
          * @param {Object|String} style
-         * @param {Object|String} ctx
+         * @param {Object|String|undefined} ctx
          */
         this.applyStyle = function( style, ctx ) {
             ctx = resolveContext( ctx );
             var sty = (typeof style == "string") ?  styles[ style ] || reset : style;
-            lola.util.copyPrimitives( reset, ctx );
-            lola.util.copyPrimitives( sty, ctx );
+            $.util.copyPrimitives( reset, ctx );
+            $.util.copyPrimitives( sty, ctx );
         };
 
         /**
@@ -218,7 +219,7 @@
          * @param {Object|Array} objects
          */
         this.draw = function( object, flags ){
-            if ( lola.hasFn( object, 'draw')){
+            if ( $.hasFn( object, 'draw')){
                 object.draw( context, flags );
             }
         };
@@ -264,18 +265,18 @@
         // Preinitialization
         //==================================================================
 
-        if (lola.support.canvas){
-            lola.addSafeDeleteHook( self.removeContext, self );
+        if ($.support.canvas){
+            $.addSafeDeleteHook( self.removeContext, self );
 
             //get reset context
             var canvas = document.createElement('canvas');
             var ctx = canvas.getContext('2d');
             for ( var prop in ctx ){
                 //if (ctx.hasOwnProperty(prop)){
-                    if ( lola.type.isPrimitive( ctx[ prop ] ) ){
+                    if ( $.type.isPrimitive( ctx[ prop ] ) ){
                         reset[ prop ] = ctx[ prop ];
                     }
-                    else if (lola.type.get( ctx[prop] ) == 'function'){
+                    else if ($.type.get( ctx[prop] ) == 'function'){
                         createContextMethod( prop );
                     }
                 //}

@@ -12,7 +12,8 @@
 	 * @namespace lola.data
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -89,9 +90,9 @@
         function getCacheId( object, create ) {
             create = (create == undefined) ? true : create;
             //assume if create cache is being called that ther is no cache
-            var cacheId = lola.dom.attr( object, cacheIDProp );
+            var cacheId = $.dom.attr( object, cacheIDProp );
             if ( cacheId == null ) {
-                switch ( lola.type.get( object ) ) {
+                switch ( $.type.get( object ) ) {
                     case 'function':
                     case 'object':
                         cacheId = object[cacheIDProp];
@@ -117,10 +118,10 @@
                         break;
                     default:
                         //get attribute
-                        cacheId = lola.dom.attr( object, cacheIDProp );
+                        cacheId = $.dom.attr( object, cacheIDProp );
                         if ( cacheId == null && create ) {
                             cacheId = nextUid();
-                            lola.dom.attr( object, cacheIDProp, cacheId );
+                            $.dom.attr( object, cacheIDProp, cacheId );
                         }
                         break;
                 }
@@ -175,7 +176,7 @@
             if ( overwite || cache[namespace][cacheId] == null )
                 cache[namespace][cacheId] = data;
             else
-                lola.extend(cache[namespace][cacheId], data, true );
+                $.extend(cache[namespace][cacheId], data, true );
 
             return cache[namespace][cacheId];
         };
@@ -198,7 +199,7 @@
                     }
                 }
                 else {
-                    if ( lola.type.get(namespace) != "array" )
+                    if ( $.type.get(namespace) != "array" )
                         namespace = [namespace];
                 }
 
@@ -211,7 +212,7 @@
                 recurse = true;
 
             if ( recurse ) {
-                if ( object.childNodes && lola.type.get(object.childNodes) == "array") {
+                if ( object.childNodes && $.type.get(object.childNodes) == "array") {
                     object.childNodes.forEach( function( item ) {
                         self.remove( item, namespace, true );
                     } )
@@ -222,15 +223,15 @@
 
         this.dataset = function( elem, name, value ){
             if (value != undefined ){
-                if (lola.support.dataset){
+                if ($.support.dataset){
                     elem.dataset[name] = value;
                 }
                 else{
-                    lola(elem).attr('data-'+name, value);
+                    $(elem).attr('data-'+name, value);
                 }
             }
             else{
-                if (lola.support.dataset){
+                if ($.support.dataset){
                     try {
                         return elem.dataset[name];
                     }
@@ -238,7 +239,7 @@
                     return undefined;
                 }
                 else{
-                    return lola(elem).attr('data-'+name);
+                    return $(elem).attr('data-'+name);
                 }
             }
         };
@@ -309,7 +310,7 @@
         //==================================================================
         // Preinitialize
         //==================================================================
-        lola.addSafeDeleteHook( this.remove, this );
+        $.addSafeDeleteHook( this.remove, this );
 
     };
 

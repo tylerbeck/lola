@@ -13,6 +13,7 @@
 	 * @namespace lola.type
 	 */
 	var Module = function() {
+		var $ = lola;
         var self = this;
         //==================================================================
         // Attributes
@@ -108,7 +109,7 @@
             var cn = document.createComment( 'test' );
             var tntype = Object.prototype.toString.call( tn );
             var cntype = Object.prototype.toString.call( cn );
-            var windowtype = Object.prototype.toString.call( lola.window );
+            var windowtype = Object.prototype.toString.call( $.window );
             map[ tntype ] = 'textnode';
             map[ cntype ] = 'commentnode';
             map[ windowtype ] = 'window';
@@ -130,7 +131,7 @@
             map[ type ] = name.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + name + "'] = " +
                 "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**
@@ -147,7 +148,7 @@
             map[ type ] = name.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + name + "'] = " +
                 "function(index){ return this.isType('" + name.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**
@@ -161,7 +162,7 @@
             map[ type ] = item.toLowerCase();
             var isfn = "lola.Selector.prototype['is" + item + "'] = " +
                 "function(index){ return this.isType('" + item.toLowerCase() + "',index); };";
-            lola.evaluate( isfn );
+            $.evaluate( isfn );
         }
 
         /**

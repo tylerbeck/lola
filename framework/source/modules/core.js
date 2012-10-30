@@ -12,7 +12,8 @@
      * @namespace lola
      */
 	var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -48,13 +49,21 @@
          */
         var safeDeleteHooks = [];
 
-        /**
-         * @private
-         * @type {Boolean}
-         */
-        var debugMode = false;
+	    self.DEBUG_NONE = 0;
+	    self.DEBUG_ERROR = 1;
+	    self.DEBUG_WARN = 2;
+	    self.DEBUG_INFO = 3;
+	    self.DEBUG_DEBUG = 4;
+	    self.DEBUG_ALL = 5;
 
-        /**
+	    /**
+         * @private
+         * @type {int}
+         */
+        var debugLevel = self.DEBUG_NONE;
+
+
+	    /**
          * @private
          * @type {lola.URL}
          */
@@ -94,15 +103,41 @@
          */
         this.setURL = function( str ){
             url = new self.URL( str );
-            debugMode = url.vars['debug'] == "true";
+	        if ( url.vars['debug'] != undefined ){
+		        var debug = url.vars['debug'];
+		        switch( debug.toLowerCase() ){
+			        case "all":
+				        debugLevel = self.DEBUG_ALL;
+				        break;
+			        case "true":
+			        case "debug":
+				        debugLevel = self.DEBUG_DEBUG;
+				        break;
+			        case "info":
+				        debugLevel = self.DEBUG_INFO;
+				        break;
+			        case "warn":
+				        debugLevel = self.DEBUG_WARN;
+				        break;
+			        case "error":
+				        debugLevel = self.DEBUG_ERROR;
+				        break;
+			        case "none":
+				        debugLevel = self.DEBUG_NONE;
+				        break;
+			        default:
+				        debugLevel = parseInt( url.vars['debug'] );
+				        break;
+		        }
+	        }
         };
 
         /**
-         * gets debug mode
-         * @return {Boolean}
+         * gets debug level
+         * @return {int}
          */
-        this.debugMode = function(){
-            return debugMode;
+        this.debugLevel = function(){
+            return debugLevel;
         };
 
 
@@ -122,8 +157,8 @@
          * @param {Function} fn
          */
         this.addInitializer = function( fn ){
-            if (lola.isInitialized())
-                fn( lola );
+            if ($.isInitialized())
+                fn( $ );
             else {
                 initializers.push( fn );
             }
@@ -196,7 +231,7 @@
             var missing = [];
 
             Object.forEach(modules, function(item){
-                if (!lola.hasPackage( lola, item ))
+                if (!$.hasPackage( $, item ))
                     missing.push(item);
             });
 
@@ -207,13 +242,13 @@
          * framework initialization function
          */
         this.executeInitializers = function() {
-            lola.debug('core::executeInitializers');
+            $.syslog('core::executeInitializers');
             var i;
             var stackSize = initializers.length;
 
             for ( i = 0; i < stackSize; i++ ) {
-                if (lola.hasFn(initializers,i)){
-                    initializers[i]( lola );
+                if ($.hasFn(initializers,i)){
+                    initializers[i]( $ );
                     delete initializers[i];
                 }
             }
@@ -235,7 +270,7 @@
             var script = document.createElement( 'script' );
             script.type = "text/javascript";
 
-            if ( lola.support.domEval ) {
+            if ( $.support.domEval ) {
                 script.appendChild( document.createTextNode( expression ) );
             }
             else {
@@ -260,7 +295,7 @@
             var script = document.createElement( 'script' );
 
             if (typeof callback == "function")
-                lola.event.addListener(script, 'load', function(){callback.apply()} );
+                $.event.addListener(script, 'load', function(){callback.apply()} );
 
             script.src = src;
             node.insertBefore( script, node.firstChild );
@@ -299,17 +334,85 @@
             return ( obj && obj[ fnName ] && typeof obj[ fnName ] == "function");
         };
 
-        /**
-         * outputs debug statement
-         */
-        this.debug = function(/*args*/){
-            if (debugMode) {
-                console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
-            }
+	    /**
+	     * get error object to expose stack
+	     */
+	    function getErrorObj(){
+		    try{ throw Error("")}catch(err){ return err }
+	    }
 
-        };
+	    /**
+	     * gets error object arguments
+	     * @param args
+	     * @return {Array}
+	     */
+	    function logArguments( args ){
+		    var err = getErrorObj();
+		    //var caller_line = err.stack.split("\n")[4];
+		    //var index = caller_line.indexOf("at ");
+		    //var clean = caller_line.slice(index+2, caller_line.length);
+		    var stack = (err.stack)?err.stack.split("\n" ).slice(3):[];
+		    var stackObj = {};
+		    var i = stack.length;
+		    while (i) {
+			    i--;
+			    stackObj[i] = stack[i];
+		    }
+		    var pre = ["["+ $.now()+"][", stackObj,"] " ];
+		    var argArray = Array.prototype.slice.call(args);
+		    return pre.concat( argArray );
+	    }
 
-        /**
+	    /**
+	     * output to log, independent of log-level and debug status
+	     */
+	    this.log = function(/*args*/){
+			console.log.apply(console, logArguments(arguments) );
+	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_ALL
+	     */
+	    this.syslog = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_ALL ){
+			    console.log.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_DEBUG
+	     */
+	    this.debug = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_DEBUG )
+			    console.log.apply(console, logArguments(arguments) );
+	    };
+	    /**
+	     * output to log if log-level is DEBUG_INFO
+	     */
+	    this.info = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_INFO )
+			    console.info.apply(console, logArguments(arguments) );
+	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_WARN
+	     */
+	    this.warn = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_WARN ){
+			    console.warn.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    /**
+	     * output to log if log-level is DEBUG_ERROR
+	     */
+	    this.error = function(/*args*/){
+		    if ( debugLevel >= self.DEBUG_ERROR ){
+			    console.error.apply(console, logArguments(arguments) );
+		    }
+	    };
+
+	    /**
          * get current time in milliseconds
          * @return {uint}
          */
@@ -341,7 +444,7 @@
             identify: function() {
                 this.forEach( function( item ) {
                     if ( !item.id )
-                        item.id = "lola-guid-" + lola.getGUID()
+                        item.id = "lola-guid-" + $.getGUID()
                 } );
 
                 return this;
@@ -366,7 +469,7 @@
             at: function( index ) {
                 if ( index == undefined )
                     index = 0;
-                return lola(this[ index ]);
+                return $(this[ index ]);
             },
 
             /**
@@ -394,7 +497,7 @@
             concat: function( obj, unique ) {
                 var self = this;
 
-                if ( obj instanceof lola.Selector ){
+                if ( obj instanceof $.Selector ){
                     obj.forEach( function(item){
                         self.push( item );
                     })
@@ -409,7 +512,7 @@
                 }
 
                 if (unique == undefined || unique === true){
-                    var uni = lola.array.unique( this );
+                    var uni = $.array.unique( this );
                     this.splice(0,this.length);
                     uni.forEach( function(item){
                         self.push( item );
@@ -423,7 +526,7 @@
              * @private
              */
             g: function( /*arguments*/ ){
-                return lola.__( this.i.apply( this, arguments ) );
+                return $.__( this.i.apply( this, arguments ) );
             },
 
             /**
@@ -445,7 +548,7 @@
             _: function( /*arguments*/ ){
                 //console.log('_: ', arguments);
                 var result = this.i.apply( this, arguments );
-                return ( arguments[arguments.length - 1] == undefined ) ? lola.__( result ) : this;
+                return ( arguments[arguments.length - 1] == undefined ) ? $.__( result ) : this;
             },
 
 

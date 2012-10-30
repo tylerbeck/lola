@@ -12,7 +12,8 @@
      * @namespace lola.animation
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -105,7 +106,7 @@
         // Methods
         //==================================================================
         this.initialize = function(){
-            getFrameType = lola.support.animationFrameType;
+            getFrameType = $.support.animationFrameType;
         };
 
         /**
@@ -133,13 +134,13 @@
          */
         function requestFrame(callback){
             if ( getFrameType == 1 )
-                lola.window.requestAnimationFrame( callback );
+                $.window.requestAnimationFrame( callback );
             else if ( getFrameType == 2 )
-                lola.window.mozRequestAnimationFrame( callback );
+                $.window.mozRequestAnimationFrame( callback );
             else if ( getFrameType == 3 )
-                lola.window.webkitRequestAnimationFrame( callback );
+                $.window.webkitRequestAnimationFrame( callback );
             else if ( getFrameType == 4 )
-                lola.window.oRequestAnimationFrame( callback );
+                $.window.oRequestAnimationFrame( callback );
             else
                 setTimeout( callback, timeout );
         }
@@ -150,7 +151,7 @@
          * @param {lola.animation.Animation} animation
          */
         this.register = function( name, animation ){
-            //console.log('lola.animation.registerAnimation', name, animation );
+            //console.log('$.animation.registerAnimation', name, animation );
             animations[ name ] = animation;
         };
 
@@ -158,7 +159,7 @@
          * removes a registered animation
          */
         this.remove = function( name ){
-            //console.log('lola.animation.registerAnimation', name, animation );
+            //console.log('$.animation.registerAnimation', name, animation );
             if (animations[name]){
                 delete animations[name];
             }
@@ -170,7 +171,7 @@
          * @private
          */
         this.start = function( name ){
-            //console.log('lola.animation.start', name );
+            //console.log('$.animation.start', name );
             if (animations[ name ]){
 
                 animations[ name ].start();
@@ -182,7 +183,7 @@
          * @param {uint} name
          */
         this.stop = function( name ){
-            //console.log('lola.animation.stop', name );
+            //console.log('$.animation.stop', name );
             if (animations[ name ]){
                 animations[ name ].stop();
             }
@@ -193,7 +194,7 @@
          * @param {uint} name
          */
         this.pause = function( name ){
-            //console.log('lola.animation.pause', name );
+            //console.log('$.animation.pause', name );
             if (animations[ name ]){
                 animations[ name ].pause();
             }
@@ -204,7 +205,7 @@
          * @param {uint} name
          */
         this.resume = function( name ){
-            //console.log('lola.animation.resume', name );
+            //console.log('$.animation.resume', name );
             if (animations[ name ]){
                 animations[ name ].resume();
             }
@@ -219,8 +220,8 @@
            //iterate through animations and check for active state
             //if active, run position calculation on animations
             var activityCheck = false;
-            var now = lola.now();
-            //console.log('lola.animation.tick', now );
+            var now = $.now();
+            //console.log('$.animation.tick', now );
 
             for (var k in animations){
                 //console.log('   ',k,animations[k].isActive());
@@ -233,7 +234,7 @@
                     else{
                         //console.log('   ','complete');
                         //catch complete on next tick
-                        lola.event.trigger(animations[k],'animationcomplete',false,false);
+                        $.event.trigger(animations[k],'animationcomplete',false,false);
                         delete animations[k];
                         freeAnimationIds.push( parseInt(k) );
                     }
@@ -264,6 +265,7 @@
         // Classes
         //==================================================================
         this.Animation = function( tickFn, tickScope ) {
+	        var $ = lola;
             var startTime = -1;
             var pauseTime = -1;
             var delay = 0;
@@ -295,32 +297,32 @@
             this.pause = function(){
                 if (active){
                     active = false;
-                    pauseTime = lola.now();
-                    lola.event.trigger( self, 'animationpause',false,false);
+                    pauseTime = $.now();
+                    $.event.trigger( self, 'animationpause',false,false);
                 }
             };
 
             this.resume = function(){
                 if (!active){
                     active = true;
-                    startTime += lola.now() - pauseTime;
+                    startTime += $.now() - pauseTime;
                     startTicking();
-                    lola.event.trigger( self, 'animationresume',false,false);
+                    $.event.trigger( self, 'animationresume',false,false);
                 }
             };
 
             this.restart = function(){
                 active = true;
                 complete = false;
-                startTime = lastTime = lola.now();
+                startTime = lastTime = $.now();
                 startTicking();
-                lola.event.trigger( self, 'animationstart',false,false);
+                $.event.trigger( self, 'animationstart',false,false);
             };
 
             this.stop = function(){
                 active = false;
                 complete = true;
-                lola.event.trigger( self, 'animationstop',false,false);
+                $.event.trigger( self, 'animationstop',false,false);
             };
 
             return this;

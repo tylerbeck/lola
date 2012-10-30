@@ -12,7 +12,8 @@
      * @namespace lola.geometry
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -35,7 +36,6 @@
          * @private
          */
         var rDropPx = /px/g;
-
 
 
         //==================================================================
@@ -92,16 +92,16 @@
          * @param {Number|undefined} value
          */
         this.width = function( elem, value ) {
-            //console.log('lola.geometry.width', arguments );
+            //console.log('$.geometry.width', arguments );
             if ( value != undefined ){
                 //setting
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 value -= bl+br+pl+pr;
 
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -134,7 +134,7 @@
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'width', value);
+                return $.css.style( elem, 'width', value);
             }
             else{
                 //getting
@@ -143,10 +143,10 @@
                 else
                     w = elem.clientWidth;
 
-                var bl = lola.css.style(elem,"borderLeft");
-                var br = lola.css.style(elem,"borderRight");
-                var pl = lola.css.style(elem,"paddingLeft");
-                var pr = lola.css.style(elem,"paddingRight");
+                var bl = $.css.style(elem,"borderLeft");
+                var br = $.css.style(elem,"borderRight");
+                var pl = $.css.style(elem,"paddingLeft");
+                var pr = $.css.style(elem,"paddingRight");
                 w -= bl+br+pl+pr;
 
                 return w;
@@ -161,13 +161,13 @@
         this.height = function( elem, value ) {
             if ( value != undefined ){
                 //setting
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 value -= bt+bb+pt+pb;
 
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -200,7 +200,7 @@
             }
             else if ( value != undefined ){
                 //setting
-                return lola.css.style( elem, 'height', value);
+                return $.css.style( elem, 'height', value);
             }
             else{
                 //getting
@@ -209,10 +209,10 @@
                 else
                     h = elem.clientHeight;
 
-                var bt = lola.css.style(elem,"borderTop");
-                var bb = lola.css.style(elem,"borderBottom");
-                var pt = lola.css.style(elem,"paddingTop");
-                var pb = lola.css.style(elem,"paddingBottom");
+                var bt = $.css.style(elem,"borderTop");
+                var bb = $.css.style(elem,"borderBottom");
+                var pt = $.css.style(elem,"paddingTop");
+                var pb = $.css.style(elem,"paddingBottom");
                 h -= bt+bb+pt+pb;
 
                 return h;
@@ -435,7 +435,7 @@
              * spline flags
              * @type {Boolean}
              */
-            flags = flags == undefined ? 0 : flags;
+            flags = flags == undefined ? self.Spline.BEGIN|self.Spline.END : flags;
 
             /**
              * adds a point at the specified index.
@@ -520,7 +520,8 @@
                         //d(n,n+1);
                     }
 
-                    ctx.beginPath();
+                    if (!(flgs & self.Spline.NOBEGIN))
+	                    ctx.beginPath();
                     ctx.moveTo( p[1].x,p[1].y );
                     for (var i=2; i<pl-3; i+=3){
                         ctx.bezierCurveTo(
@@ -546,7 +547,8 @@
                         ctx.stroke();
                     }
 
-                    ctx.closePath();
+	                if (!(flgs & self.Spline.NOEND))
+		                ctx.closePath();
 
                 }
                 else{
@@ -601,15 +603,30 @@
                 return norm;
             };
 
+	        /**
+	         * converts object to object list of strings
+	         * @return {Object}
+	         */
+	        this.listPoints= function(){
+		        var pts = {};
+		        var ct = 0;
+		        points.forEach(function(item){
+			        pts[ct++] = item.toString();
+		        });
+		        return pts;
+	        };
 
-            return this;
+	        return this;
         };
-        this.Spline.CLOSED = 0x1;
-        this.Spline.FILL = 0x2;
+	    this.Spline.CLOSED = 0x1;
+	    this.Spline.FILL = 0x2;
         this.Spline.STROKE = 0x4;
         this.Spline.CONTROLS =0x8;
+	    this.Spline.NOBEGIN = 0x10;
+	    this.Spline.NOEND = 0x11;
 
-        /**
+
+	    /**
          * SplinePoint class
          * @class
          * @param anchorX
@@ -639,18 +656,34 @@
              */
             var exit;
 
-            /**
-             * sets the SplinePont's entry and exit angles
-             * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
-             * @param {Number} entryAngle
-             * @param {Number|undefined} exitAngle
-             */
-            this.setAngle = function( entryAngle, exitAngle) {
-                entry.angle = entryAngle;
-                exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
-            };
+	        /**
+	         * sets the SplinePont's entry and exit angles
+	         * if exitAngle is omitted, exitAngle is set to entryAngle + PI both
+	         * @param {Number|undefined} entryAngle
+	         * @param {Number|undefined} exitAngle
+	         */
+	        this.setAngle = function( entryAngle, exitAngle) {
+		        entry.angle = entryAngle;
+		        exit.angle = exitAngle==undefined?entryAngle+Math.PI:exitAngle;
+	        };
 
-            /**
+	        /**
+	         * sets the SplinePont's entry vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setEntry = function( vector ) {
+		        entry = vector;
+	        };
+
+	        /**
+	         * sets the SplinePont's exit vector
+	         * @param {lola.geometry.Vector} vector
+	         */
+	        this.setExit = function( vector ) {
+		        exit = vector;
+	        };
+
+	        /**
              * gets the spline point's anchor
              * @return {lola.geometry.Point}
              */
@@ -677,6 +710,14 @@
                 if (vector) return exit;
                 return anchor.add( exit.toPoint() );
             };
+
+	        /**
+	         * converts object to readable string
+	         * @return {String}
+	         */
+	        this.toString = function(){
+		        return [anchor,entry,exit].join(" ");
+	        };
 
             //initialize
             anchor = new self.Point( anchorX, anchorY );
@@ -712,10 +753,15 @@
                 return new self.Vector( this.velocity, this.angle );
             };
 
-
+	        /**
+	         * adds two vectors
+	         * @param v
+	         */
             this.add = function( v ){
-                this.velocity += v.velocity;
-                this.angle += v.angle;
+	            var c = this.copy();
+                c.velocity += v.velocity;
+                c.angle += v.angle;
+	            return c;
             };
 
             /**
@@ -729,7 +775,17 @@
                 )
             };
 
-            return this;
+	        /**
+	         * converts vector to object notation
+	         * @return {String}
+	         */
+	        this.toString = function(){
+		        return "{v:"+this.velocity+",a:"+this.angle+"}";
+	        };
+
+
+
+	        return this;
         };
 
     };

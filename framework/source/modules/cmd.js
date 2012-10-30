@@ -12,7 +12,8 @@
      * @namespace lola.cmd
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -77,14 +78,14 @@
                 name = tmp.getName();
             }
 
-            lola.debug('register command: '+name);
+            $.syslog('register command: '+name);
             if ( registry[name] != null && typeof registry[name] != "string" )
                 console.warn( 'command "'+name+'" has already been registered... overwriting' );
 
             //register command class or url
             registry[name] = cmd;
 
-            lola.event.addListener( self, name, executeCommand  );
+            $.event.addListener( self, name, executeCommand  );
         };
 
         this.call = function( name, params, onResult, onFault, onStatus ){
@@ -104,8 +105,8 @@
                     //add execution params to call later queue for the unloaded command
                     if ( !callLater[ name ] ){
                         //try to load command
-                        lola.loadScript( registry[name], function(e){
-                            if ( lola.hasFn( registry, name ) ) {
+                        $.loadScript( registry[name], function(e){
+                            if ( $.hasFn( registry, name ) ) {
                                 //command successfully loaded - iterate through queued calls
                                 var s = callLater[ name ].length;
                                 for (var i = 0; i < s; i++){
@@ -130,9 +131,9 @@
                     if (cmdClass) {
                         var cmd = new cmdClass();
                         if (responder) {
-                            lola.event.addListener( cmd, 'result', responder.handleResult );
-                            lola.event.addListener( cmd, 'fault', responder.handleFault );
-                            lola.event.addListener( cmd, 'status', responder.handleStatus );
+                            $.event.addListener( cmd, 'result', responder.handleResult );
+                            $.event.addListener( cmd, 'fault', responder.handleFault );
+                            $.event.addListener( cmd, 'status', responder.handleStatus );
                         }
                         cmd.execute( params );
                     }
@@ -188,7 +189,7 @@
                 if (!lastResponse || lastResponse.type == 'status' )
                     lastResponse = event;
                 if (typeof statusHandler == 'function')
-                    statusHandler.apply( lola.window, [event] );
+                    statusHandler.apply( $.window, [event] );
             };
 
             /**
@@ -199,7 +200,7 @@
             this.handleResult = function( event ){
                 lastResponse = event;
                 if (typeof resultHandler == 'function')
-                    resultHandler.apply(lola.window, [event] );
+                    resultHandler.apply($.window, [event] );
             };
 
             /**
@@ -210,7 +211,7 @@
             this.handleFault = function( event ){
                 lastResponse = event;
                 if (typeof faultHandler == 'function')
-                    faultHandler.apply(lola.window, [event] );
+                    faultHandler.apply($.window, [event] );
             };
 
             return this;

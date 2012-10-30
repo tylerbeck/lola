@@ -13,7 +13,8 @@
 	 * @namespace lola.string
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================

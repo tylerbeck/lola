@@ -12,7 +12,8 @@
 	 * @namespace lola.dom
 	 */
 	var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -75,7 +76,7 @@
             }
             else if (object) {
                 if ( value || value == "") {   //set value
-                    if (lola.type.isPrimitive(value)) {
+                    if ($.type.isPrimitive(value)) {
                         return object[name] = value;
                     }
                     else {
@@ -114,7 +115,7 @@
             if (value != undefined){
                 var result = self.attr(object, name, value, false);
                 if (oldValue != value)
-                    lola.event.trigger( object, 'change', false, false );
+                    $.event.trigger( object, 'change', false, false );
                 return result;
             }
 
@@ -127,7 +128,7 @@
          * @param {String} name
          */
         this.deleteExpando =function( object, name ) {
-            if ( lola.support.deleteExpando )
+            if ( $.support.deleteExpando )
                 delete object[name];
             else
                 object[name] = null;
@@ -221,7 +222,7 @@
                     this.forEach( function( item ) {
                         values.push( (item) ? item.innerHTML : null );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
                 else {
                     this.forEach( function( item ) {
@@ -229,9 +230,9 @@
                             var cnl = item.childNodes.length;
                             for ( var i=0; i<cnl; i++ ) {
                                 var child = item.childNodes.item(i);
-                                lola.safeDelete( child );
+                                $.safeDelete( child );
                             }
-                            switch ( lola.type.get( content ) ) {
+                            switch ( $.type.get( content ) ) {
                                 case 'null':
                                 case 'undefined':
                                     item.innerHTML = "";
@@ -263,7 +264,7 @@
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
-                    console.log("appendChild:",node);
+                    //console.log("appendChild:",node);
                     var p = this.get(0);
                     if ( p && p.appendChild )
                         p.appendChild( node );
@@ -326,7 +327,7 @@
              */
             removeChild: function( node ) {
                 if ( this.length > 0 ) {
-                    lola.safeDelete( node );
+                    $.safeDelete( node );
                     this.get().removeChild( node );
                 }
                 return contentChanged( this );
@@ -340,9 +341,9 @@
              */
             replaceChild: function( newChild, oldChild ) {
                 if ( this.length > 0 ) {
-                    lola.safeDelete( oldChild );
+                    $.safeDelete( oldChild );
                     //TODO: check if call to below line is needed
-                    //lola.data.destroyCache( oldChild, true );
+                    //$.data.destroyCache( oldChild, true );
                     this.get().replaceChild( newChild, oldChild );
                 }
                 return contentChanged( this );
@@ -366,7 +367,7 @@
                     this.forEach( function( item ) {
                         values.push( self.attr( item, name ) );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
             },
 
@@ -400,7 +401,7 @@
                     this.forEach( function( item ) {
                         values.push( item?item.parentNode:null );
                     } );
-                    return lola.__(values);
+                    return $.__(values);
                 }
             },
 

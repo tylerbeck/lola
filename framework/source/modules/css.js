@@ -12,7 +12,8 @@
 	 * @namespace lola.css
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -85,7 +86,7 @@
          * @return {void}
          */
         this.initialize = function() {
-            lola.debug( 'lola.css::initialize' );
+            $.syslog( 'lola.css::initialize' );
 
             //add default hooks
             var dimensionals = "padding margin background-position-x background-position-y border-top-width border-right-width border-bottom-width "+
@@ -99,14 +100,14 @@
             });
 
             //add default mappings
-            propertyCache['float'] = (lola.support.cssFloat) ? 'cssFloat' : 'styleFloat';
+            propertyCache['float'] = ($.support.cssFloat) ? 'cssFloat' : 'styleFloat';
 
             //register default hooks
             var getOffsetStyle = function( node, style, value, type ){
                 var result = self.style( node, style, value, false );
                 if (result == "auto"){
                     //get actual value
-                    var offset = lola.geometry.getOffset( node, node.offsetParent );
+                    var offset = $.geometry.getOffset( node, node.offsetParent );
                     return offset[type]+'px';
                 }
                 return result;
@@ -138,7 +139,7 @@
 
         function getSelector( selector ) {
             if ( !selectorCache[selector] )
-                selectorCache[selector] = lola.string.camelCase( selector );
+                selectorCache[selector] = $.string.camelCase( selector );
             return selectorCache[selector];
         }*/
 
@@ -149,7 +150,7 @@
          */
         function getProperty( property ) {
             if ( !propertyCache[property] )
-                propertyCache[property] = lola.string.camelCase( property );
+                propertyCache[property] = $.string.camelCase( property );
             return propertyCache[ property ];
         }
 
@@ -190,7 +191,7 @@
          */
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
-            //console.log( 'getting raw style', '"'+prop+'"', '"'+lola.string.dashed( prop )+'"', node );
+            //console.log( 'getting raw style', '"'+prop+'"', '"'+$.string.dashed( prop )+'"', node );
             var result = node.style[prop];
             if ( !result || result == "" ){
                 result = self.getComputedStyle( node, prop );
@@ -198,6 +199,7 @@
 
             return result;
         };
+
 
         this.getComputedStyle = function( node, style ){
             var compStyle,result;
@@ -285,10 +287,10 @@
             var result;
             if (value == undefined) {
                 result = self.getRawStyle( obj, style );
-                result = parseFloat(result.replace( lola.regex.isDimension, "$1"));
+                result = parseFloat(result.replace( $.regex.isDimension, "$1"));
             }
             else {
-                value = (String(value).match(lola.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
+                value = (String(value).match($.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
                 result = self.setRawStyle( obj, style, value );
             }
 
@@ -301,11 +303,11 @@
          * @param {String|undefined} source url for external stylesheet
          */
         this.addStyleSheet = function( id, source ) {
-            lola.debug('addStyleSheet',lola.support.cssRules, id, source );
+            $.syslog('addStyleSheet',$.support.cssRules, id, source );
             var stylesheet;
-            if (lola.support.cssRules){
+            if ($.support.cssRules){
                 stylesheet = document.createElement( 'style' );
-                lola.dom.attr(stylesheet, "type", "text/css");
+                $.dom.attr(stylesheet, "type", "text/css");
             }
             else{
                 stylesheet = document.createStyleSheet();
@@ -340,19 +342,19 @@
          * @return {Object}
          */
         this.addSelector = function( selector, styles, stylesheet ) {
-            if (lola.type.get(stylesheet) == "string" ){
+            if ($.type.get(stylesheet) == "string" ){
                 stylesheet = stylesheets["_default"];
             }
             stylesheet = stylesheet || stylesheets["_default"];
             styles = styles || [];
 
-            var ri = lola.support.cssRules ? stylesheet.cssRules.length : stylesheet.rules.length;
+            var ri = $.support.cssRules ? stylesheet.cssRules.length : stylesheet.rules.length;
             if ( stylesheet.addRule )
                 stylesheet.addRule( selector, null, ri );
             else
                 stylesheet.insertRule( selector + ' { }', ri );
 
-            var rule = lola.support.cssRules ? stylesheet.cssRules[ri] : stylesheet.rules[ri];
+            var rule = $.support.cssRules ? stylesheet.cssRules[ri] : stylesheet.rules[ri];
             if ( styles ){
                 var props = styles.keys();
                 props.forEach( function( item ){
@@ -376,7 +378,7 @@
                 var ss = document.styleSheets[si];
                 //match media
                 if ( !media || media == ss.mediaText ) {
-                    var rules = (lola.support.cssRules) ? ss.cssRules : ss.rules;
+                    var rules = ($.support.cssRules) ? ss.cssRules : ss.rules;
                     for ( var ri in rules ) {
                         if ( rules.hasOwnProperty(ri)){
                             if ( rules[ri] && rules[ri].selectorText ) {
@@ -400,7 +402,7 @@
         this.getRules = function( selector, media ) {
             var rules = [];
             self.performRuleAction( selector, function( si, ri ) {
-                if ( lola.support.cssRules )
+                if ( $.support.cssRules )
                     rules.push( document.styleSheets[ si ].cssRules[ ri ] );
                 else
                     rules.push( document.styleSheets[ si ].rules[ ri ] );
@@ -434,7 +436,7 @@
          */
         this.deleteRules = function( selector, media ) {
             self.performRuleAction( selector, function( si, ri ) {
-                if ( lola.support.cssRules )
+                if ( $.support.cssRules )
                     document.styleSheets[ si ].deleteRule( ri );
                 else
                     document.styleSheets[ si ].removeRule( ri );
@@ -450,8 +452,8 @@
         this.classes = function( obj, classes ) {
             if ( classes != undefined ) {
                 //console.log('setting classes:', classes);
-                if ( lola.type.get( classes ) != 'array' ) {
-                    if ( lola.type.get( classes ) == 'string' )
+                if ( $.type.get( classes ) != 'array' ) {
+                    if ( $.type.get( classes ) == 'string' )
                         classes = [classes];
                     else
                         classes = [];
@@ -461,7 +463,7 @@
 
             }
             else {
-                var names = (obj && obj.className) ? obj.className.replace( lola.regex.extraSpace , " " ): "";
+                var names = (obj && obj.className) ? obj.className.replace( $.regex.extraSpace , " " ): "";
                 return names.split( " " ).reverse();
             }
         };
@@ -473,7 +475,7 @@
          */
         this.hasClass = function( obj, className ) {
             var names = self.classes( obj );
-            return lola.array.isIn( names, className );
+            return $.array.isIn( names, className );
         };
 
         /**
@@ -593,8 +595,9 @@
         // Classes
         //==================================================================
         this.Color = function( value ){
-            var self = this;
-            var c = lola.math.color;
+	        var $ = lola;
+	        var self = this;
+            var c = $.math.color;
             /**
              * rgba color value object
              * @private
@@ -644,12 +647,12 @@
              */
             function parseValue( val ) {
                 if (typeof val == "string"){
-                    var cparts = val.match( lola.regex.isColor );
+                    var cparts = val.match( $.regex.isColor );
                     if ( cparts ) {
                         var parts;
                         switch ( cparts[1] ) {
                             case '#':
-                                parts = val.match( lola.regex.isHexColor );
+                                parts = val.match( $.regex.isHexColor );
                                 hex = ( parts != null ) ? parts[1] : "000000";
                                 rgb = c.hex2rgb(hex);
                                 hsl = c.rgb2hsl( rgb.r, rgb.g, rgb.b );
@@ -703,7 +706,7 @@
              */
             function parseHSLColorString( val ) {
                 var c = { h:0, s:0, l:0, a:1 };
-                var parts = val.match( lola.regex.isHSLColor );
+                var parts = val.match( $.regex.isHSLColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );
@@ -723,7 +726,7 @@
              */
             function parseRGBColorString( val ) {
                 var c = { r:0, g:0, b:0, a:1 };
-                var parts = val.match( lola.regex.isRGBColor );
+                var parts = val.match( $.regex.isRGBColor );
                 if ( parts != null ) {
                     var v = parts[1].replace( /\s+/g, "" );
                     v = v.split( ',' );

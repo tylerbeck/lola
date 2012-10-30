@@ -12,7 +12,10 @@
      * @namespace lola.test
      */
     var Module = function(){
-        var self = this;
+
+	    var $ = lola;
+	    var self = this;
+
         //==================================================================
         // Attributes
         //==================================================================
@@ -137,7 +140,7 @@
          */
         function loadExternalXML( source ){
 
-            var req = new lola.http.SyncRequest( source );
+            var req = new $.http.SyncRequest( source );
             req.send();
             var xml = req.responseXML();
             var list = [];
@@ -201,7 +204,7 @@
          * @private
          */
         function complete(){
-            console.log('lola.test.complete');
+            $.syslog('lola.test.complete');
 
         }
 
@@ -214,13 +217,14 @@
          * @param {Node} node
          */
         function Script( node ){
-            var name = "";
+	        var $ = lola;
+	        var name = "";
             var value = "";
 
             this.execute = function(){
                 logFn('executing', '"'+name+'"', 'script');
                 //try {
-                lola.evaluate( value );
+                $.evaluate( value );
                 //}
                 //catch( e ){
                 //   errorFn('error evaluating', name, 'script:', e.message );
@@ -247,7 +251,8 @@
          * @param {Node} node
          */
         function Test( node ){
-            var name;
+	        var $ = lola;
+	        var name;
             var result;
             var assert = "==";
             var compareTo;
@@ -260,7 +265,7 @@
                 logFn( name );
                 try {
                     if ( async ){
-                        lola.evaluate( test );
+                        $.evaluate( test );
                         return false;
                     }
                     else {
@@ -333,7 +338,7 @@
                 }
                 else {
                     error = 'failed, '+error;
-                    errorFn( '    ', error );
+                    errorFn( '    ', "["+name+"] "+error );
                 }
             }
 
@@ -399,13 +404,14 @@
          * @param {Node} node
          */
         function ExternalXML( node ){
-            var source;
+	        var $ = lola;
+	        var source;
 
             if ((node.hasAttribute('src')))
                 source = node.attributes.getNamedItem("src").nodeValue;
 
             this.execute = function(){
-                var ls = lola.string;
+                var ls = $.string;
             	var div = ls.padFront( ls.padEnd("\nsource\n",'=',56), '=',104);
                 logFn(div);
                 if (source){

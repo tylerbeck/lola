@@ -13,7 +13,8 @@
 	 * @memberof lola
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -365,19 +366,19 @@
          * @param {String} jsonpParam
          */
         this.get = function( urlStr, callback, jsonpParam ){
-            console.log('json.get: '+urlStr);
+            $.syslog('json.get: '+urlStr);
 
-            var url = new lola.URL(urlStr);
+            var url = new $.URL(urlStr);
 
             //determine how to load json
             if (url.protocol == "____" ||
-                (false && url.protocol == lola.url.protocol && url.domain == lola.url.domain) ){
+                (false && url.protocol == $.url.protocol && url.domain == $.url.domain) ){
                 //console.log('    same domain');
                 //same protocol & domain... just do async call
-                var r = new lola.http.AsyncRequest(urlStr);
+                var r = new $.http.AsyncRequest(urlStr);
                 if (callback) {
                     $(r).addListener('result', function(event){
-                        console.log('    result');
+                        $.syslog('    result');
                         var obj = self.parse( event.data.responseText );
                         callback(obj);
                     } );
@@ -387,7 +388,7 @@
 
             }
             else {
-                console.log('    cross domain');
+                $.syslog('    cross domain');
                 jsonpParam = jsonpParam ? jsonpParam : "jsonp";
                 //assume this is a jsonp call and the server supports it.
                 var uid = ruid++;
@@ -396,7 +397,7 @@
                     delete self.handleResponse[uid];
                 };
                 url.vars[jsonpParam] = "lola.json.handleResponse["+uid+"]";
-                lola.loadScript( url.toString() );
+                $.loadScript( url.toString() );
             }
         };
 
@@ -414,11 +415,11 @@
             Date.prototype.toJSON = function ( key ) {
                 return isFinite( this.valueOf() ) ?
                     this.getUTCFullYear() + '-' +
-                        lola.string.padFront( this.getUTCMonth() + 1,"0",2 ) + '-' +
-                        lola.string.padFront( this.getUTCDate(),"0",2 ) + 'T' +
-                        lola.string.padFront( this.getUTCHours(),"0",2 ) + ':' +
-                        lola.string.padFront( this.getUTCMinutes(),"0",2 ) + ':' +
-                        lola.string.padFront( this.getUTCSeconds(),"0",2 ) + 'Z' : null;
+                        $.string.padFront( this.getUTCMonth() + 1,"0",2 ) + '-' +
+                        $.string.padFront( this.getUTCDate(),"0",2 ) + 'T' +
+                        $.string.padFront( this.getUTCHours(),"0",2 ) + ':' +
+                        $.string.padFront( this.getUTCMinutes(),"0",2 ) + ':' +
+                        $.string.padFront( this.getUTCSeconds(),"0",2 ) + 'Z' : null;
             };
 
             String.prototype.toJSON =

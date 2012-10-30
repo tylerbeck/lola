@@ -12,7 +12,8 @@
 	 * @namespace lola.http
 	 */
     var Module = function(){
-        var self = this;
+		var $ = lola;
+		var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -144,7 +145,7 @@
          */
         this.getParamString = function( paramObj ){
             if ( paramObj != undefined ) {
-                if ( lola.type.get( paramObj ) != 'string' ) {
+                if ( $.type.get( paramObj ) != 'string' ) {
                     var temp = [];
                     for ( var k in paramObj ) {
                         if (paramObj.hasOwnProperty(k)){
@@ -171,10 +172,10 @@
             applyTransform: function( transform, interimContent, faultContent ) {
                 this.html( interimContent );
                 this.forEach( function(item){
-                    lola.event.addListener( transform, 'result', function( event ) {
+                    $.event.addListener( transform, 'result', function( event ) {
                         $( item ).html( event.data );
                     } );
-                    lola.event.addListener( transform, 'fault', function() {
+                    $.event.addListener( transform, 'fault', function() {
                         $( item ).html( faultContent );
                     } );
                 });
@@ -193,10 +194,10 @@
             applyRequest: function( request, requestParams, interimContent, faultContent ) {
                 this.html( interimContent );
                 this.forEach( function(item){
-                    lola.event.addListener( request, 'result', function( event ) {
+                    $.event.addListener( request, 'result', function( event ) {
                         $( item ).html( event.currentTarget.responseText() );
                     } );
-                    lola.event.addListener( request, 'fault', function() {
+                    $.event.addListener( request, 'fault', function() {
                         $( item ).html( faultContent );
                     } );
                 });
@@ -212,7 +213,7 @@
              * @param {*} faultContent
              */
             loadContent: function( url, interimContent, faultContent ){
-                var request = new lola.http.AsyncRequest( url, 'get', [] );
+                var request = new $.http.AsyncRequest( url, 'get', [] );
                 this.applyRequest( request, {}, interimContent, faultContent);
                 return this;
             }
@@ -234,7 +235,8 @@
          * @param {String} password credentials password
          */
         var Request = function( url, method, headers, async, user, password ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
             /**
              * DOM xmlhttprequest
@@ -345,26 +347,26 @@
                             break;
                         case 1:
                             //loading
-                            lola.event.trigger( self, 'loading', true, true, request );
+                            $.event.trigger( self, 'loading', true, true, request );
                             break;
                         case 2:
                             //loaded
-                            lola.event.trigger( self, 'loaded', true, true, request );
+                            $.event.trigger( self, 'loaded', true, true, request );
                             break;
                         case 3:
                             //interactive
-                            lola.event.trigger( self, 'interactive', true, true, request );
+                            $.event.trigger( self, 'interactive', true, true, request );
                             break;
                         case 4:
                             //complete
-                            lola.event.trigger( self, 'statecomplete', true, true, request );
+                            $.event.trigger( self, 'statecomplete', true, true, request );
                             if ( request.status == 200 && !ready ) {
                                 ready = true;
-                                lola.event.trigger( self, 'result', true, true, request );
+                                $.event.trigger( self, 'result', true, true, request );
                             }
                             else if ( request.status >= 400 ) {
                                 console.info( 'AsyncRequest.readyStateChange.fault:', url );
-                                lola.event.trigger( self, 'fault', false, false, request );
+                                $.event.trigger( self, 'fault', false, false, request );
                             }
                             break;
                     }
@@ -435,7 +437,8 @@
          * @param {String|undefined} xslCacheId if set xsl will be cached with the specified id
          */
         this.Transform = function( xml, xsl, transformParams, xslCacheId ) {
-            var parent = self;
+	        var $ = lola;
+	        var parent = self;
             var self = this;
             /**
              * holds transformation result
@@ -457,7 +460,7 @@
              */
             function initialize() {
                 xslCacheId = xslCacheId || "";
-                if ( lola.type.get( xsl ) == 'string' ) {
+                if ( $.type.get( xsl ) == 'string' ) {
                     var xslId = xsl;
                     xsl = parent.getCachedXsl( xslId );
                     if ( !xsl ) {
@@ -469,10 +472,10 @@
                 }
 
                 if ( this.xsl && this.xml ) {
-                    lola.event.addListener( this.xsl, 'result', checkStates, true, 0, this );
-                    lola.event.addListener( this.xsl, 'fault', handleXSLFault, true, 0, this );
-                    lola.event.addListener( this.xml, 'result', checkStates, true, 0, this );
-                    lola.event.addListener( this.xml, 'fault', handleXMLFault, true, 0, this );
+                    $.event.addListener( this.xsl, 'result', checkStates, true, 0, this );
+                    $.event.addListener( this.xsl, 'fault', handleXSLFault, true, 0, this );
+                    $.event.addListener( this.xml, 'result', checkStates, true, 0, this );
+                    $.event.addListener( this.xml, 'fault', handleXMLFault, true, 0, this );
 
                     checkStates();
                 }
@@ -494,7 +497,7 @@
 
                     //both requests are ready, do transform
                     resultNodes = parent.transform( xml.responseXML(), xsl.responseXML(), transformParams );
-                    lola.event.trigger( self, 'result', true, true, resultNodes );
+                    $.event.trigger( self, 'result', true, true, resultNodes );
                 }
             }
 
@@ -503,7 +506,7 @@
              * @private
              */
             function handleXSLFault() {
-                lola.event.trigger( self, 'fault', true, true, 'xsl fault' );
+                $.event.trigger( self, 'fault', true, true, 'xsl fault' );
             }
 
             /**
@@ -511,7 +514,7 @@
              * @private
              */
             function handleXMLFault() {
-                lola.event.trigger( self, 'fault', true, true, 'xml fault' );
+                $.event.trigger( self, 'fault', true, true, 'xml fault' );
             }
 
             /**
@@ -532,10 +535,10 @@
              * @public
              */
             this.cancel = function() {
-                lola.event.removeListener( xsl, 'result', checkStates, true );
-                lola.event.removeListener( xsl, 'fault', handleXSLFault, true );
-                lola.event.removeListener( xml, 'result', checkStates, true );
-                lola.event.removeListener( xml, 'fault', handleXMLFault, true );
+                $.event.removeListener( xsl, 'result', checkStates, true );
+                $.event.removeListener( xsl, 'fault', handleXSLFault, true );
+                $.event.removeListener( xml, 'result', checkStates, true );
+                $.event.removeListener( xml, 'fault', handleXMLFault, true );
                 try {
                     xsl.abort();
                 }

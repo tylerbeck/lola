@@ -12,7 +12,8 @@
      * @namespace lola.array
      */
     var Module = function(){
-        var self = this;
+	    var $ = lola;
+	    var self = this;
         //==================================================================
         // Attributes
         //==================================================================
@@ -96,8 +97,8 @@
          * @return {void}
          */
         function preinitialize() {
-            var start = lola.now();
-            lola.debug( 'lola.easing::preinitialize' );
+            var start = $.now();
+            $.syslog( 'lola.easing::preinitialize' );
 
             //do module initialization
             //easing that simulates css timing
@@ -122,8 +123,8 @@
                     self.registerEasingFn(k+'-in-out', eio );
                 }
             } );
-            var complete = lola.now();
-            lola.debug('easing preinitialization took',(complete-start), 'ms');
+            var complete = $.now();
+            $.syslog('easing preinitialization took',(complete-start), 'ms');
             self.setDefaultEase('ease-in-out');
         }
 
@@ -254,7 +255,7 @@
          * @param p2y
          */
         this.registerSimpleEasing = function(id,p1x,p1y,p2x,p2y){
-            var geo = lola.geometry;
+            var geo = $.geometry;
             var spline = new geo.Spline();
             var c1 = new geo.Point( p1x, p1y );
             var c2 = new geo.Point( 1-p2x, 1-p2y );
@@ -285,12 +286,12 @@
          * @param {String} id
          */
         this.get = function( id ){
-            //console.log("lola.easing.get: "+id);
+            //console.log("$.easing.get: "+id);
             if (methods[ id ]){
                 return methods[ id ];
             }
             else {
-                lola.debug('easing method "'+id+'" not found.');
+                $.warn('easing method "'+id+'" not found.');
                 return methods[ defaultEase ];
             }
         };

@@ -285,6 +285,7 @@
                         result = result[part];
                 }
             }
+
             return true;
         };
 
@@ -305,6 +306,7 @@
             if (debugMode) {
                 console.log("["+this.now()+"]", Array.prototype.slice.call(arguments, 0).join(' '));
             }
+
         };
 
         /**

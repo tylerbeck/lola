@@ -118,6 +118,7 @@
          * start ticking
          */
         function startTicking(){
+
             lola.animation.start( namespace );
         }
 

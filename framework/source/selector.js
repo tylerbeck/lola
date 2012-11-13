@@ -51,6 +51,10 @@
         else if (typeof selector == "function") {
            lola.addInitializer( selector );
         }
+	    else if (selector == undefined && context == undefined ){
+	        this[0] = lola;
+	        i++;
+        }
         this.length = i;
 
         return this;

@@ -430,8 +430,23 @@
             return (v.length == 1) ? v[0] : v;
         };
 
+	    /**
+	     * launches fullscreen mode
+	     * @param element
+	     */
+	    this.fullscreen = function(element) {
+		    if(element.requestFullScreen) {
+			    element.requestFullScreen();
+		    } else if(element.mozRequestFullScreen) {
+			    element.mozRequestFullScreen();
+		    } else if(element.webkitRequestFullScreen) {
+			    element.webkitRequestFullScreen();
+		    }
+	    };
 
-        //==================================================================
+
+
+	    //==================================================================
         // Selector Methods
         //==================================================================
         this.selectorMethods = {

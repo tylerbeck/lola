@@ -479,6 +479,10 @@ if ( !String.prototype.trim ) {
         else if (typeof selector == "function") {
            lola.addInitializer( selector );
         }
+	    else if (selector == undefined && context == undefined ){
+	        this[0] = lola;
+	        i++;
+        }
         this.length = i;
 
         return this;
@@ -837,7 +841,7 @@ if ( !String.prototype.trim ) {
         };
 
 	    /**
-	     * outputs log statement
+	     * get error object to expose stack
 	     */
 	    function getErrorObj(){
 		    try{ throw Error("")}catch(err){ return err }
@@ -933,8 +937,23 @@ if ( !String.prototype.trim ) {
             return (v.length == 1) ? v[0] : v;
         };
 
+	    /**
+	     * launches fullscreen mode
+	     * @param element
+	     */
+	    this.fullscreen = function(element) {
+		    if(element.requestFullScreen) {
+			    element.requestFullScreen();
+		    } else if(element.mozRequestFullScreen) {
+			    element.mozRequestFullScreen();
+		    } else if(element.webkitRequestFullScreen) {
+			    element.webkitRequestFullScreen();
+		    }
+	    };
 
-        //==================================================================
+
+
+	    //==================================================================
         // Selector Methods
         //==================================================================
         this.selectorMethods = {
@@ -3169,9 +3188,8 @@ if ( !String.prototype.trim ) {
                     scope = scope || target;
 
                     //assign handler a uid so it can be easily referenced
-                    if ( handler.uid == null )
+                    if ( !handler.uid )
                         handler.uid = uid++;
-                    var uid = handler.uid;
 
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
@@ -3567,10 +3585,10 @@ if ( !String.prototype.trim ) {
              * @param {Object|undefined} scope
              */
             addListener: function( type, handler, useCapture, priority, scope ) {
-                return this.s( self.addListener, type, handler, useCapture, priority, scope );
+	            return this.s( self.addListener, type, handler, useCapture, priority, scope );
             },
 
-            /**
+	        /**
              * removes a framework event listener
              * @param {String} type
              * @param {Function} handler
@@ -3602,7 +3620,10 @@ if ( !String.prototype.trim ) {
             }
         };
 
-        //==================================================================
+		//alias for addListener
+		this.selectorMethods.on = this.selectorMethods.addListener;
+
+		//==================================================================
         // Classes
         //==================================================================
         /**
@@ -7449,7 +7470,6 @@ if ( !String.prototype.trim ) {
          * @private
          */
         var rDropPx = /px/g;
-
 
 
         //==================================================================

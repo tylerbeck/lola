@@ -127,9 +127,8 @@
                     scope = scope || target;
 
                     //assign handler a uid so it can be easily referenced
-                    if ( handler.uid == null )
+                    if ( !handler.uid )
                         handler.uid = uid++;
-                    var uid = handler.uid;
 
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
@@ -525,10 +524,10 @@
              * @param {Object|undefined} scope
              */
             addListener: function( type, handler, useCapture, priority, scope ) {
-                return this.s( self.addListener, type, handler, useCapture, priority, scope );
+	            return this.s( self.addListener, type, handler, useCapture, priority, scope );
             },
 
-            /**
+	        /**
              * removes a framework event listener
              * @param {String} type
              * @param {Function} handler
@@ -560,7 +559,10 @@
             }
         };
 
-        //==================================================================
+		//alias for addListener
+		this.selectorMethods.on = this.selectorMethods.addListener;
+
+		//==================================================================
         // Classes
         //==================================================================
         /**

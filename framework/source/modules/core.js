@@ -320,6 +320,7 @@
                         result = result[part];
                 }
             }
+
             return true;
         };
 

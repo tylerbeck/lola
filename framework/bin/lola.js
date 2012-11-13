@@ -827,6 +827,7 @@ if ( !String.prototype.trim ) {
                         result = result[part];
                 }
             }
+
             return true;
         };
 
@@ -4822,6 +4823,7 @@ if ( !String.prototype.trim ) {
          * @private
          */
         var propertyHooks = {};
+        this.getPropertyHooks = function(){ return propertyHooks; };
 
         /**
          * references to dynamic stylesheets
@@ -4862,7 +4864,7 @@ if ( !String.prototype.trim ) {
             $.syslog( 'lola.css::initialize' );
 
             //add default hooks
-            var dimensionals = "padding margin background-position border-top-width border-right-width border-bottom-width "+
+            var dimensionals = "padding margin background-position-x background-position-y border-top-width border-right-width border-bottom-width "+
                 "border-left-width border-width bottom font-size height left line-height list-style-position "+
                 "margin margin-top margin-right margin-bottom margin-left max-height max-width min-height "+
                 "min-width outline-width padding padding-top padding-right padding-bottom padding-left right "+
@@ -4965,29 +4967,36 @@ if ( !String.prototype.trim ) {
         this.getRawStyle = function( node, style ){
             var prop = getProperty( style );
             //console.log( 'getting raw style', '"'+prop+'"', '"'+$.string.dashed( prop )+'"', node );
-
             var result = node.style[prop];
             if ( !result || result == "" ){
-                //console.log('element style not set');
-                var compStyle;
+                result = self.getComputedStyle( node, prop );
+            }
 
-                if ( document.defaultView && document.defaultView.getComputedStyle ) {
-                    //console.log( document.defaultView );
-                    //console.log( document.defaultView.getComputedStyle );
-                    compStyle = document.defaultView.getComputedStyle( node, undefined );
-                }
+            return result;
+        };
 
-                if (compStyle){
-                    //console.log( 'using getComputedStyle', compStyle );
-                    result = compStyle.getPropertyValue( $.string.dashed(prop) );
-                }
-                else if ( typeof(document.body.currentStyle) !== "undefined") {
-                    //console.log( 'using currentStyle', node["currentStyle"] );
-                    result = node["currentStyle"][prop];
-                }
-                else {
+
+        this.getComputedStyle = function( node, style ){
+            var compStyle,result;
+            var prop = getProperty( style );
+            if ( document.defaultView && document.defaultView.getComputedStyle ) {
+                //console.log( document.defaultView );
+                //console.log( document.defaultView.getComputedStyle );
+                compStyle = document.defaultView.getComputedStyle( node, undefined );
+            }
+
+            if (compStyle){
+                //console.log( 'using getComputedStyle', compStyle );
+                result = compStyle.getPropertyValue( lola.string.dashed(prop) );
+                if (result == "" && compStyle[prop] == undefined )
                     result = undefined;
-                }
+            }
+            else if ( typeof(document.body.currentStyle) !== "undefined") {
+                //console.log( 'using currentStyle', node["currentStyle"] );
+                result = node["currentStyle"][prop];
+            }
+            else {
+                result = undefined;
             }
 
             return result;
@@ -5002,7 +5011,9 @@ if ( !String.prototype.trim ) {
          */
         this.setRawStyle = function( node, style, value ){
             var prop = getProperty( style );
+            //$.debug('setRawStyle',style,value);
             return node.style[ prop ] = value;
+
         };
 
         /**
@@ -5013,6 +5024,30 @@ if ( !String.prototype.trim ) {
         this.registerStyleHook = function( style, fn ){
             var prop = getProperty( style );
             propertyHooks[ prop ] = fn;
+        };
+
+        /**
+         * sets a dimension style with or without units
+         * gets a dimensional style with no units
+         * @param obj
+         * @param style
+         * @param value
+         * @private
+         */
+        this.registerStyleAlias = function( style, alias ){
+            $.debug('registerStyleAlias', style, alias );
+            var fnc = function( o, s, v ){
+                var result;
+                if (v == undefined) {
+                    result = self.getRawStyle( o, style );
+                }
+                else {
+                    result = self.setRawStyle( o, style, v );
+                }
+                return result;
+            };
+
+            self.registerStyleHook( alias, fnc );
         };
 
         /**
@@ -5254,6 +5289,26 @@ if ( !String.prototype.trim ) {
          */
         this.clearStyle = function( obj, style ) {
             delete obj.style[ getProperty( style ) ];
+        };
+
+        var prefixes = ["-webkit-", "-moz-", "-ms-", "-o-"];
+        this.prefix = function( type, updateStyleSheets ){
+            var prf = "";
+            var $div =  $( document.createElement('div') );
+            //$.debug("prefix css:",type);
+            prefixes.forEach( function( prefix ){
+                var val = $div.style( prefix + type );
+                //$.debug("    ",prefix + type+":", lola.type.get(val), val);
+                if (val != null && val != undefined){
+                    //add alias hook
+                    self.registerStyleAlias( prefix+type, type );
+
+                    if (updateStyleSheets){
+                        //update stylesheets
+                        //TODO: update prefixes in stylesheets
+                    }
+                }
+            });
         };
 
 

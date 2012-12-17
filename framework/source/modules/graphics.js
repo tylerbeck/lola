@@ -138,11 +138,13 @@
         }
 
         /**
-         * @descrtiption sets the current default context
+         * @description sets the current default context
          * @param {Object|String} ctx
+         * @return {Object}
          */
         this.setContext = function( ctx ) {
             context = resolveContext( ctx );
+	        return context;
         };
 
         /**

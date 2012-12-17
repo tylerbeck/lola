@@ -436,6 +436,7 @@
 	     * @param element
 	     */
 	    this.fullscreen = function(element) {
+		    $.debug('fullscreen',element);
 		    if(element.requestFullScreen) {
 			    element.requestFullScreen();
 		    } else if(element.mozRequestFullScreen) {
@@ -444,6 +445,20 @@
 			    element.webkitRequestFullScreen();
 		    }
 	    };
+
+	    /**
+	     * exits fullscreen mode
+	     */
+	    this.cancelFullscreen = function(){
+		    if (document.cancelFullScreen) {
+			    document.cancelFullScreen();
+		    } else if (document.mozCancelFullScreen) {
+			    document.mozCancelFullScreen();
+		    } else if (document.webkitCancelFullScreen) {
+			    document.webkitCancelFullScreen();
+		    }
+	    };
+
 
 
 

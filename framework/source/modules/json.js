@@ -115,7 +115,7 @@
                 k,          // The member key.
                 v,          // The member value.
                 length,
-                mind = this.gap,
+                mind = self.gap,
                 partial,
                 value = holder[key];
 
@@ -144,7 +144,7 @@
                 case 'null':
                     // If the value is a boolean or null, convert it to a string. Note:
                     // typeof null does not produce 'null'. The case is included here in
-                    // the remote chance that this gets fixed someday.
+                    // the remote chance that self gets fixed someday.
                     return String( value );
 
                 case 'object':
@@ -156,7 +156,7 @@
                     }
 
                     // Make an array to hold the partial results of stringifying this object value.
-                    this.gap += this.indent;
+                    self.gap += self.indent;
                     partial = [];
 
                     // Is the value an array?

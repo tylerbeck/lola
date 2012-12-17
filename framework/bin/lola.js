@@ -943,6 +943,7 @@ if ( !String.prototype.trim ) {
 	     * @param element
 	     */
 	    this.fullscreen = function(element) {
+		    $.debug('fullscreen',element);
 		    if(element.requestFullScreen) {
 			    element.requestFullScreen();
 		    } else if(element.mozRequestFullScreen) {
@@ -951,6 +952,20 @@ if ( !String.prototype.trim ) {
 			    element.webkitRequestFullScreen();
 		    }
 	    };
+
+	    /**
+	     * exits fullscreen mode
+	     */
+	    this.cancelFullscreen = function(){
+		    if (document.cancelFullScreen) {
+			    document.cancelFullScreen();
+		    } else if (document.mozCancelFullScreen) {
+			    document.mozCancelFullScreen();
+		    } else if (document.webkitCancelFullScreen) {
+			    document.webkitCancelFullScreen();
+		    }
+	    };
+
 
 
 
@@ -6286,7 +6301,7 @@ if ( !String.prototype.trim ) {
                 k,          // The member key.
                 v,          // The member value.
                 length,
-                mind = this.gap,
+                mind = self.gap,
                 partial,
                 value = holder[key];
 
@@ -6315,7 +6330,7 @@ if ( !String.prototype.trim ) {
                 case 'null':
                     // If the value is a boolean or null, convert it to a string. Note:
                     // typeof null does not produce 'null'. The case is included here in
-                    // the remote chance that this gets fixed someday.
+                    // the remote chance that self gets fixed someday.
                     return String( value );
 
                 case 'object':
@@ -6327,7 +6342,7 @@ if ( !String.prototype.trim ) {
                     }
 
                     // Make an array to hold the partial results of stringifying this object value.
-                    this.gap += this.indent;
+                    self.gap += self.indent;
                     partial = [];
 
                     // Is the value an array?
@@ -8424,11 +8439,13 @@ if ( !String.prototype.trim ) {
         }
 
         /**
-         * @descrtiption sets the current default context
+         * @description sets the current default context
          * @param {Object|String} ctx
+         * @return {Object}
          */
         this.setContext = function( ctx ) {
             context = resolveContext( ctx );
+	        return context;
         };
 
         /**

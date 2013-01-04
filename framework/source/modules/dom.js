@@ -315,7 +315,7 @@
              */
             insertAfter: function( node ) {
                 if ( this.length == 1 ) {
-                    this.parent().insertAfter( node, this[0] );
+                    this.parent().insertBefore( node, this[0].nextSibling );
                 }
                 return contentChanged( this );
             },
@@ -385,7 +385,7 @@
 
             /**
              *  sets new parent elements
-             * @param {String} newParent
+             * @param {String|undefined} newParent
              * @return {lola.Selector|Array}
              */
             parent: function( newParent ) {

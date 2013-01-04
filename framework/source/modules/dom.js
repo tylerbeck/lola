@@ -413,8 +413,10 @@
                 this.forEach( function( item, index ) {
                     if (item.previousSibling){
                         var i = 0;
-                        while( (item = item.previousSibling) != null )
-                            i++;
+                        while( (item = item.previousSibling) != null ){
+	                        if (item.nodeType === 1)
+	                            i++;
+                        }
                         values.push( i );
                     }
                     else{

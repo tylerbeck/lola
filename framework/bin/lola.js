@@ -3205,7 +3205,7 @@ if ( !String.prototype.trim ) {
 
                     //assign handler a uid so it can be easily referenced
                     if ( !handler.uid )
-                        handler.uid = uid++;
+                        handler.uid = ++uid;
 
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
@@ -3238,20 +3238,17 @@ if ( !String.prototype.trim ) {
             var info = [target,'type: '+type,'useCapture: '+useCapture];
             if ( $.util.checkArgs('ERROR: lola.event.removeListener( '+type+' )', required, info) ){
                 if (useHooks !== false && hooks[type] != null){
-                    hooks[type]['removeListener'].call( hooks[type], target, type, handler, useCapture );
+	                hooks[type]['removeListener'].call( hooks[type], target, type, handler, useCapture );
                 }
                 else {
                     var data = $.data.get( target, dataNamespace );
                     if ( !data ) data = { capture:{}, bubble:{} };
-
                     var phase = self.phaseString( target, useCapture );
-
                     //get handler uid
-                    var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
-
+                    var huid = ""+( $.type.get( handler ) == 'function' ? handler.uid : handler );
                     if (data && data[phase] && data[phase][type] ){
-                        delete data[phase][type][uid];
-
+	                    data[phase][type][huid] = undefined;
+	                    delete data[phase][type][huid];
                         //if there are no more listeners in stack remove handler
                         // function checks if event listener can actually be removed
                         if ( data[phase][type] && Object.keys( data[phase][type] ).length == 0 ) {
@@ -3278,7 +3275,7 @@ if ( !String.prototype.trim ) {
             var info = [];
             if ( $.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
                 //get handler uid
-                var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
+                var huid = ""+($.type.get( handler ) == 'function' ? handler.uid : handler);
 
                 //get event data
                 var data = $.data.getNamespace( dataNamespace );
@@ -3293,12 +3290,12 @@ if ( !String.prototype.trim ) {
                             if ( types ) {
                                 for ( type in types ) {
                                     if ( data[oid][phase][type] )
-                                        delete  data[oid][phase][type][uid];
+                                        delete  data[oid][phase][type][huid];
                                 }
                             }
                             else {
                                 for ( type in data[oid][phase] ) {
-                                    delete  data[oid][phase][type][uid];
+                                    delete  data[oid][phase][type][huid];
                                 }
                             }
                             //rempve DOM listener if needed

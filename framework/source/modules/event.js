@@ -130,10 +130,12 @@
                     if ( !handler.uid )
                         handler.uid = ++uid;
 
+	                console.log('handler.uid', handler.uid);
+
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
 
-                    data[phase][type][uid] = {priority:priority, huid:uid, handler:handler, scope:scope };
+                    data[phase][type][handler.uid] = {priority:priority, uid:handler.uid, handler:handler, scope:scope };
 
 
                     //since duplicate dom listeners are discarded just add listener every time
@@ -168,13 +170,13 @@
                     if ( !data ) data = { capture:{}, bubble:{} };
                     var phase = self.phaseString( target, useCapture );
                     //get handler uid
-                    var huid = ""+( $.type.get( handler ) == 'function' ? handler.uid : handler );
+                    var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
                     if (data && data[phase] && data[phase][type] ){
-	                    data[phase][type][huid] = undefined;
-	                    delete data[phase][type][huid];
+	                    delete data[phase][type][uid];
                         //if there are no more listeners in stack remove handler
                         // function checks if event listener can actually be removed
                         if ( data[phase][type] && Object.keys( data[phase][type] ).length == 0 ) {
+	                        delete data[phase][type];
                             if ( phase == 'capture' )
                                 self.removeDOMListener( target, type, captureHandler, true );
                             else
@@ -198,7 +200,7 @@
             var info = [];
             if ( $.utils.checkArgs('ERROR: lola.event.removeHandler', required, info) ){
                 //get handler uid
-                var huid = ""+($.type.get( handler ) == 'function' ? handler.uid : handler);
+                var uid = ""+($.type.get( handler ) == 'function' ? handler.uid : handler);
 
                 //get event data
                 var data = $.data.getNamespace( dataNamespace );
@@ -213,12 +215,12 @@
                             if ( types ) {
                                 for ( type in types ) {
                                     if ( data[oid][phase][type] )
-                                        delete  data[oid][phase][type][huid];
+                                        delete  data[oid][phase][type][uid];
                                 }
                             }
                             else {
                                 for ( type in data[oid][phase] ) {
-                                    delete  data[oid][phase][type][huid];
+                                    delete  data[oid][phase][type][uid];
                                 }
                             }
                             //rempve DOM listener if needed
@@ -277,7 +279,7 @@
                     if ( obj.handler )
                         obj.handler.call( obj.scope, e );
                     else
-                        delete data[phase][event.type][obj.huid];
+                        delete data[phase][event.type][obj.uid];
                 }
             }
         }

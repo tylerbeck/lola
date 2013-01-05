@@ -47,7 +47,7 @@
      * @param overwrite {Boolean|undefined}
      * @param errors {Boolean|undefined}
      * @param deep {Boolean|undefined}
-     * @param deep {Array|undefined}
+     * @param ignore {Array|undefined}
      * @return {void}
      */
     lola.extend = function( target, source, overwrite, errors, deep, ignore ) {
@@ -71,7 +71,7 @@
      * @public
      * @param {!Object} base object on which to build chain
      * @param {!String} chain "." seperated namespace / package
-     * @param {!Object} object object to set in lineage
+     * @param {!Object} obj object to set in lineage
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {
@@ -2193,8 +2193,10 @@ if ( !String.prototype.trim ) {
                 this.forEach( function( item, index ) {
                     if (item.previousSibling){
                         var i = 0;
-                        while( (item = item.previousSibling) != null )
-                            i++;
+                        while( (item = item.previousSibling) != null ){
+	                        if (item.nodeType === 1)
+	                            i++;
+                        }
                         values.push( i );
                     }
                     else{
@@ -3248,7 +3250,6 @@ if ( !String.prototype.trim ) {
                     var phase = self.phaseString( target, useCapture );
                     //get handler uid
                     var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
-	                console.log( "handler uid" , uid );
                     if (data && data[phase] && data[phase][type] ){
 	                    delete data[phase][type][uid];
                         //if there are no more listeners in stack remove handler

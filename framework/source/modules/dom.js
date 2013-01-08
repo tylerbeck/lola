@@ -159,7 +159,7 @@
         /**
          * utility function: dispatches contentChanged event for target
          * @param $target
-         * @return {Object}
+         * @return {lola.Selector}
          */
         function contentChanged( $target ){
             $target.trigger('contentchanged', true);
@@ -190,7 +190,23 @@
                 return $instance;
             },
 
-            /**
+	        /**
+	         * returns first element as selector
+	         * @return {*|lola.Selector}
+	         */
+	        first: function(){
+		        return this.at(0);
+	        },
+
+	        /**
+	         * returns last element as selector
+	         * @return {*|lola.Selector}
+	         */
+	        last: function(){
+		        return this.at(this.length-1);
+	        },
+
+	        /**
              *  generation selection
              * @return {lola.Selector}
              */
@@ -258,14 +274,14 @@
             },
 
             /**
-             *  appends node to first selection element in DOM
+             *  appends node to last selection element in DOM
              * @param {Element} node
              * @return {lola.Selector}
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
                     //console.log("appendChild:",node);
-                    var p = this.get(0);
+                    var p = this.last().get();
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }
@@ -278,9 +294,12 @@
              * @return {lola.Selector}
              */
             prependChild: function( node ) {
-                if ( this.length > 0 ) {
-                    this.get().insertBefore( node, this.get().firstChild );
-                }
+	            if ( this.length > 0 ) {
+		            //console.log("appendChild:",node);
+		            var p = this.first().get();
+		            if ( p && p.insertBefore )
+			            p.insertBefore( node, p.firstElementChild );
+	            }
                 return contentChanged( this );
             },
 
@@ -302,20 +321,26 @@
              * @return {lola.Selector}
              */
             insertBefore: function( node ) {
-                if ( this.length == 1 ) {
-                    this.parent().insertBefore( node, this[0] );
+                if ( this.length > 0 ) {
+                    this.first().parent().insertBefore( node, this[0] );
                 }
                 return contentChanged( this );
             },
 
             /**
-             *  inserts node after first selected element
+             *  inserts node after last selected element
              * @param {Element} node
              * @return {lola.Selector}
              */
             insertAfter: function( node ) {
-                if ( this.length == 1 ) {
-                    this.parent().insertBefore( node, this[0].nextSibling );
+                if ( this.length > 0 ) {
+	                var p = this.last().parent();
+	                if ( this.last().get() == p.lastElementChild ){
+		                p.appendChild( node );
+	                }
+	                else{
+		                p.insertBefore( node, this.last().get().nextSibling );
+	                }
                 }
                 return contentChanged( this );
             },

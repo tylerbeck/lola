@@ -130,8 +130,6 @@
                     if ( !handler.uid )
                         handler.uid = ++uid;
 
-	                console.log('handler.uid', handler.uid);
-
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
 

@@ -254,20 +254,22 @@
         /**
          * sets a dimension style with or without units
          * gets a dimensional style with no units
-         * @param obj
-         * @param style
-         * @param value
+         * @param alias
+         * @param {String|Array} style
          * @private
          */
-        this.registerStyleAlias = function( style, alias ){
-            $.debug('registerStyleAlias', style, alias );
+        this.registerStyleAlias = function( alias, style ){
+            $.debug('registerStyleAlias', alias, style );
+	        var styles = ( $.type.get(style) == "array") ? style : [style];
             var fnc = function( o, s, v ){
                 var result;
                 if (v == undefined) {
-                    result = self.getRawStyle( o, style );
+                    result = self.getRawStyle( o, styles[0] );
                 }
                 else {
-                    result = self.setRawStyle( o, style, v );
+	                styles.forEach( function( s ){
+		                result = self.setRawStyle( o, s, v );
+	                });
                 }
                 return result;
             };
@@ -742,6 +744,7 @@
              * parses color part value
              * @private
              * @param {String} val
+             * @param divisor
              * @return {Number}
              */
             function parseColorPart( val, divisor ) {
@@ -823,7 +826,6 @@
         //TODO:this breaks in IE browsers and needs to be fixed
         //add default stylesheet for dynamic rules
         //self.addStyleSheet( "_default" );
-
 
     };
 

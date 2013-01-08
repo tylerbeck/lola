@@ -529,16 +529,16 @@
 
                 if ( obj instanceof $.Selector ){
                     obj.forEach( function(item){
-                        self.push( item );
+                        self.unshift( item );
                     })
                 }
                 else if (Array.isArray( obj )){
                     obj.forEach( function(item){
-                        self.push( item );
+                        self.unshift( item );
                     })
                 }
                 else{
-                    self.push( obj );
+                    self.unshift( obj );
                 }
 
                 if (unique == undefined || unique === true){

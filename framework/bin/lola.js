@@ -1036,16 +1036,16 @@ if ( !String.prototype.trim ) {
 
                 if ( obj instanceof $.Selector ){
                     obj.forEach( function(item){
-                        self.push( item );
+                        self.unshift( item );
                     })
                 }
                 else if (Array.isArray( obj )){
                     obj.forEach( function(item){
-                        self.push( item );
+                        self.unshift( item );
                     })
                 }
                 else{
-                    self.push( obj );
+                    self.unshift( obj );
                 }
 
                 if (unique == undefined || unique === true){
@@ -1939,7 +1939,7 @@ if ( !String.prototype.trim ) {
         /**
          * utility function: dispatches contentChanged event for target
          * @param $target
-         * @return {Object}
+         * @return {lola.Selector}
          */
         function contentChanged( $target ){
             $target.trigger('contentchanged', true);
@@ -1970,7 +1970,23 @@ if ( !String.prototype.trim ) {
                 return $instance;
             },
 
-            /**
+	        /**
+	         * returns first element as selector
+	         * @return {*|lola.Selector}
+	         */
+	        first: function(){
+		        return this.at(0);
+	        },
+
+	        /**
+	         * returns last element as selector
+	         * @return {*|lola.Selector}
+	         */
+	        last: function(){
+		        return this.at(this.length-1);
+	        },
+
+	        /**
              *  generation selection
              * @return {lola.Selector}
              */
@@ -2038,14 +2054,14 @@ if ( !String.prototype.trim ) {
             },
 
             /**
-             *  appends node to first selection element in DOM
+             *  appends node to last selection element in DOM
              * @param {Element} node
              * @return {lola.Selector}
              */
             appendChild: function( node ) {
                 if ( this.length > 0 ) {
                     //console.log("appendChild:",node);
-                    var p = this.get(0);
+                    var p = this.last().get();
                     if ( p && p.appendChild )
                         p.appendChild( node );
                 }
@@ -2058,9 +2074,12 @@ if ( !String.prototype.trim ) {
              * @return {lola.Selector}
              */
             prependChild: function( node ) {
-                if ( this.length > 0 ) {
-                    this.get().insertBefore( node, this.get().firstChild );
-                }
+	            if ( this.length > 0 ) {
+		            //console.log("appendChild:",node);
+		            var p = this.first().get();
+		            if ( p && p.insertBefore )
+			            p.insertBefore( node, p.firstElementChild );
+	            }
                 return contentChanged( this );
             },
 
@@ -2082,20 +2101,26 @@ if ( !String.prototype.trim ) {
              * @return {lola.Selector}
              */
             insertBefore: function( node ) {
-                if ( this.length == 1 ) {
-                    this.parent().insertBefore( node, this[0] );
+                if ( this.length > 0 ) {
+                    this.first().parent().insertBefore( node, this[0] );
                 }
                 return contentChanged( this );
             },
 
             /**
-             *  inserts node after first selected element
+             *  inserts node after last selected element
              * @param {Element} node
              * @return {lola.Selector}
              */
             insertAfter: function( node ) {
-                if ( this.length == 1 ) {
-                    this.parent().insertBefore( node, this[0].nextSibling );
+                if ( this.length > 0 ) {
+	                var p = this.last().parent();
+	                if ( this.last().get() == p.lastElementChild ){
+		                p.appendChild( node );
+	                }
+	                else{
+		                p.insertBefore( node, this.last().get().nextSibling );
+	                }
                 }
                 return contentChanged( this );
             },
@@ -2193,8 +2218,10 @@ if ( !String.prototype.trim ) {
                 this.forEach( function( item, index ) {
                     if (item.previousSibling){
                         var i = 0;
-                        while( (item = item.previousSibling) != null )
-                            i++;
+                        while( (item = item.previousSibling) != null ){
+	                        if (item.nodeType === 1)
+	                            i++;
+                        }
                         values.push( i );
                     }
                     else{
@@ -3207,8 +3234,6 @@ if ( !String.prototype.trim ) {
                     if ( !handler.uid )
                         handler.uid = ++uid;
 
-	                console.log('handler.uid', handler.uid);
-
                     if ( data[phase][type] == null )
                         data[phase][type] = {};
 
@@ -3248,7 +3273,6 @@ if ( !String.prototype.trim ) {
                     var phase = self.phaseString( target, useCapture );
                     //get handler uid
                     var uid = $.type.get( handler ) == 'function' ? handler.uid : handler;
-	                console.log( "handler uid" , uid );
                     if (data && data[phase] && data[phase][type] ){
 	                    delete data[phase][type][uid];
                         //if there are no more listeners in stack remove handler
@@ -5044,20 +5068,22 @@ if ( !String.prototype.trim ) {
         /**
          * sets a dimension style with or without units
          * gets a dimensional style with no units
-         * @param obj
-         * @param style
-         * @param value
+         * @param alias
+         * @param {String|Array} style
          * @private
          */
-        this.registerStyleAlias = function( style, alias ){
-            $.debug('registerStyleAlias', style, alias );
+        this.registerStyleAlias = function( alias, style ){
+            $.debug('registerStyleAlias', alias, style );
+	        var styles = ( $.type.get(style) == "array") ? style : [style];
             var fnc = function( o, s, v ){
                 var result;
                 if (v == undefined) {
-                    result = self.getRawStyle( o, style );
+                    result = self.getRawStyle( o, styles[0] );
                 }
                 else {
-                    result = self.setRawStyle( o, style, v );
+	                styles.forEach( function( s ){
+		                result = self.setRawStyle( o, s, v );
+	                });
                 }
                 return result;
             };
@@ -5532,6 +5558,7 @@ if ( !String.prototype.trim ) {
              * parses color part value
              * @private
              * @param {String} val
+             * @param divisor
              * @return {Number}
              */
             function parseColorPart( val, divisor ) {
@@ -5613,7 +5640,6 @@ if ( !String.prototype.trim ) {
         //TODO:this breaks in IE browsers and needs to be fixed
         //add default stylesheet for dynamic rules
         //self.addStyleSheet( "_default" );
-
 
     };
 

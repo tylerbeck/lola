@@ -47,7 +47,7 @@
      * @param overwrite {Boolean|undefined}
      * @param errors {Boolean|undefined}
      * @param deep {Boolean|undefined}
-     * @param deep {Array|undefined}
+     * @param ignore {Array|undefined}
      * @return {void}
      */
     lola.extend = function( target, source, overwrite, errors, deep, ignore ) {
@@ -71,7 +71,7 @@
      * @public
      * @param {!Object} base object on which to build chain
      * @param {!String} chain "." seperated namespace / package
-     * @param {!Object} object object to set in lineage
+     * @param {!Object} obj object to set in lineage
      * @return {Object}
      */
     lola.getPackage = function( base, chain, obj ) {

@@ -2104,7 +2104,8 @@ if ( !String.prototype.trim ) {
                 if ( this.length > 0 ) {
                     this.first().parent().insertBefore( node, this[0] );
                 }
-                return contentChanged( this );
+	            contentChanged(this.first().generation());
+                return this;
             },
 
             /**
@@ -2122,7 +2123,8 @@ if ( !String.prototype.trim ) {
 		                p.insertBefore( node, this.last().get().nextSibling );
 	                }
                 }
-                return contentChanged( this );
+	            contentChanged(this.first().generation());
+	            return this;
             },
 
             /**
@@ -4986,10 +4988,16 @@ if ( !String.prototype.trim ) {
                     return propertyHooks[prop].apply( node, arguments );
                 }
                 else {
-                    if ( value == undefined )
-                        return self.getRawStyle( node, prop );
+	                var result;
+                    if ( value == undefined ){
+	                    result =  self.rawStyle( node, prop );
+	                    if ( !result || result == "" ){
+		                    result = self.getComputedStyle( node, prop );
+	                    }
+	                    return result;
+                    }
                     else
-                        return self.setRawStyle( node, prop, value );
+                        return self.rawStyle( node, prop, value );
                 }
             }
 
@@ -5001,20 +5009,26 @@ if ( !String.prototype.trim ) {
          * @public
          * @param {Node} node styleable object
          * @param {String} style style property
-         * @return {String}
+         * @param {*}value
+         * @return {String|undefined|Boolean}
          */
-        this.getRawStyle = function( node, style ){
-            var prop = getProperty( style );
-            //console.log( 'getting raw style', '"'+prop+'"', '"'+$.string.dashed( prop )+'"', node );
-            var result = node.style[prop];
-            if ( !result || result == "" ){
-                result = self.getComputedStyle( node, prop );
-            }
-
-            return result;
+        this.rawStyle = function( node, style, value ){
+	        if ( canStyle( node ) ) {
+		        var prop = getProperty( style );
+		        if (value == undefined)
+			        return node.style[prop];
+		        else
+			        return node.style[ prop ] = value;
+	        }
+	        return false;
         };
 
-
+		/**
+		 * gets computed style for node
+		 * @param node
+		 * @param style
+		 * @return {*}
+		 */
         this.getComputedStyle = function( node, style ){
             var compStyle,result;
             var prop = getProperty( style );
@@ -5041,19 +5055,6 @@ if ( !String.prototype.trim ) {
             return result;
         };
 
-        /**
-         * sets raw style on an object
-         * @public
-         * @param {Node} node styleable object
-         * @param {String} style style property
-         * @param {*} value leave undefined to get style
-         */
-        this.setRawStyle = function( node, style, value ){
-            var prop = getProperty( style );
-            //$.debug('setRawStyle',style,value);
-            return node.style[ prop ] = value;
-
-        };
 
         /**
          * registers hook for style property
@@ -5078,11 +5079,11 @@ if ( !String.prototype.trim ) {
             var fnc = function( o, s, v ){
                 var result;
                 if (v == undefined) {
-                    result = self.getRawStyle( o, styles[0] );
+                    result = self.rawStyle( o, styles[0] );
                 }
                 else {
 	                styles.forEach( function( s ){
-		                result = self.setRawStyle( o, s, v );
+		                result = self.rawStyle( o, s, v );
 	                });
                 }
                 return result;
@@ -5102,12 +5103,16 @@ if ( !String.prototype.trim ) {
         function dimensionalHook( obj, style, value ){
             var result;
             if (value == undefined) {
-                result = self.getRawStyle( obj, style );
-                result = parseFloat(result.replace( $.regex.isDimension, "$1"));
+                result = self.rawStyle( obj, style );
+	            if ( !result || result == "" ){
+		            result = self.getComputedStyle( obj, style );
+	            }
+	            if (String(result).match($.regex.isDimension))
+                    result = parseFloat(result.replace( $.regex.isDimension, "$1"));
             }
             else {
                 value = (String(value).match($.regex.isDimension) || value == 'auto' || value == 'inherit') ? value : value+"px";
-                result = self.setRawStyle( obj, style, value );
+                result = self.rawStyle( obj, style, value );
             }
 
             return result;
@@ -5362,16 +5367,25 @@ if ( !String.prototype.trim ) {
          * @type {Object}
          */
         this.selectorMethods = {
-            /**
-             * sets or gets element css property
-             * @param {String} property
-             * @param {*} value
-             */
-            style: function( property, value ) {
-                return this._( self.style, property, value );
-            },
+	        /**
+	         * sets or gets element css property
+	         * @param {String} property
+	         * @param {*} value
+	         */
+	        style: function( property, value ) {
+		        return this._( self.style, property, value );
+	        },
 
-            /**
+	        /**
+	         * sets or gets element css property
+	         * @param {String} property
+	         * @param {*} value
+	         */
+	        rawStyle: function( property, value ) {
+		        return this._( self.rawStyle, property, value );
+	        },
+
+	        /**
              * sets or gets classes for elements
              * @param {String|Array|undefined} values
              */

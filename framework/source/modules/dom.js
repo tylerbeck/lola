@@ -324,7 +324,8 @@
                 if ( this.length > 0 ) {
                     this.first().parent().insertBefore( node, this[0] );
                 }
-                return contentChanged( this );
+	            contentChanged(this.first().generation());
+                return this;
             },
 
             /**
@@ -342,7 +343,8 @@
 		                p.insertBefore( node, this.last().get().nextSibling );
 	                }
                 }
-                return contentChanged( this );
+	            contentChanged(this.first().generation());
+	            return this;
             },
 
             /**
